@@ -259,7 +259,7 @@ The palette is paper and ink with a deep green cover. One warm action colour sit
 
 ## Layout
 
-The shell has two columns. On the left is the cover rail (252px on web, 240px on desktop), which is sticky and full height. On the right is the main area (padding 26px 32px 40px). The main area holds a head row with the headline and counts on the left, the search field (up to 340px) on the right, and then a single ruled sheet holding the profile table.
+The shell has two columns. On the left is the cover rail (252px on web, 240px on desktop), which is sticky and full height. On the right is the main area (padding 26px 32px 40px). The main area holds a head row with the headline and counts on the left, the search field (up to 340px) on the right, and then the view's ruled sheets: the profile table in **Profiles**, or the Runs and Workflows sheets in **Automation**, the view the app opens on.
 
 **The One Grid Rule.** The header row and every profile row share one column template: select (32px), profile name, device, proxy, timezone and locale, stamp (112px web / 100px desktop), and actions (232px). Each row is 58px tall with a 14px side padding. The header row is 40px on paper. Column gap is 16px on web and 12px on desktop. Nothing in a row may change the row height.
 
@@ -309,6 +309,12 @@ Buttons are solid and quiet. The fill colour says what kind of action it is.
 - **Rows:** 58px tall with a 1px rule divider and no zebra striping. Hover is a barely darker paper (`#F6F7F2`, web only). A running row is filled with live-tint. A selected row is filled with row-selected.
 - **Bulk bar:** when rows are selected, a sunk-paper band sits at the top of the sheet. It shows the count (600), then Launch (act), Stop and Delete (line), and a ghost Clear pushed to the far right.
 
+### Automation Sheets
+The Automation view stacks two ruled sheets under small section heads (15px/600 title, 13px ink-3 subtitle). They follow the profile table's rules: 58px rows, two lines in every data cell, hairline dividers, Launch-sized main buttons (112px here) followed by icon buttons.
+- **Runs:** profile, workflow (with start or end time), progress, retries (attempt, restarts in mono), status and actions. Progress is `Step n/N` in mono beside a flat 3px track on hairline: violet fill while running or starting, green when done, red when failed, ink-3 when stopped. Its minor line is the current step, or the failure reason in err ink. An active run's row takes the live tint. The main button is ink Stop while active and orange Run again otherwise.
+- **Workflows:** name (with description), recorded in (profile in mono, last edit), steps, last run, and an orange Run button with edit and delete icons.
+- **Run state stamp:** the small run stamp keeps the entry stamp's forms: running is a double rule in violet, starting and stopped a single thin rule in ink-2 and ink-3, done a single rule in green, failed a struck single rule in red.
+
 ### OS Badge and Tags
 - **OS badge:** a 38×22 outlined box with a 1px ink-2 border and 4px corners, holding WIN, MAC or LIN in 11px/600 mono. Every OS gets the same monochrome badge, with no coloured OS tiles.
 - **Engine:** Camoufox is set in plain ink. Chrome is set in cover green at 600 weight. On web, its tag uses a soft green-grey fill.
@@ -320,7 +326,8 @@ Buttons are solid and quiet. The fill colour says what kind of action it is.
 - **Desktop difference:** Flet dropdowns cannot go below 48px, so desktop text fields keep Material's 48px height to stay aligned with them. Desktop labels sit above the fields as separate text rather than floating.
 
 ### Navigation (the cover rail)
-- From top to bottom: brand (fox mark, `FoxFlow` at 18px/700, subtitle in cover-muted), a full-width orange Create button, the filter list (`Tất cả`, `Đang chạy`, `Có proxy`, `Không proxy`, `Engine Chrome`), MCP and API links, and the language segment (`Tiếng Việt` / `English`).
+- From top to bottom: brand (fox mark, `FoxFlow` at 18px/700, subtitle in cover-muted), a full-width orange primary button that follows the view (`Ghi workflow` in Automation, `Tạo profile` in Profiles), the view switch (`Không gian làm việc`: `Tự động hoá` with the number of active runs, `Profile` with the number of profiles), the filter list shown only in Profiles (`Tất cả`, `Đang chạy`, `Có proxy`, `Không proxy`, `Engine Chrome`), MCP and API links, and the language segment (`Tiếng Việt` / `English`).
+- View items share the filter items' pill style, with a 16px stroke icon before the label.
 - Filter items are 36px tall with 7px corners, in cover-ink at 500. Hover fills them with cover-deep. The active item is a cover-ink pill with cover-coloured 600 text. Counts are right-aligned in mono.
 - On desktop, the rail also holds a collapsible activity log (`Nhật ký hoạt động`) on cover-deep.
 

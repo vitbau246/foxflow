@@ -1,4 +1,8 @@
-"""Edit a workflow: run settings, and each step's delay, typing speed, check and retries."""
+"""Edit a workflow: run settings, and each step's delay, typing speed, check and retries.
+
+If / Repeat blocks are steps too: the rows between an opener and its End are
+indented, and picking If or a Repeat for a step adds the End it needs.
+"""
 
 from __future__ import annotations
 
@@ -13,11 +17,16 @@ from ...core.strings import get_string
 from ...services.ai.settings import AISettingsStore
 from ...services.workflow.model import (
     ACTIONS,
+    BLOCK_ACTIONS,
     CHECK_TYPES,
+    CONDITIONS,
+    CONTROL_ACTIONS,
     ELEMENT_ACTIONS,
-    SAVING_ACTIONS,
+    MARKER_ACTIONS,
     Workflow,
+    depths,
     new_step_id,
+    unclosed,
 )
 from ...services.workflow.store import WorkflowError, WorkflowStore
 from ..theme.colors import COLORS, FONT_BOLD, FONT_DATA, FONT_SEMIBOLD
@@ -46,8 +55,10 @@ COLUMNS = {
     "typing": (None, 92),
     "check": (None, 200),
     "retries": (None, 100),
-    "acts": (None, 164),
+    "acts": (None, 200),
 }
+# Pixels of indent per block level.
+_INDENT = 18
 
 
 def _cell(key: str, content: ft.Control | None) -> ft.Container:
@@ -101,6 +112,19 @@ def _what(step: dict[str, Any]) -> str:
     first = (step.get("selectors") or [""])[0]
     action, value = step["action"], step.get("value", "")
     into = f" → {{{{{step['save_as']}}}}}" if step.get("save_as") else ""
+    if action in MARKER_ACTIONS:
+        return ""
+    if action == "assign":
+        return f"{{{{{step.get('save_as', '')}}}}} = {value}"
+    if action == "for":
+        return " · ".join(line.strip() for line in value.splitlines() if line.strip()) + into
+    if action in ("if", "while"):
+        condition = step.get("condition", "expression")
+        text = (
+            value if condition == "expression" else f"{get_string(f'wf_cond_{condition}')}: {value}"
+        )
+        limit = f" · ≤ {step.get('max_loops', 100)}" if action == "while" else ""
+        return ("not " if step.get("negate") else "") + text + limit
     if action == "fill":
         return "•••" if step.get("sensitive") else f"“{value}” → {first}"
     if action == "get_text":
@@ -116,6 +140,43 @@ def _what(step: dict[str, Any]) -> str:
 
 # Actions that find an element and so may hover something first.
 _HOVERING = (*ELEMENT_ACTIONS, "press", "get_text")
+
+
+def new_step(**changes: Any) -> dict[str, Any]:
+    """A step as the editor holds it: every field, with the defaults for a new one."""
+    return {
+        "id": new_step_id(),
+        "action": "wait",
+        "value": "1000",
+        "label": "",
+        "selectors": [],
+        "frame": "",
+        "expect_url": "",
+        "delay_ms": 0,
+        "char_delay_ms": 0,
+        "timeout_ms": None,
+        "retries": None,
+        "check": {"type": "auto", "value": ""},
+        "enabled": True,
+        "sensitive": False,
+        "hover_selectors": [],
+        "hover_ms": 800,
+        "save_as": "",
+        "condition": "expression",
+        "negate": False,
+        "max_loops": 100,
+        **changes,
+    }
+
+
+def close_block(steps: list[dict[str, Any]], i: int) -> bool:
+    """Add an End after step i when it opens a block nothing closes; True if added."""
+    if steps[i]["action"] not in BLOCK_ACTIONS:
+        return False
+    if i not in unclosed([s["action"] for s in steps]):
+        return False
+    steps.insert(i + 1, new_step(action="end", value=""))
+    return True
 
 
 def open_workflow_editor(
@@ -208,10 +269,13 @@ def open_workflow_editor(
                         ),
                         ft.Container(
                             expand=True,
+                            # Several lines (a list for Repeat for) stay several lines.
                             content=ft.TextField(
                                 value=var["value"],
                                 hint_text=get_string("wf_var_value"),
                                 on_change=setter("value"),
+                                multiline=True,
+                                max_lines=5,
                                 **_FIELD,
                             ),
                         ),
@@ -270,6 +334,12 @@ def open_workflow_editor(
         del steps[i]
         draw_steps()
 
+    def insert_below(i: int) -> None:
+        step = new_step()
+        steps.insert(i + 1, step)
+        expanded.add(step["id"])
+        draw_steps()
+
     def toggle(step_id: str) -> None:
         expanded.symmetric_difference_update({step_id})
         draw_steps()
@@ -301,7 +371,7 @@ def open_workflow_editor(
             ),
         )
 
-    def step_row(i: int, st: dict[str, Any]) -> ft.Container:
+    def step_row(i: int, st: dict[str, Any], depth: int = 0) -> ft.Container:
         def setter(key: str, numeric: bool = False, fallback: Any = 0) -> Callable:
             def on_change(e: ft.ControlEvent) -> None:
                 st[key] = _int(e.control.value, fallback) if numeric else e.control.value
@@ -340,6 +410,27 @@ def open_workflow_editor(
             _number(st["char_delay_ms"], on_change=setter("char_delay_ms", True))
             if st["action"] == "fill"
             else ft.Text("—", color=COLORS["text_dim"])
+        )
+        action = st["action"]
+        # Control steps have no check; markers no delay; only conditions retry.
+        delay_cell = (
+            ft.Text("—", color=COLORS["text_dim"])
+            if action in MARKER_ACTIONS
+            else _number(st["delay_ms"], on_change=setter("delay_ms", True))
+        )
+        check_cell = (
+            ft.Text("—", color=COLORS["text_dim"])
+            if action in CONTROL_ACTIONS
+            else ft.Column(spacing=4, tight=True, controls=[check, check_value])
+        )
+        retries_cell = (
+            ft.Text("—", color=COLORS["text_dim"])
+            if action in CONTROL_ACTIONS and action not in ("if", "while")
+            else _number(
+                st["retries"],
+                get_string("wf_default"),
+                on_change=setter("retries", True, None),
+            )
         )
 
         def icon(name: Any, tip: str, fn: Callable, disabled: bool = False, danger: bool = False):
@@ -406,17 +497,10 @@ def open_workflow_editor(
                         ],
                     ),
                 ),
-                _cell("delay", _number(st["delay_ms"], on_change=setter("delay_ms", True))),
+                _cell("delay", delay_cell),
                 _cell("typing", typing),
-                _cell("check", ft.Column(spacing=4, tight=True, controls=[check, check_value])),
-                _cell(
-                    "retries",
-                    _number(
-                        st["retries"],
-                        get_string("wf_default"),
-                        on_change=setter("retries", True, None),
-                    ),
-                ),
+                _cell("check", check_cell),
+                _cell("retries", retries_cell),
                 _cell(
                     "acts",
                     ft.Row(
@@ -437,6 +521,9 @@ def open_workflow_editor(
                                 disabled=i == len(steps) - 1,
                             ),
                             icon(
+                                ft.Icons.ADD, get_string("wf_insert_below"), lambda: insert_below(i)
+                            ),
+                            icon(
                                 ft.Icons.DELETE_OUTLINE,
                                 get_string("wf_remove_step"),
                                 lambda: remove(i),
@@ -453,7 +540,21 @@ def open_workflow_editor(
         return ft.Container(
             padding=ft.Padding.symmetric(horizontal=12, vertical=8),
             border=ft.Border.only(top=ft.BorderSide(1, COLORS["card_border"])),
-            content=ft.Column(spacing=8, tight=True, controls=body),
+            # The block guide: a rule down the left of the indent, one per level.
+            content=ft.Row(
+                spacing=0,
+                vertical_alignment=ft.CrossAxisAlignment.STRETCH,
+                controls=[
+                    *(
+                        ft.Container(
+                            width=_INDENT,
+                            border=ft.Border.only(left=ft.BorderSide(2, COLORS["rule_strong"])),
+                        )
+                        for _ in range(depth)
+                    ),
+                    ft.Column(spacing=8, tight=True, expand=True, controls=body),
+                ],
+            ),
         )
 
     def step_details(st: dict[str, Any]) -> ft.Container:
@@ -470,6 +571,11 @@ def open_workflow_editor(
 
         def on_action(e: ft.ControlEvent) -> None:
             st["action"] = e.control.value
+            if st["action"] in MARKER_ACTIONS:
+                st["value"] = ""
+            elif st["action"] in CONTROL_ACTIONS and st["value"] == "1000":
+                st["value"] = ""  # the new step's wait time means nothing here
+            close_block(steps, steps.index(st))
             draw_steps()
 
         def on_selectors(e: ft.ControlEvent) -> None:
@@ -526,6 +632,9 @@ def open_workflow_editor(
                 controls=[ft.Container(expand=1, content=a), ft.Container(expand=1, content=b)],
             )
 
+        if st["action"] in CONTROL_ACTIONS:
+            return control_details(st, action, text, pair)
+
         return ft.Container(
             padding=ft.Padding.only(left=70, bottom=6),
             content=ft.Column(
@@ -545,7 +654,7 @@ def open_workflow_editor(
                                 get_string("wf_field_save_as_hint"),
                             )
                         ]
-                        if st["action"] in SAVING_ACTIONS
+                        if st["action"] in ("get_text", "ai")
                         else []
                     ),
                     *(
@@ -603,31 +712,116 @@ def open_workflow_editor(
             ),
         )
 
+    def control_details(
+        st: dict[str, Any], action: ft.Dropdown, text: Callable, pair: Callable
+    ) -> ft.Container:
+        """The fields of an assign, if, for, while or a block marker."""
+        kind = st["action"]
+        controls: list[ft.Control] = [
+            pair(
+                _field(get_string("wf_field_action"), action),
+                _field(get_string("wf_field_label"), text("label")),
+            )
+        ]
+        if kind == "assign":
+            controls += [
+                _field(
+                    get_string("wf_field_save_as"),
+                    text("save_as", text_style=_DATA),
+                    get_string("wf_field_save_as_hint"),
+                ),
+                _field(
+                    get_string("wf_field_value"),
+                    text("value", text_style=_DATA),
+                    get_string("wf_field_assign_hint"),
+                ),
+            ]
+        elif kind == "for":
+            controls += [
+                _field(
+                    get_string("wf_field_for_value"),
+                    text("value", multiline=True, min_lines=2, max_lines=8, text_style=_DATA),
+                    get_string("wf_field_for_hint"),
+                ),
+                _field(
+                    get_string("wf_field_for_var"),
+                    text("save_as", text_style=_DATA),
+                    get_string("wf_field_for_var_hint"),
+                ),
+            ]
+        elif kind in ("if", "while"):
+
+            def on_condition(e: ft.ControlEvent) -> None:
+                st["condition"] = e.control.value
+                draw_steps()
+
+            def on_negate(e: ft.ControlEvent) -> None:
+                st["negate"] = bool(e.control.value)
+                draw_steps()
+
+            condition = ft.Dropdown(
+                value=st.get("condition", "expression"),
+                text_size=13,
+                bgcolor=COLORS["input_bg"],
+                border_color=COLORS["rule_strong"],
+                focused_border_color=COLORS["sidebar"],
+                border_radius=8,
+                on_select=on_condition,
+                options=[ft.dropdown.Option(c, get_string(f"wf_cond_{c}")) for c in CONDITIONS],
+            )
+            controls += [
+                pair(
+                    _field(get_string("wf_field_condition"), condition),
+                    _field(get_string("wf_field_cond_value"), text("value", text_style=_DATA)),
+                ),
+                ft.Text(get_string("wf_field_cond_hint"), size=12, color=COLORS["text_dim"]),
+                ft.Checkbox(
+                    label=get_string("wf_field_negate"),
+                    value=bool(st.get("negate")),
+                    on_change=on_negate,
+                ),
+            ]
+            extra: list[ft.Control] = []
+            if kind == "while":
+                extra.append(
+                    _field(
+                        get_string("wf_field_max_loops"),
+                        text("max_loops", numeric=True, text_style=_DATA),
+                    )
+                )
+            if st.get("condition", "expression") != "expression":
+                extra.append(
+                    _field(
+                        get_string("wf_field_cond_wait"),
+                        text("timeout_ms", numeric=True, text_style=_DATA),
+                        get_string("wf_field_cond_wait_hint"),
+                    )
+                )
+                extra.append(
+                    _field(
+                        get_string("wf_field_frame"),
+                        text("frame", text_style=_DATA),
+                        get_string("wf_field_frame_hint"),
+                    )
+                )
+            for k in range(0, len(extra), 2):
+                controls.append(pair(extra[k], extra[k + 1]) if k + 1 < len(extra) else extra[k])
+        return ft.Container(
+            padding=ft.Padding.only(left=70, bottom=6),
+            content=ft.Column(spacing=8, tight=True, controls=controls),
+        )
+
     def draw_steps() -> None:
-        steps_column.controls = [header(), *(step_row(i, st) for i, st in enumerate(steps))]
+        levels = depths([st["action"] for st in steps])
+        steps_column.controls = [
+            header(),
+            *(step_row(i, st, levels[i]) for i, st in enumerate(steps)),
+        ]
         with contextlib.suppress(Exception):
             steps_column.update()
 
     def add_step(_: ft.ControlEvent) -> None:
-        step = {
-            "id": new_step_id(),
-            "action": "wait",
-            "value": "1000",
-            "label": "",
-            "selectors": [],
-            "frame": "",
-            "expect_url": "",
-            "delay_ms": 0,
-            "char_delay_ms": 0,
-            "timeout_ms": None,
-            "retries": None,
-            "check": {"type": "auto", "value": ""},
-            "enabled": True,
-            "sensitive": False,
-            "hover_selectors": [],
-            "hover_ms": 800,
-            "save_as": "",
-        }
+        step = new_step()
         steps.append(step)
         expanded.add(step["id"])
         draw_steps()
@@ -638,6 +832,8 @@ def open_workflow_editor(
         for st in steps:
             if st.get("hover_ms") is None:
                 st["hover_ms"] = 800
+            if st.get("max_loops") is None:
+                st["max_loops"] = 100
         data["settings"] = {
             "speed": float(speed.value or 1),
             "step_timeout_ms": (_int(timeout.value, 15) or 15) * 1000,
@@ -771,6 +967,7 @@ def open_workflow_editor(
                         font_family=FONT_SEMIBOLD,
                         color=COLORS["text_main"],
                     ),
+                    ft.Text(get_string("wf_block_hint"), size=12.5, color=COLORS["text_sub"]),
                     ft.Row(
                         spacing=8,
                         vertical_alignment=ft.CrossAxisAlignment.CENTER,

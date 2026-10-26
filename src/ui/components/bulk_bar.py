@@ -48,6 +48,11 @@ def _build_container(count: int, cbs: BulkCallbacks) -> ft.Container:
                 ),
                 ft.Container(width=6),
                 btn(get_string("launch"), ft.Icons.PLAY_ARROW_ROUNDED, "launch", ACCENT_STYLE),
+                *(
+                    [btn(get_string("run_title"), ft.Icons.PLAYLIST_PLAY, "run", OUTLINE_STYLE)]
+                    if "run" in cbs
+                    else []
+                ),
                 btn(get_string("stop"), ft.Icons.STOP_ROUNDED, "stop", OUTLINE_STYLE),
                 btn(get_string("delete"), ft.Icons.DELETE_OUTLINE, "delete", OUTLINE_STYLE),
                 ft.Container(expand=True),

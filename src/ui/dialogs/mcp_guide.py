@@ -1,12 +1,12 @@
 import contextlib
 import threading
-import urllib.request
 
 import flet as ft
 
 from ...core.config import API_PORT, API_TOKEN
 from ...core.strings import get_string
 from ...services import mcp_setup
+from ...utils import net
 from ..theme.colors import COLORS
 from ..theme.styles import ACCENT_STYLE, OUTLINE_STYLE
 
@@ -89,7 +89,7 @@ def open_mcp_guide(page: ft.Page, clipboard: ft.Clipboard) -> None:
 
     def check_health() -> None:
         try:
-            with urllib.request.urlopen(f"{_API_URL}/api/v1/health", timeout=3):
+            with net.urlopen(f"{_API_URL}/api/v1/health", timeout=3):
                 health.value = get_string("mcp_status_ok")
                 health.color = COLORS["success"]
         except OSError as e:

@@ -8,6 +8,26 @@ from ..refs import UIRefs
 from ..theme.colors import COLORS, FONT_DATA, FONT_MEDIUM
 
 
+def build_search_field(hint: str, on_search: Callable[[str], None]) -> ft.TextField:
+    """The page head's search field (up to 340px on web, 320px here)."""
+    return ft.TextField(
+        hint_text=hint,
+        prefix_icon=ft.Icons.SEARCH,
+        width=320,
+        height=40,
+        dense=True,
+        border_radius=8,
+        bgcolor=COLORS["input_bg"],
+        color=COLORS["text_main"],
+        text_size=14,
+        border_color=COLORS["rule_strong"],
+        focused_border_color=COLORS["sidebar"],
+        cursor_color=COLORS["accent"],
+        hint_style=ft.TextStyle(color=COLORS["text_dim"]),
+        on_change=lambda e: on_search(e.control.value or ""),
+    )
+
+
 def build_ui_refs(
     pm: IProfileManager,
     on_change_page: Callable[[int], None],
@@ -76,20 +96,5 @@ def build_ui_refs(
         ),
         bulk_bar=ft.Row(visible=False, spacing=0, controls=[]),
         file_picker=file_picker,
-        search_field=ft.TextField(
-            hint_text=get_string("search_hint"),
-            prefix_icon=ft.Icons.SEARCH,
-            width=320,
-            height=40,
-            dense=True,
-            border_radius=8,
-            bgcolor=COLORS["input_bg"],
-            color=COLORS["text_main"],
-            text_size=14,
-            border_color=COLORS["rule_strong"],
-            focused_border_color=COLORS["sidebar"],
-            cursor_color=COLORS["accent"],
-            hint_style=ft.TextStyle(color=COLORS["text_dim"]),
-            on_change=lambda e: on_search(e.control.value or ""),
-        ),
+        search_field=build_search_field(get_string("search_hint"), on_search),
     )

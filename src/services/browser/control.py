@@ -237,7 +237,8 @@ class PageController:
                 continue
         return await self._page()
 
-    async def record_start(self) -> dict[str, Any]:
+    async def record_start(self, lang: str = "en") -> dict[str, Any]:
+        """Record from the focused tab; `lang` is the language of the in-page offers."""
         from .recorder import Recorder
 
         if self._recorder is None:
@@ -246,7 +247,7 @@ class PageController:
             return self._recorder.status()
         page = await self._focused_page()
         self._current = page
-        return await self._recorder.start(page)
+        return await self._recorder.start(page, lang)
 
     async def record_stop(self) -> dict[str, Any]:
         if self._recorder is None:

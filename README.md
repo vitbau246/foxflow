@@ -2,7 +2,7 @@
   <img src="src/assets/icon.png" width="112" alt="FoxFlow logo" />
   <h1>FoxFlow</h1>
   <p><strong>Self-hosted web automation: record a task once, replay it in any browser profile</strong></p>
-  <p>Record-and-replay workflows with checks, retries, variables and AI text · Isolated browser profiles (Camoufox or Chrome) · REST API and MCP for scripts and AI agents · English and Vietnamese UI</p>
+  <p>Record-and-replay workflows with checks, retries, variables, if/else, loops and AI text · Isolated browser profiles (Camoufox or Chrome) · REST API and MCP for scripts and AI agents · English and Vietnamese UI</p>
 
   <p>
     <a href="https://github.com/vitbau246/foxflow/actions/workflows/ci.yml"><img src="https://github.com/vitbau246/foxflow/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
@@ -22,9 +22,9 @@
   </p>
 </div>
 
-![FoxFlow](docs/images/en/main.png)
+![FoxFlow: the Automation dashboard](docs/images/en/automation.png)
 
-FoxFlow automates repetitive work in the browser. Do a task once while FoxFlow records it, tune the steps, then replay it: every step is checked, a failed step is retried, and a stuck run restarts the browser and starts over. Workflows can read text from the page, fill in variables and ask an OpenAI-compatible model to write text for you. You run them from the desktop app, the web panel, the REST API, or let an AI agent (Claude, Cursor...) drive the browser over MCP.
+FoxFlow automates repetitive work in the browser. Do a task once while FoxFlow records it, tune the steps, then replay it: every step is checked, a failed step is retried, and a stuck run restarts the browser and starts over. Workflows can read text from the page (select it or rest the mouse on it while recording), fill in variables, branch with if/else, repeat steps in loops, chain several workflows in one run and ask an OpenAI-compatible model to write text for you. You run them from the desktop app, the web panel, the REST API, or let an AI agent (Claude, Cursor...) drive the browser over MCP.
 
 Every run happens inside a **browser profile**: an isolated browser with its own cookies, logins, proxy, timezone, locale and a stable device fingerprint, so tasks for different accounts or clients never share a session. Profiles run on [Camoufox](https://github.com/daijro/camoufox) (Firefox) or an experimental Chrome engine based on [fingerprint-chromium](https://github.com/adryfish/fingerprint-chromium), on your own machine or a VPS.
 
@@ -54,10 +54,13 @@ Every run happens inside a **browser profile**: an isolated browser with its own
 
 **Automation**
 
+- **An automation dashboard.** The app opens on every profile's current or last run (step progress, retries, a stamp for its state, the reason it failed) and on every saved workflow with its last result. Stop, run again or open the log in one click.
+- **One workflow, many profiles.** Run a workflow in as many profiles as you pick, with its variables filled in for that run; stopped profiles are launched first.
 - **Record and replay workflows.** Every click, keystroke, selection, key press, scroll and page load in a profile's browser becomes a step, with several fallback selectors per element.
 - **Reliable replays.** Each step is checked (the field holds the text, the box is ticked, the click reached the same page), retried on failure, and the whole run restarts from step 1 in a fresh browser when a step keeps failing.
 - **Human pacing.** Each step keeps the delay you actually took while recording, typing has its own speed per character, and one speed setting (x0.25 to x5) scales the whole workflow.
-- **Variables, page text and AI.** `{{variables}}` in values, URLs and selectors; *Get text* reads the page into a variable (optionally through a regex); *AI text* sends a prompt to an OpenAI-compatible API and saves the reply.
+- **Variables, page text and AI.** `{{variables}}` in values, URLs and selectors; *Get text* reads the page into a variable (optionally through a regex), and while recording, selecting text or resting the mouse on an element for 3 s offers to add one; *AI text* sends a prompt to an OpenAI-compatible API and saves the reply.
+- **If, loops and chains.** *If / Else*, *Repeat for* (a count or a list), *Repeat while*, *Exit loop* and *Set variable* steps, with conditions on variables or on the page; run several workflows one after the other in one browser.
 - **Hover menus.** Clicks on elements that only appear on hover are recorded with a *Hover first* step.
 - **AI agents over MCP.** Claude Code, Claude Desktop, Cursor, VS Code and others can launch profiles, navigate, read, click, type, take screenshots and run your workflows.
 - **REST API** with Swagger docs for every action, so any script or scheduler can start runs and read their logs.
@@ -103,11 +106,26 @@ python -m src.main
 
 On Windows you can also double-click `run_foxflow.bat`. The app opens the main window and serves the API on `http://127.0.0.1:8000`; API docs are at `http://127.0.0.1:8000/docs`. Set `FOXFLOW_LANG=vi` for the Vietnamese UI.
 
-Your first automation: create a profile, launch it, open **Workflows** on its row, click **Start recording**, do the task in the browser, then **Stop and save**. Press **Run** to replay it.
+Your first automation: create a profile, then in **Automation** click **Record workflow** and pick it. Launch it from that dialog, click **Start recording**, do the task in the browser, then **Stop and save**. Press **Run** on the new workflow to replay it in one or many profiles.
 
 ## Workflows: record and replay
 
-A workflow is a task you did once in a profile's browser, saved as steps you can replay in any profile. Open it with the **Workflows** button on a profile row, in the desktop app or the web panel.
+A workflow is a task you did once in a profile's browser, saved as steps you can replay in any profile.
+
+### The Automation dashboard
+
+The desktop app and the web panel open on **Automation** (switch to **Profiles** in the left rail for the profile table):
+
+- **Runs**: the current or last run of every profile, active runs first. Each row shows the step it is on with a progress rule, the attempt and restarts, a stamp for the state (running, starting, done, failed, stopped) and, for a failed run, the reason. Stop a run, **Run again**, open its **Log** (live while it runs) or view the profile's screen.
+- **Workflows**: every saved workflow with the profile it was recorded in, its steps and its last result. **Run** opens the run dialog; edit and delete sit next to it.
+- **Run dialog**: tick the profiles that should run the workflow (each runs its own copy; profiles that are recording or already running a workflow are greyed out with the reason) and fill in the workflow's variables for this run. Stopped profiles are launched first.
+- In **Profiles**, select rows and use **Run workflow** in the bulk bar to run a workflow you pick in all of them.
+
+The dashboard refreshes every 1.5 s while something runs and every 4 s otherwise.
+
+### Record, edit, run
+
+Open a profile's workflows with the **Workflows** button on its row, or with **Record workflow** in Automation.
 
 1. **Record.** Launch the profile, click **Start recording**, then do the task in its browser: every click, keystroke, selection, key press (Enter, Escape, Tab...) and scroll becomes a step, and so does opening a page. On a server, do it through **View screen**. **Stop and save** names it. If the browser closes while recording, the steps are kept as an unsaved recording you can still save.
 2. **Edit.** Each step has its own **delay** (the pause before it, taken from how long you actually paused while recording) and, for typing, a **typing speed** in ms per character (0 types at once). A workflow-wide **speed** divides every delay: x2 runs twice as fast. Steps can be disabled, reordered, added or removed; **Details** shows the selectors (tried in order), the value, the frame, the timeout and the expected URL.
@@ -121,6 +139,30 @@ Running a workflow leaves one tab open in the profile (it starts the way a recor
 - **Variables.** Write `{{name}}` in a step's value, URL or selector; it is replaced when the step runs. Give variables a starting value under **Variables** in the editor, or per run with the API (`"variables": {...}`). `{{profile}}` is always the running profile's name. A step that uses an unknown variable is refused when you save.
 - **Get text** reads an element's visible text (the whole page without a selector), optionally through a regular expression (its first group is kept, e.g. `#(\d+)`), and saves it into a variable. Its check fails when there is no text or the expression does not match.
 - **AI text** sends its prompt, with its `{{variables}}` filled in, to an OpenAI-compatible Chat Completions API and saves the reply into a variable, e.g. *Get text* of an order page into `{{order}}`, *AI text* "Write a short reply confirming this order: {{order}}" into `{{reply}}`, then *Type* `{{reply}}`. Set it up with **AI settings** in the editor: API key, base URL (OpenAI by default; Azure OpenAI, OpenRouter or a local LLM work too), model, system prompt and temperature, with a **Test** button. AI is off until a key is set. The prompt, including any page text it uses, is sent to that service, from the FoxFlow process (not through the profile's proxy). The key is kept in `ai_settings.json` next to `profiles.json`, or comes from `FOXFLOW_OPENAI_API_KEY`, which is never written to disk.
+
+### Get text while recording
+
+While recording, **select text** with the mouse, or **rest the mouse on an element for 3 seconds**: a small card in the page asks *Get this text?*, shows the text and suggests a variable name (`text1`, `text2`...). **Get text** adds a *Get text* step for that element; **Skip**, Escape or a click elsewhere dismisses it, and the same element is not offered again until the mouse moves to another one. The card's own clicks and keys are not recorded, dragging to select text is not recorded as a click, and the step's selectors never use the element's text (it changes from run to run).
+
+### If, loops and variables
+
+Steps can also steer the run. These run in FoxFlow, between the browser steps:
+
+| Step | What it does |
+|---|---|
+| **Set variable** | Saves a value into a variable: text with `{{variables}}`, or `=` and an expression, e.g. `= count + 1`, `= upper(name)`. |
+| **If** ... **Else** ... **End** | Runs the steps up to Else (or End) when the condition holds, the steps after Else otherwise. |
+| **Repeat for** ... **End** | Runs the steps inside once per item: a number N (rounds 1 to N), or a list, one item per line or separated by commas, e.g. `{{names}}`. The item (or round number) goes into the step's variable. |
+| **Repeat while** ... **End** | Runs the steps inside while the condition holds, at most *At most (rounds)* times (100 by default). |
+| **Exit loop** | Leaves the innermost Repeat. |
+
+A condition is either an **expression on variables**, e.g. `price > 100 and status == "ok"`, `contains(title, "Sale")`, `len(code) == 6` (two values that read as numbers compare as numbers; functions: `len`, `int`, `num`, `str`, `lower`, `upper`, `trim`, `contains`, `startswith`, `endswith`, `matches`, `replace`), or a **page condition**: element visible, text visible, URL contains, title contains, optionally waited for up to the step's timeout. Tick *Go in when the condition does NOT hold* to turn it around. Expressions are parsed, never executed as code.
+
+In the editor, steps inside a block are indented, **+** on a row inserts a step below it, and picking If or a Repeat adds its End. Saving refuses a block without its End, an Else outside an If and an Exit loop outside a loop.
+
+### Several workflows in one run
+
+In the run dialog, **Add workflow** chains more workflows: each picked profile runs them one after the other in the same browser. Each workflow keeps its own settings and restarts from its own first step; variables saved by one carry over to the next (give the later workflow a variable of that name to use it); the run stops at the first workflow that fails. **Run again** on a run row runs the whole chain. From the API: `POST /workflow-runs` with `{"profile": ..., "workflows": [...], "variables": {...}}`; over MCP: `run_workflows`.
 
 Workflows are JSON files in `workflows/`, one per workflow, editable with the REST API (`PUT /workflows/{name}`) as well. They contain what you typed while recording, **including passwords** (a password field only hides the value in the interface), so treat that folder like `camoufox_data/`. Replays drive the page through Playwright: a site that blocks automation may notice it.
 
@@ -156,7 +198,7 @@ Then just ask, e.g. *"Open profile work-01, go to example.com and send me a scre
 | Cookies & fingerprints | `export_cookies`, `import_cookies`, `get_fingerprint`, `reset_fingerprint`, `check_proxy`, `check_profile_ip` |
 | Page | `browser_navigate`, `browser_back`, `browser_snapshot`, `browser_get_text`, `browser_click`, `browser_click_at`, `browser_type`, `browser_press`, `browser_wait_for`, `browser_screenshot`, `browser_evaluate` |
 | Tabs | `browser_tabs`, `browser_tab_new`, `browser_tab_select`, `browser_tab_close` |
-| Workflows | `list_workflows`, `get_workflow`, `run_workflow`, `workflow_run_status`, `stop_workflow_run` |
+| Workflows | `list_workflows`, `get_workflow`, `run_workflow`, `run_workflows`, `workflow_run_status`, `stop_workflow_run` |
 
 There is deliberately **no** delete tool, so an agent cannot wipe an account's cookies by mistake. Only `http`, `https` and `about:blank` can be opened; `file://` and `about:config` are blocked.
 
@@ -212,7 +254,7 @@ Pick the OS of the machine running FoxFlow: a persona of another OS leaks the ma
 
 ![Cookies & fingerprint](docs/images/en/cookies.png)
 
-Click the cookie button on a profile row to open **Cookies & fingerprint**. **The profile's browser must be stopped**: FoxFlow opens the profile headless to read and write cookies.
+Click the cookie button on a profile row to open **Cookies & fingerprint**. These need the profile's browser stopped, because FoxFlow opens the profile headless to read and write cookies; if it is running, FoxFlow offers to stop it first. Renaming, deleting and cloning with data do the same.
 
 - Cookies export/import as Cookie-Editor / EditThisCookie JSON and Netscape `cookies.txt` (yt-dlp, curl, wget). Imported session cookies are given a one-year lifetime; otherwise the browser would discard them when it closes.
 - "New fingerprint" deletes the stored fingerprint so the next launch presents a different device. Changing a profile's OS also regenerates it.
@@ -239,11 +281,28 @@ Everything is optional. To override defaults, copy `.env.example` to `.env`.
 | `FOXFLOW_OPENAI_BASE_URL` | `https://api.openai.com/v1` | Default base URL of an OpenAI-compatible API |
 | `FOXFLOW_OPENAI_MODEL` | `gpt-4o-mini` | Default model |
 | `FOXFLOW_AI_SETTINGS_FILE` | `ai_settings.json` | Where the AI settings (and key) are saved |
+| `FOXFLOW_HTTP_PROXY` | *(empty: direct)* | Proxy for FoxFlow's own internet requests, e.g. `http://host:port` or `http://user:pass@host:port`. See [Network and proxy](#network-and-proxy) |
 | `FOXFLOW_API_TOKEN` | *(empty)* | Token for the API, web panel and MCP. Required when the API listens beyond `127.0.0.1` |
 | `FOXFLOW_API_HOST` | `127.0.0.1` | API host |
 | `FOXFLOW_API_PORT` | `8000` | API port |
 
 The old `FOXPROFILE_*` names still work; a `FOXFLOW_*` variable wins when both are set.
+
+### Network and proxy
+
+FoxFlow's own internet requests are the AI text steps, the Chrome engine and GeoIP downloads, and the exit-IP / **Check IP** lookups of profiles that have no proxy of their own. They go **direct** unless you set `FOXFLOW_HTTP_PROXY`; the system proxy and `HTTP(S)_PROXY` are ignored. Requests to FoxFlow's own API and to the browsers on `127.0.0.1` never use a proxy.
+
+If this machine reaches the internet only through a proxy (a company network, for example), add it to `.env` and restart FoxFlow:
+
+```bash
+FOXFLOW_HTTP_PROXY=http://host:port
+# or with a login
+FOXFLOW_HTTP_PROXY=http://user:pass@host:port
+```
+
+How to tell you need it: the startup log says *"Internet requests go direct"*, and AI steps, the Chrome engine download, Check IP or launching a profile without a proxy fail with *"no internet connection"* or *"Cannot reach..."*. Those errors end with a reminder to set `FOXFLOW_HTTP_PROXY`, and **AI settings** shows which route is in use. `python -m camoufox fetch` is not part of FoxFlow: behind a proxy, run it with `HTTPS_PROXY` set in that terminal.
+
+This setting does not change what the browsers use: each profile's traffic goes through that profile's own proxy.
 
 ### Proxy format
 
@@ -278,7 +337,8 @@ Prefix `/api/v1`. The full reference is at `/docs` while the app is running.
 | `GET` / `POST` | `/workflows` | List / create workflows |
 | `GET` / `PUT` / `DELETE` | `/workflows/{name}` | Read / save (steps, delays, typing speed, checks, retries) / delete a workflow |
 | `POST` | `/workflows/{name}/run` | Replay it in a profile: `{"profile": "name", "variables": {}}`, launching the browser if needed (202) |
-| `GET` / `POST` | `/workflow-runs` · `/workflow-runs/{profile}` · `/workflow-runs/{profile}/stop` | Runs; one profile's current or last run (status, step, attempt, restarts, log); stop it |
+| `POST` | `/workflow-runs` | Run several workflows one after the other in a profile: `{"profile": "name", "workflows": ["a", "b"], "variables": {}}` (202) |
+| `GET` / `POST` | `/workflow-runs` · `/workflow-runs/{profile}` · `/workflow-runs/{profile}/stop` | Runs (`?log=false` leaves out the log lines); one profile's current or last run (status, step, attempt, restarts, log); stop it |
 | `GET` / `PUT` | `/ai/settings` | AI settings (the key only as a hint) / save them (`api_key` omitted keeps it, `""` removes it) |
 | `POST` | `/ai/test` | Send one prompt with the saved AI settings |
 | `POST` | `/browser/{name}/page/navigate` · `back` | Open a URL in the active tab, go back |
@@ -333,9 +393,10 @@ FoxFlow reads a FoxProfile installation as it is: run it from the same folder an
 - **Data is unchanged**: `profiles.json`, `camoufox_data/`, `workflows/` and `ai_settings.json` keep their names and format.
 - **Environment variables** are now `FOXFLOW_*`. `FOXPROFILE_*` in an existing `.env` is still read, so nothing breaks; rename them when convenient.
 - **The Chrome engine** reuses a build FoxProfile already downloaded instead of fetching it again.
+- **Network**: FoxFlow no longer picks up the system proxy for its own requests. If you need one, set `FOXFLOW_HTTP_PROXY` (see [Network and proxy](#network-and-proxy)).
 - **MCP**: the server is now called `foxflow` and the stdio launcher is `foxflow_mcp.py`. Re-add it in your AI apps (the Connect AI dialog generates the new config).
 - **Renamed files**: `run_foxflow.bat`, `deploy/foxflow.service`, `deploy/nginx-foxflow.conf`, and logs are written to `logs/foxflow_YYYYMMDD.log`.
-- **Web panel**: the saved language and token carry over; you stay logged in.
+- **Web panel**: the saved language and token carry over; you stay logged in. It now opens on the Automation view; the profile table is under **Profiles**.
 
 ## Development
 

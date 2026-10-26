@@ -16,42 +16,96 @@ FILTERS = (
 )
 
 
+# (view id, string key): what the main area shows.
+VIEWS = (
+    ("automation", "view_automation"),
+    ("profiles", "view_profiles"),
+)
+
+
+def _nav_item(label: str, count: int, on: bool, on_click: Callable) -> ft.Container:
+    """A rail nav item: label, count right-aligned in mono; the active one in cover ink."""
+    return ft.Container(
+        height=36,
+        border_radius=7,
+        padding=ft.Padding.symmetric(horizontal=10),
+        bgcolor=COLORS["cover_ink"] if on else None,
+        ink=True,
+        on_click=on_click,
+        content=ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                ft.Text(
+                    label,
+                    size=13.5,
+                    font_family=FONT_SEMIBOLD if on else FONT_MEDIUM,
+                    color=COLORS["sidebar"] if on else COLORS["cover_ink"],
+                ),
+                ft.Text(
+                    str(count),
+                    size=12,
+                    font_family=FONT_DATA,
+                    color=COLORS["sidebar"] if on else COLORS["cover_muted"],
+                ),
+            ],
+        ),
+    )
+
+
 def build_filter_buttons(
     active: str, counts: dict[str, int], on_filter: Callable[[str], None]
 ) -> list[ft.Control]:
     """The rail's filter list; the active filter is set in cover ink."""
-    controls: list[ft.Control] = []
-    for fid, key in FILTERS:
-        on = fid == active
-        controls.append(
+    return [
+        _nav_item(get_string(key), counts.get(fid, 0), fid == active, lambda _, f=fid: on_filter(f))
+        for fid, key in FILTERS
+    ]
+
+
+def build_view_buttons(
+    active: str, counts: dict[str, int], on_view: Callable[[str], None]
+) -> list[ft.Control]:
+    """Automation / Profiles: which page the main area shows."""
+    return [
+        _nav_item(get_string(key), counts.get(vid, 0), vid == active, lambda _, v=vid: on_view(v))
+        for vid, key in VIEWS
+    ]
+
+
+def rail_section(title: str, items: ft.Control, visible: bool = True) -> ft.Column:
+    """A titled group of nav items on the rail (with the 22px gap above it)."""
+    return ft.Column(
+        spacing=0,
+        visible=visible,
+        controls=[
+            ft.Container(height=22),
             ft.Container(
-                height=36,
-                border_radius=7,
-                padding=ft.Padding.symmetric(horizontal=10),
-                bgcolor=COLORS["cover_ink"] if on else None,
-                ink=True,
-                on_click=lambda _, f=fid: on_filter(f),
-                content=ft.Row(
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    controls=[
-                        ft.Text(
-                            get_string(key),
-                            size=13.5,
-                            font_family=FONT_SEMIBOLD if on else FONT_MEDIUM,
-                            color=COLORS["sidebar"] if on else COLORS["cover_ink"],
-                        ),
-                        ft.Text(
-                            str(counts.get(fid, 0)),
-                            size=12,
-                            font_family=FONT_DATA,
-                            color=COLORS["sidebar"] if on else COLORS["cover_muted"],
-                        ),
-                    ],
+                padding=ft.Padding.only(left=10, bottom=6),
+                content=ft.Text(
+                    title,
+                    size=12,
+                    font_family=FONT_SEMIBOLD,
+                    color=COLORS["cover_muted"],
                 ),
-            )
-        )
-    return controls
+            ),
+            items,
+        ],
+    )
+
+
+def build_primary_button(on_click: Callable) -> ft.Button:
+    """The rail's orange button; its label follows the view (see `primary_for`)."""
+    return ft.Button(width=208, height=42, style=ACCENT_STYLE, on_click=on_click)
+
+
+def primary_for(button: ft.Button, view: str) -> None:
+    """New profile in the Profiles view, Record workflow in the Automation view."""
+    if view == "profiles":
+        button.content, button.icon = get_string("new_profile"), ft.Icons.ADD
+    else:
+        button.content = get_string("record_workflow")
+        button.icon = ft.Icons.FIBER_MANUAL_RECORD_OUTLINED
 
 
 def build_sidebar(
@@ -60,13 +114,13 @@ def build_sidebar(
     _log_text: ft.Text,
     log_column: ft.Container,
     log_toggle_btn: ft.TextButton,
-    on_new_profile: Callable,
+    primary_button: ft.Control,
     on_import: Callable,
     on_export: Callable,
     on_toggle_log: Callable,
     on_mcp: Callable,
     on_fullscreen_log: Callable,
-    filter_column: ft.Column | None = None,
+    sections: list[ft.Control] | None = None,
     language: str = "en",
     on_language: Callable[[str], None] | None = None,
 ) -> ft.Container:
@@ -109,14 +163,7 @@ def build_sidebar(
                 ft.Container(height=2),
                 running_text,
                 ft.Container(height=10),
-                ft.Button(
-                    get_string("new_profile"),
-                    icon=ft.Icons.ADD,
-                    width=208,
-                    height=42,
-                    style=ACCENT_STYLE,
-                    on_click=on_new_profile,
-                ),
+                primary_button,
                 ft.Container(height=10),
                 ft.Row(
                     spacing=8,
@@ -139,18 +186,13 @@ def build_sidebar(
                         ),
                     ],
                 ),
-                ft.Container(height=22),
-                ft.Container(
-                    padding=ft.Padding.only(left=10, bottom=6),
-                    content=ft.Text(
-                        get_string("filter_title"),
-                        size=12,
-                        font_family=FONT_SEMIBOLD,
-                        color=COLORS["cover_muted"],
-                    ),
+                # The nav takes the free height and scrolls in a short window.
+                ft.Column(
+                    spacing=0,
+                    expand=True,
+                    scroll=ft.ScrollMode.AUTO,
+                    controls=list(sections or []),
                 ),
-                filter_column or ft.Column(),
-                ft.Container(expand=True),
                 ft.Row(
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     controls=[

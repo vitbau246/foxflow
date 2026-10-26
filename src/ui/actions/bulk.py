@@ -7,33 +7,40 @@ from ...interfaces.protocols import IBrowserLauncher, IProfileManager
 from ..dialogs import open_confirm_dialog
 from ..state import AppState
 from .browser import launch_or_stop
+from .stop_first import StopThen
 
 
 def bulk_delete_profiles(
     page: ft.Page,
     names: list[str],
     pm: IProfileManager,
+    bl: IBrowserLauncher,
     log: Callable[[str], None],
     refresh: Callable[[], None],
     on_done: Callable[[], None],
+    stop_then: StopThen,
 ) -> None:
+    """Confirm, stop the running ones, then delete every one that has stopped."""
     if not names:
         return
 
     def do_bulk_delete() -> None:
         for name in names:
-            pm.delete_profile(name)
-            log(get_string("deleted_profile", name=name))
+            # One that would not stop is logged by stop_then and kept.
+            if not bl.is_running(name) and pm.delete_profile(name):
+                log(get_string("deleted_profile", name=name))
         on_done()
         refresh()
 
-    count = len(names)
+    body = get_string("cannot_undo")
+    if running := sum(1 for n in names if bl.is_running(n)):
+        body = f"{body} {get_string('bulk_delete_running_note', count=running)}"
     open_confirm_dialog(
         page,
         "",
-        do_bulk_delete,
-        title=get_string("confirm_bulk_delete", count=count),
-        body=get_string("cannot_undo"),
+        lambda: stop_then(names, do_bulk_delete, partial=True),
+        title=get_string("confirm_bulk_delete", count=len(names)),
+        body=body,
     )
 
 

@@ -55,6 +55,7 @@ def test_invalid_input(client):
 def test_runs(client):
     client.put(f"{API}/workflows/search", json=WF)
     assert client.get(f"{API}/workflow-runs").json() == {"runs": []}
+    assert client.get(f"{API}/workflow-runs?log=false").json() == {"runs": []}
     assert client.get(f"{API}/workflow-runs/p1").status_code == 404
     assert client.post(f"{API}/workflow-runs/p1/stop").status_code == 409
     r = client.post(f"{API}/workflows/missing/run", json={"profile": "p1"})

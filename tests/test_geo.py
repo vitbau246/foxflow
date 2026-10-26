@@ -314,3 +314,29 @@ def test_dead_proxy_reports_launch_failed(monkeypatch, tmp_path, capsys):
     )
     assert "Failed to get IP address" in out  # the raw error is still logged
     assert "user" not in out.split("LAUNCH_FAILED:", 1)[1]
+
+
+def test_direct_profile_failure_suggests_the_foxflow_proxy(monkeypatch, fake_lookups):
+    def fail(proxy):
+        raise OSError("network unreachable")
+
+    monkeypatch.delenv("FOXFLOW_HTTP_PROXY", raising=False)
+    monkeypatch.delenv("FOXPROFILE_HTTP_PROXY", raising=False)
+    monkeypatch.setattr(geo_check, "_exit_ip", fail)
+    r = check_geo("")
+    assert r.error.startswith("OSError: network unreachable. ") and "FOXFLOW_HTTP_PROXY" in r.error
+
+
+def test_runner_reports_no_internet_for_a_direct_profile(monkeypatch):
+    from camoufox import ip
+
+    from src.services.browser import runner
+
+    def fail(proxy=None):
+        raise OSError("network unreachable")
+
+    monkeypatch.setenv("FOXFLOW_HTTP_PROXY", "http://user:pass@198.51.100.7:8080")
+    monkeypatch.setattr(ip, "public_ip", fail)
+    with pytest.raises(runner.NoInternet) as e:
+        runner.exit_ip("")
+    assert "198.51.100.7:8080" in str(e.value) and "pass" not in str(e.value)

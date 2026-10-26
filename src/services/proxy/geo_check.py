@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ...core.strings import get_string
+from ...utils import net
 from ...utils.proxy_parser import parse_proxy
 
 # (connect, read) per request, and the overall budget for one check: the exit
@@ -262,6 +263,10 @@ def check_geo(
     finally:
         # Do not wait for a lookup stuck on a dead proxy; it ends on its own timeout.
         pool.shutdown(wait=False, cancel_futures=True)
+
+    if error and not parse_proxy(proxy or ""):
+        # No proxy of the profile's own: FoxFlow's route to the internet is the one failing.
+        error = f"{error}. {net.network_hint()}"
 
     country = auto_timezone = suggested_locale = None
     share = 0.0

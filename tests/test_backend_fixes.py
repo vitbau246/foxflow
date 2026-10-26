@@ -429,3 +429,43 @@ class TestRequireProfile:
         with pytest.raises(HTTPException) as e:
             require_profile("gone", pm)
         assert e.value.status_code == 404
+
+
+def test_rename_and_delete_wait_out_a_briefly_locked_data_dir(monkeypatch):
+    from src.services.profile import manager as m
+
+    monkeypatch.setattr(m, "_LOCK_DELAY", 0)
+    calls = []
+
+    def flaky():
+        calls.append(1)
+        if len(calls) < 3:
+            raise PermissionError("in use")
+
+    m._retry_locked(flaky)
+    assert len(calls) == 3
+
+    def always_locked():
+        raise PermissionError("in use")
+
+    with pytest.raises(PermissionError):
+        m._retry_locked(always_locked)
+
+
+def test_remove_tree_retries_until_the_directory_is_gone(monkeypatch, tmp_path):
+    from src.services.profile import manager as m
+
+    monkeypatch.setattr(m, "_LOCK_DELAY", 0)
+    target = tmp_path / "profile"
+    target.mkdir()
+    attempts = []
+    real_rmtree = m.shutil.rmtree
+
+    def rmtree(path, ignore_errors=False):
+        attempts.append(path)
+        if len(attempts) >= 2:  # a file was still in use on the first try
+            real_rmtree(path, ignore_errors=ignore_errors)
+
+    monkeypatch.setattr(m.shutil, "rmtree", rmtree)
+    m._remove_tree(str(target))
+    assert len(attempts) == 2 and not target.exists()

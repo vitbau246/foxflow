@@ -2,7 +2,7 @@
   <img src="src/assets/icon.png" width="112" alt="FoxFlow logo" />
   <h1>FoxFlow</h1>
   <p><strong>Tự động hoá web tự host: ghi lại một lần, chạy lại trên bất kỳ profile trình duyệt nào</strong></p>
-  <p>Workflow ghi và chạy lại có kiểm tra, thử lại, biến và sinh chữ bằng AI · Profile trình duyệt tách biệt (Camoufox hoặc Chrome) · REST API và MCP cho script và AI agent · Giao diện tiếng Anh và tiếng Việt</p>
+  <p>Workflow ghi và chạy lại có kiểm tra, thử lại, biến, điều kiện, vòng lặp và sinh chữ bằng AI · Profile trình duyệt tách biệt (Camoufox hoặc Chrome) · REST API và MCP cho script và AI agent · Giao diện tiếng Anh và tiếng Việt</p>
 
   <p>
     <a href="https://github.com/vitbau246/foxflow/actions/workflows/ci.yml"><img src="https://github.com/vitbau246/foxflow/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
@@ -22,9 +22,9 @@
   </p>
 </div>
 
-![FoxFlow](docs/images/main.png)
+![FoxFlow: bảng Tự động hoá](docs/images/automation.png)
 
-FoxFlow tự động hoá những việc lặp đi lặp lại trên trình duyệt. Bạn làm một việc một lần trong khi FoxFlow ghi lại, chỉnh các bước, rồi cho chạy lại: mỗi bước đều được kiểm tra kết quả, bước lỗi được thử lại, lần chạy bị kẹt thì trình duyệt được khởi động lại và chạy lại từ đầu. Workflow đọc được chữ trên trang, điền biến và nhờ một model tương thích OpenAI viết chữ giúp bạn. Bạn chạy workflow từ app desktop, web panel, REST API, hoặc để AI agent (Claude, Cursor...) điều khiển trình duyệt qua MCP.
+FoxFlow tự động hoá những việc lặp đi lặp lại trên trình duyệt. Bạn làm một việc một lần trong khi FoxFlow ghi lại, chỉnh các bước, rồi cho chạy lại: mỗi bước đều được kiểm tra kết quả, bước lỗi được thử lại, lần chạy bị kẹt thì trình duyệt được khởi động lại và chạy lại từ đầu. Workflow đọc được chữ trên trang (bôi đen hoặc để chuột yên trên nó lúc ghi), điền biến, rẽ nhánh bằng nếu/ngược lại, lặp lại các bước, nối nhiều workflow trong một lần chạy và nhờ một model tương thích OpenAI viết chữ giúp bạn. Bạn chạy workflow từ app desktop, web panel, REST API, hoặc để AI agent (Claude, Cursor...) điều khiển trình duyệt qua MCP.
 
 Mọi lần chạy diễn ra trong một **profile trình duyệt**: một trình duyệt tách biệt có cookie, phiên đăng nhập, proxy, timezone, locale và fingerprint thiết bị cố định của riêng nó, nên việc của các tài khoản hay khách hàng khác nhau không bao giờ dùng chung phiên. Profile chạy trên [Camoufox](https://github.com/daijro/camoufox) (Firefox) hoặc engine Chrome thử nghiệm dựa trên [fingerprint-chromium](https://github.com/adryfish/fingerprint-chromium), trên máy bạn hoặc VPS.
 
@@ -54,10 +54,13 @@ Mọi lần chạy diễn ra trong một **profile trình duyệt**: một trìn
 
 **Tự động hoá**
 
+- **Bảng điều khiển tự động hoá.** App mở ra với lần chạy hiện tại hoặc gần nhất của mọi profile (tiến độ theo bước, số lần thử, dấu trạng thái, lý do lỗi) và mọi workflow đã lưu kèm kết quả lần chạy gần nhất. Dừng, chạy lại hay xem log chỉ với một cú bấm.
+- **Một workflow, nhiều profile.** Chạy một workflow trên bao nhiêu profile tuỳ chọn, điền biến cho lần chạy đó; profile đang tắt được mở trước.
 - **Ghi và chạy lại workflow.** Mỗi click, gõ phím, chọn, bấm phím, cuộn và mở trang trong trình duyệt của profile thành một bước, mỗi phần tử kèm nhiều selector dự phòng.
 - **Chạy lại tin cậy.** Mỗi bước được kiểm tra (ô đã có đúng chữ, ô đã được tích, click tới đúng trang như lúc ghi), lỗi thì thử lại, và nếu một bước cứ lỗi mãi thì cả lần chạy bắt đầu lại từ bước 1 trên trình duyệt mới.
 - **Nhịp như người thật.** Mỗi bước giữ đúng khoảng dừng của bạn lúc ghi, bước gõ có tốc độ theo từng ký tự, và một mức tốc độ chung (x0.25 đến x5) cho cả workflow.
-- **Biến, lấy chữ và AI.** `{{biến}}` trong giá trị, URL và selector; *Lấy chữ* đọc chữ trên trang vào biến (lọc được bằng regex); *Sinh bằng AI* gửi prompt tới API tương thích OpenAI và lưu câu trả lời.
+- **Biến, lấy chữ và AI.** `{{biến}}` trong giá trị, URL và selector; *Lấy chữ* đọc chữ trên trang vào biến (lọc được bằng regex), và lúc ghi, bôi đen chữ hoặc để chuột yên trên phần tử 3 giây sẽ được hỏi để thêm bước này; *Sinh bằng AI* gửi prompt tới API tương thích OpenAI và lưu câu trả lời.
+- **Điều kiện, vòng lặp và chuỗi.** Các bước *Nếu / Ngược lại*, *Lặp theo danh sách* (một số hoặc danh sách), *Lặp khi*, *Thoát vòng lặp* và *Gán biến*, với điều kiện trên biến hoặc trên trang; chạy nhiều workflow lần lượt trong một trình duyệt.
 - **Menu hiện khi rê chuột.** Click vào phần tử chỉ hiện khi rê chuột được ghi kèm bước *Rê chuột vào trước*.
 - **AI agent qua MCP.** Claude Code, Claude Desktop, Cursor, VS Code... tự mở profile, mở trang, đọc, click, gõ, chụp màn hình và chạy workflow bạn đã ghi.
 - **REST API** có tài liệu Swagger cho mọi thao tác, để script hay bộ lập lịch bất kỳ khởi chạy và đọc log của lần chạy.
@@ -103,11 +106,26 @@ python -m src.main
 
 Trên Windows có thể bấm đúp `run_foxflow.bat`. Ứng dụng mở cửa sổ chính và đồng thời chạy API tại `http://127.0.0.1:8000`; tài liệu API ở `http://127.0.0.1:8000/docs`. Đặt `FOXFLOW_LANG=vi` để dùng giao diện tiếng Việt.
 
-Tự động hoá đầu tiên: tạo một profile, mở nó, bấm **Workflow** trên dòng profile, chọn **Bắt đầu ghi**, làm việc cần làm trong trình duyệt, rồi bấm **Dừng & lưu**. Bấm **Chạy** để chạy lại.
+Tự động hoá đầu tiên: tạo một profile, rồi ở **Tự động hoá** bấm **Ghi workflow** và chọn profile đó. Mở profile ngay trong hộp thoại, bấm **Bắt đầu ghi**, làm việc cần làm trong trình duyệt, rồi bấm **Dừng & lưu**. Bấm **Chạy** trên workflow mới để chạy lại trên một hoặc nhiều profile.
 
 ## Workflow: ghi lại và chạy lại
 
-Workflow là một việc bạn đã làm một lần trong trình duyệt của profile, được lưu thành các bước để chạy lại trên bất kỳ profile nào. Mở bằng nút **Workflow** trên dòng profile, ở app desktop hoặc web panel.
+Workflow là một việc bạn đã làm một lần trong trình duyệt của profile, được lưu thành các bước để chạy lại trên bất kỳ profile nào.
+
+### Bảng Tự động hoá
+
+App desktop và web panel mở ra ở **Tự động hoá** (bấm **Profile** ở thanh bên trái để về bảng profile):
+
+- **Lần chạy**: lần chạy hiện tại hoặc gần nhất của mọi profile, lần đang chạy lên đầu. Mỗi dòng cho thấy bước đang chạy kèm vạch tiến độ, số lần thử và khởi động lại, dấu trạng thái (đang chạy, đang mở, xong, lỗi, đã dừng) và lý do nếu lỗi. Dừng lần chạy, **Chạy lại**, mở **Log** (cập nhật trực tiếp khi đang chạy) hoặc xem màn hình của profile.
+- **Workflow**: mọi workflow đã lưu, kèm profile đã ghi, số bước và kết quả lần chạy gần nhất. **Chạy** mở hộp thoại chạy; sửa và xoá nằm bên cạnh.
+- **Hộp thoại chạy**: tick các profile sẽ chạy workflow (mỗi profile chạy một bản riêng; profile đang ghi hoặc đang chạy workflow khác bị làm mờ kèm lý do) và điền biến của workflow cho lần chạy này. Profile đang tắt được mở trước.
+- Ở **Profile**, chọn các dòng rồi bấm **Chạy workflow** trên thanh thao tác hàng loạt để chạy một workflow trên tất cả.
+
+Bảng tự cập nhật mỗi 1,5 giây khi có lần chạy đang chạy, còn lại mỗi 4 giây.
+
+### Ghi, sửa, chạy
+
+Mở workflow của một profile bằng nút **Workflow** trên dòng profile, hoặc bằng **Ghi workflow** ở Tự động hoá.
 
 1. **Ghi.** Mở profile, bấm **Bắt đầu ghi**, rồi làm việc đó trong trình duyệt của nó: mỗi click, gõ phím, chọn, bấm phím (Enter, Escape, Tab...) và cuộn trang đều thành một bước, mở trang cũng vậy. Trên server thì thao tác qua **Xem màn hình**. Bấm **Dừng & lưu** và đặt tên. Nếu trình duyệt đóng khi đang ghi, các bước vẫn được giữ thành một bản ghi chưa lưu để lưu sau.
 2. **Sửa.** Mỗi bước có **delay** riêng (thời gian chờ trước bước, lấy từ khoảng dừng thật của bạn lúc ghi) và với bước gõ thì có **tốc độ gõ** tính bằng ms mỗi ký tự (0 là điền ngay). **Tốc độ** chung của workflow chia mọi delay: x2 là nhanh gấp đôi. Có thể tắt, đổi thứ tự, thêm hoặc xoá bước; **Chi tiết** hiện các selector (thử lần lượt), giá trị, frame, thời gian chờ tối đa và URL mong đợi.
@@ -121,6 +139,30 @@ Khi chạy, workflow chỉ để lại một tab trong profile (bắt đầu gi�
 - **Biến.** Viết `{{tên}}` trong giá trị, URL hay selector của bước; nó được thay khi bước chạy. Đặt giá trị ban đầu ở mục **Biến** trong trình sửa, hoặc theo từng lần chạy qua API (`"variables": {...}`). `{{profile}}` luôn là tên profile đang chạy. Bước dùng biến không tồn tại bị từ chối khi lưu.
 - **Lấy chữ** đọc chữ hiển thị của một phần tử (cả trang nếu không có selector), có thể lọc qua biểu thức chính quy (lấy nhóm đầu, ví dụ `#(\d+)`), rồi lưu vào biến. Bước báo lỗi khi không có chữ hoặc biểu thức không khớp.
 - **Sinh bằng AI** gửi prompt (đã thay `{{biến}}`) tới API Chat Completions tương thích OpenAI và lưu câu trả lời vào biến. Ví dụ: *Lấy chữ* trang đơn hàng vào `{{order}}`, *Sinh bằng AI* "Viết một câu trả lời ngắn xác nhận đơn hàng này: {{order}}" vào `{{reply}}`, rồi *Gõ* `{{reply}}`. Cấu hình ở nút **Cấu hình AI** trong trình sửa: API key, base URL (mặc định OpenAI; dùng được cả Azure OpenAI, OpenRouter hay LLM chạy trên máy), model, system prompt và temperature, có nút **Thử**. AI tắt cho tới khi có key. Prompt, kể cả chữ lấy từ trang mà nó dùng, được gửi tới dịch vụ đó, từ tiến trình FoxFlow (không qua proxy của profile). Key lưu trong `ai_settings.json` cạnh `profiles.json`, hoặc lấy từ `FOXFLOW_OPENAI_API_KEY` (không bao giờ được ghi ra đĩa).
+
+### Lấy text ngay lúc ghi
+
+Trong lúc ghi, **bôi đen chữ** bằng chuột, hoặc **để chuột yên trên một phần tử 3 giây**: một khung nhỏ trong trang hỏi *Lấy text này?*, hiện đoạn chữ và gợi ý tên biến (`text1`, `text2`...). **Lấy text** thêm bước *Lấy chữ* cho phần tử đó; **Bỏ qua**, Escape hoặc click chỗ khác thì đóng lại, và phần tử đó không được hỏi lại cho tới khi chuột sang phần tử khác. Click và phím trong khung không bị ghi, kéo chuột để bôi đen không bị ghi thành click, và selector của bước không dựa vào chữ của phần tử (vì chữ đổi theo từng lần chạy).
+
+### Điều kiện, vòng lặp và biến
+
+Bước còn có thể điều khiển lần chạy. Các bước này chạy trong FoxFlow, xen giữa các bước trên trình duyệt:
+
+| Bước | Tác dụng |
+|---|---|
+| **Gán biến** | Lưu một giá trị vào biến: chữ có `{{biến}}`, hoặc dấu `=` và biểu thức, ví dụ `= count + 1`, `= upper(name)`. |
+| **Nếu** ... **Ngược lại** ... **Kết thúc khối** | Chạy các bước tới Ngược lại (hoặc Kết thúc khối) khi điều kiện đúng, ngược lại chạy các bước sau Ngược lại. |
+| **Lặp theo danh sách** ... **Kết thúc khối** | Chạy các bước bên trong một lần cho mỗi mục: một số N (vòng 1 tới N), hoặc danh sách, mỗi dòng một mục hoặc cách nhau bằng dấu phẩy, ví dụ `{{names}}`. Mục hiện tại (hoặc số vòng) nằm trong biến của bước. |
+| **Lặp khi** ... **Kết thúc khối** | Chạy các bước bên trong khi điều kiện còn đúng, nhiều nhất *Tối đa (vòng)* lần (mặc định 100). |
+| **Thoát vòng lặp** | Rời vòng lặp trong cùng đang chứa nó. |
+
+Điều kiện là **biểu thức trên biến**, ví dụ `price > 100 and status == "ok"`, `contains(title, "Sale")`, `len(code) == 6` (hai giá trị đọc được như số thì so như số; hàm: `len`, `int`, `num`, `str`, `lower`, `upper`, `trim`, `contains`, `startswith`, `endswith`, `matches`, `replace`), hoặc **điều kiện trên trang**: thấy phần tử, thấy chữ, URL chứa, tiêu đề chứa, có thể chờ tới timeout của bước. Tick *Vào khối khi điều kiện KHÔNG đúng* để đảo lại. Biểu thức chỉ được phân tích, không bao giờ chạy như code.
+
+Trong trình sửa, các bước trong khối được thụt vào, nút **+** trên mỗi dòng chèn một bước bên dưới, và chọn Nếu hay Lặp thì tự thêm Kết thúc khối. Khi lưu, khối thiếu Kết thúc khối, Ngược lại nằm ngoài Nếu, và Thoát vòng lặp nằm ngoài vòng lặp đều bị từ chối.
+
+### Chạy nhiều workflow trong một lần
+
+Trong hộp thoại chạy, **Thêm workflow** nối thêm workflow: mỗi profile được chọn chạy lần lượt các workflow trong cùng một trình duyệt. Mỗi workflow giữ cài đặt riêng và khởi động lại từ bước đầu của chính nó; biến lưu ở workflow trước được dùng tiếp ở workflow sau (workflow sau cần có biến cùng tên để dùng); lần chạy dừng ở workflow đầu tiên bị lỗi. **Chạy lại** trên dòng lần chạy sẽ chạy lại cả chuỗi. Qua API: `POST /workflow-runs` với `{"profile": ..., "workflows": [...], "variables": {...}}`; qua MCP: `run_workflows`.
 
 Workflow là các file JSON trong `workflows/`, mỗi workflow một file, sửa được cả qua REST API (`PUT /workflows/{name}`). File chứa những gì bạn đã gõ lúc ghi, **kể cả mật khẩu** (ô mật khẩu chỉ được ẩn trên giao diện), nên hãy giữ thư mục này cẩn thận như `camoufox_data/`. Khi chạy lại, trang được điều khiển qua Playwright: trang web chặn tự động hoá có thể nhận ra.
 
@@ -156,7 +198,7 @@ Sau đó chỉ cần nhắn AI, ví dụ: *"Mở profile work-01, vào example.c
 | Cookie & fingerprint | `export_cookies`, `import_cookies`, `get_fingerprint`, `reset_fingerprint`, `check_proxy`, `check_profile_ip` |
 | Trang | `browser_navigate`, `browser_back`, `browser_snapshot`, `browser_get_text`, `browser_click`, `browser_click_at`, `browser_type`, `browser_press`, `browser_wait_for`, `browser_screenshot`, `browser_evaluate` |
 | Tab | `browser_tabs`, `browser_tab_new`, `browser_tab_select`, `browser_tab_close` |
-| Workflow | `list_workflows`, `get_workflow`, `run_workflow`, `workflow_run_status`, `stop_workflow_run` |
+| Workflow | `list_workflows`, `get_workflow`, `run_workflow`, `run_workflows`, `workflow_run_status`, `stop_workflow_run` |
 
 MCP **không** có tool xóa profile, để AI không thể vô tình xóa cookie của tài khoản. Trang chỉ mở được `http`, `https` và `about:blank`; `file://` và `about:config` bị chặn.
 
@@ -212,7 +254,7 @@ Nên chọn đúng hệ điều hành của máy đang chạy FoxFlow: persona k
 
 ![Cookie & fingerprint](docs/images/cookies.png)
 
-Bấm nút cookie trên dòng profile để mở hộp thoại **Cookie & fingerprint**. **Trình duyệt của profile phải đang tắt**, vì FoxFlow mở profile ở chế độ headless để đọc và ghi cookie.
+Bấm nút cookie trên dòng profile để mở hộp thoại **Cookie & fingerprint**. Các thao tác này cần trình duyệt của profile đang tắt, vì FoxFlow mở profile ở chế độ headless để đọc và ghi cookie; nếu profile đang chạy, FoxFlow sẽ hỏi rồi dừng giúp. Đổi tên, xoá và nhân bản kèm dữ liệu cũng vậy.
 
 - Cookie xuất/nhập dạng JSON Cookie-Editor / EditThisCookie và `cookies.txt` Netscape (yt-dlp, curl, wget). Cookie phiên (session) khi nhập vào sẽ được đặt hạn 1 năm; nếu không, trình duyệt sẽ xóa chúng ngay khi đóng.
 - "Tạo fingerprint mới" xóa fingerprint đã lưu; lần mở sau profile sẽ là một thiết bị khác. Đổi hệ điều hành của profile cũng tự sinh fingerprint mới.
@@ -239,11 +281,28 @@ Mọi cấu hình đều không bắt buộc. Muốn đổi thì sao chép `.env
 | `FOXFLOW_OPENAI_BASE_URL` | `https://api.openai.com/v1` | Base URL mặc định của API tương thích OpenAI |
 | `FOXFLOW_OPENAI_MODEL` | `gpt-4o-mini` | Model mặc định |
 | `FOXFLOW_AI_SETTINGS_FILE` | `ai_settings.json` | Nơi lưu cấu hình AI (kèm key) |
+| `FOXFLOW_HTTP_PROXY` | *(trống: đi thẳng)* | Proxy cho các request ra Internet của chính FoxFlow, ví dụ `http://host:port` hoặc `http://user:pass@host:port`. Xem [Mạng và proxy](#mạng-và-proxy) |
 | `FOXFLOW_API_TOKEN` | *(trống)* | Token cho API, web panel và MCP. Bắt buộc khi API nghe ngoài `127.0.0.1` |
 | `FOXFLOW_API_HOST` | `127.0.0.1` | Địa chỉ API |
 | `FOXFLOW_API_PORT` | `8000` | Cổng API |
 
 Tên cũ `FOXPROFILE_*` vẫn dùng được; nếu đặt cả hai thì biến `FOXFLOW_*` được ưu tiên.
+
+### Mạng và proxy
+
+Các request ra Internet của chính FoxFlow gồm: bước Sinh bằng AI, tải engine Chrome và cơ sở dữ liệu GeoIP, và việc tra IP ra / **Kiểm tra IP** của profile không có proxy riêng. Chúng **đi thẳng** trừ khi bạn đặt `FOXFLOW_HTTP_PROXY`; proxy hệ thống và `HTTP(S)_PROXY` bị bỏ qua. Request tới API của chính FoxFlow và tới các trình duyệt trên `127.0.0.1` không bao giờ đi qua proxy.
+
+Nếu máy này chỉ vào được Internet qua proxy (ví dụ mạng công ty), thêm proxy vào `.env` rồi khởi động lại FoxFlow:
+
+```bash
+FOXFLOW_HTTP_PROXY=http://host:port
+# hoặc có đăng nhập
+FOXFLOW_HTTP_PROXY=http://user:pass@host:port
+```
+
+Dấu hiệu cần đặt: log lúc khởi động báo *"Internet requests go direct"*, và bước AI, tải engine Chrome, Kiểm tra IP hay mở profile không có proxy báo lỗi *"no internet connection"* hoặc *"Cannot reach..."*. Các lỗi này kèm lời nhắc đặt `FOXFLOW_HTTP_PROXY`, và hộp thoại **Cấu hình AI** cho biết đang đi đường nào. `python -m camoufox fetch` không thuộc FoxFlow: nếu máy cần proxy, chạy lệnh đó với `HTTPS_PROXY` đặt trong cửa sổ terminal.
+
+Cài đặt này không đổi đường đi của trình duyệt: lưu lượng của mỗi profile đi qua proxy riêng của profile đó.
 
 ### Định dạng proxy
 
@@ -278,7 +337,8 @@ Tiền tố: `/api/v1`. Xem đầy đủ tại `/docs` khi ứng dụng đang ch
 | `GET` / `POST` | `/workflows` | Danh sách / tạo workflow |
 | `GET` / `PUT` / `DELETE` | `/workflows/{name}` | Xem / lưu (bước, delay, tốc độ gõ, kiểm tra, thử lại) / xoá workflow |
 | `POST` | `/workflows/{name}/run` | Chạy lại trên một profile: `{"profile": "tên", "variables": {}}`, tự mở trình duyệt nếu cần (202) |
-| `GET` / `POST` | `/workflow-runs` · `/workflow-runs/{profile}` · `/workflow-runs/{profile}/stop` | Các lần chạy; lần chạy hiện tại hoặc gần nhất của một profile (trạng thái, bước, lần thử, số lần khởi động lại, log); dừng nó |
+| `POST` | `/workflow-runs` | Chạy lần lượt nhiều workflow trên một profile: `{"profile": "tên", "workflows": ["a", "b"], "variables": {}}` (202) |
+| `GET` / `POST` | `/workflow-runs` · `/workflow-runs/{profile}` · `/workflow-runs/{profile}/stop` | Các lần chạy (`?log=false` bỏ phần log); lần chạy hiện tại hoặc gần nhất của một profile (trạng thái, bước, lần thử, số lần khởi động lại, log); dừng nó |
 | `GET` / `PUT` | `/ai/settings` | Cấu hình AI (key chỉ hiện gợi ý) / lưu cấu hình (bỏ `api_key` thì giữ key cũ, `""` thì xoá) |
 | `POST` | `/ai/test` | Gửi thử một prompt với cấu hình AI đã lưu |
 | `POST` | `/browser/{name}/page/navigate` · `back` | Mở URL trong tab đang chọn, quay lại trang trước |
@@ -333,9 +393,10 @@ FoxFlow đọc nguyên trạng một bản cài FoxProfile: chạy từ cùng th
 - **Dữ liệu giữ nguyên**: `profiles.json`, `camoufox_data/`, `workflows/` và `ai_settings.json` không đổi tên, không đổi định dạng.
 - **Biến môi trường** giờ là `FOXFLOW_*`. `FOXPROFILE_*` trong `.env` cũ vẫn được đọc nên không có gì bị hỏng; đổi tên khi tiện.
 - **Engine Chrome** dùng lại bản trình duyệt FoxProfile đã tải, không tải lại.
+- **Mạng**: FoxFlow không còn tự dùng proxy hệ thống cho các request của chính nó. Nếu cần proxy, đặt `FOXFLOW_HTTP_PROXY` (xem [Mạng và proxy](#mạng-và-proxy)).
 - **MCP**: server giờ tên là `foxflow`, file chạy qua stdio là `foxflow_mcp.py`. Thêm lại vào các ứng dụng AI (hộp thoại Kết nối AI sinh sẵn cấu hình mới).
 - **File đổi tên**: `run_foxflow.bat`, `deploy/foxflow.service`, `deploy/nginx-foxflow.conf`, và log ghi vào `logs/foxflow_YYYYMMDD.log`.
-- **Web panel**: ngôn ngữ và token đã lưu được giữ lại, không phải đăng nhập lại.
+- **Web panel**: ngôn ngữ và token đã lưu được giữ lại, không phải đăng nhập lại. Panel giờ mở ra ở Tự động hoá; bảng profile nằm ở **Profile**.
 
 ## Phát triển
 

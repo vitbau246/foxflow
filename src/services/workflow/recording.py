@@ -11,6 +11,7 @@ import os
 from typing import Any
 
 from ...core.config import DATA_DIR
+from ...core.strings import current_language
 from ...interfaces.protocols import IBrowserLauncher
 from ..browser.launcher import BrowserControlError
 from ..browser.recorder import RECORDING_FILE, clean_steps, discard_draft, load_draft
@@ -23,9 +24,11 @@ def profile_dir(name: str) -> str:
     return os.path.join(os.getcwd(), DATA_DIR, name)
 
 
-def _control(bl: IBrowserLauncher, name: str, action: str) -> dict[str, Any]:
+def _control(
+    bl: IBrowserLauncher, name: str, action: str, params: dict[str, Any] | None = None
+) -> dict[str, Any]:
     try:
-        return bl.control(name, action, {}, timeout=30)
+        return bl.control(name, action, params or {}, timeout=30)
     except BrowserControlError as e:
         raise WorkflowError(str(e), status=e.status) from e
 
@@ -35,7 +38,8 @@ def start(bl: IBrowserLauncher, runner: WorkflowRunner, name: str) -> dict[str, 
         raise WorkflowError("Launch the profile first, then record in its browser", status=409)
     if runner.is_active(name):
         raise WorkflowError("A workflow is running in this profile; stop it first", status=409)
-    return status_of(bl, name, _control(bl, name, "record_start"))
+    started = _control(bl, name, "record_start", {"lang": current_language()})
+    return status_of(bl, name, started)
 
 
 def status(bl: IBrowserLauncher, name: str) -> dict[str, Any]:

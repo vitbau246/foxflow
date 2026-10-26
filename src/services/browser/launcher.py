@@ -11,6 +11,7 @@ from typing import Any
 from ...core.logging import get_logger
 from ...core.strings import get_string
 from ...models.profile import Profile
+from ...utils import net
 from .control import TOKEN_HEADER
 from .process import spawn_browser, terminate, wait_for_exit
 
@@ -229,7 +230,7 @@ class BrowserLauncher:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:
+            with net.urlopen(request, timeout=timeout) as response:
                 body = json.loads(response.read())
         except urllib.error.HTTPError as e:
             body = json.loads(e.read() or b"{}")

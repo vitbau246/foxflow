@@ -331,3 +331,25 @@ def test_a_run_dir_others_can_read_is_not_trusted(monkeypatch, tmp_path):
     path.mkdir(mode=0o755)
     path.chmod(0o755)
     assert display._run_dir() is None
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="the process tree kill is Windows-only")
+def test_terminate_kills_the_runners_children_on_windows(tmp_path):
+    """A browser left behind by its killed runner would still hold the profile's files."""
+    pid_file = tmp_path / "child.pid"
+    code = (
+        "import subprocess, sys, time; "
+        "c = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)']); "
+        f"open(r'{pid_file}', 'w').write(str(c.pid)); time.sleep(60)"
+    )
+    proc = subprocess.Popen([sys.executable, "-c", code])
+    for _ in range(100):
+        if pid_file.exists() and pid_file.read_text():
+            break
+        time.sleep(0.1)
+    child = int(pid_file.read_text())
+    process.terminate(proc, "test")
+    alive = subprocess.run(
+        ["tasklist", "/FI", f"PID eq {child}", "/NH"], capture_output=True, text=True
+    ).stdout
+    assert proc.poll() is not None and str(child) not in alive

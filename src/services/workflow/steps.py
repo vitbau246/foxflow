@@ -15,7 +15,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from ..browser.control import ControlError, _check_url
-from .model import MAX_VARIABLE_TEXT, Step, step_problem
+from .model import CONTROL_ACTIONS, MAX_VARIABLE_TEXT, Step, step_problem
 
 # Elements that exist but are hidden (styled checkboxes, off-screen inputs) are
 # used once no visible match has turned up for this long.
@@ -163,8 +163,8 @@ async def _act(controller: Any, page: Any, step: Step, clock: _Clock) -> dict[st
         x, y = (int(v) for v in step.value.split(","))
         await page.evaluate("([x, y]) => window.scrollTo(x, y)", [x, y])
         return {}
-    if action == "ai":
-        raise ControlError("ai steps are run by FoxFlow, not by the browser")
+    if action == "ai" or action in CONTROL_ACTIONS:
+        raise ControlError(f"{action} steps are run by FoxFlow, not by the browser")
 
     scope = await _scope(page, step.frame, clock)
     if step.hover_selectors:
@@ -293,6 +293,41 @@ async def _custom_check(page: Any, scope: Any, step: Step, clock: _Clock) -> Non
             raise StepFailed(f"Check failed: {what} '{_short(value, 60)}' did not appear") from e
 
 
+async def _page_condition(page: Any, step: Step) -> bool:
+    """Whether the page shows what an if / while looks for.
+
+    Checked once, or until it holds for up to the step's own timeout.
+    """
+    kind, value = step.condition, step.value
+    clock = _Clock(step.timeout_ms or 0)
+
+    async def holds() -> bool:
+        if kind == "url_contains":
+            return value in page.url
+        if kind == "title_contains":
+            return value in await page.title()
+        try:
+            scope = await _scope(page, step.frame, _Clock(0))
+        except StepFailed:
+            return False  # no such frame (yet)
+        try:
+            found = scope.locator(value) if kind == "selector_visible" else scope.get_by_text(value)
+            for i in range(min(await found.count(), 5)):
+                if await found.nth(i).is_visible():
+                    return True
+        except Exception as e:
+            if kind == "selector_visible":
+                raise ControlError(f"Invalid selector: {_short(value, 60)}: {e}") from e
+        return False
+
+    while True:
+        if await holds():
+            return True
+        if clock.expired():
+            return False
+        await asyncio.sleep(0.25)
+
+
 async def run_step(controller: Any, raw: dict[str, Any], timeout_ms: int) -> dict[str, Any]:
     """Run one step on the controller's active tab; StepFailed when it did not work."""
     try:
@@ -302,6 +337,12 @@ async def run_step(controller: Any, raw: dict[str, Any], timeout_ms: int) -> dic
     if problem := step_problem(step):
         raise ControlError(f"Invalid step: {problem}")
     timeout = step.timeout_ms or timeout_ms
+
+    if step.action in ("if", "while"):
+        if step.expression() is not None:
+            raise ControlError("Expressions are worked out by FoxFlow, not by the browser")
+        page = await controller._page()
+        return {"result": await _page_condition(page, step), "url": page.url}
 
     clock = _Clock(timeout)
     if step.action == "switch_tab":

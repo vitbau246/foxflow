@@ -8,6 +8,21 @@ class RunRequest(BaseModel):
     )
 
 
+class ChainRunRequest(BaseModel):
+    profile: str = Field(
+        description="Profile whose browser runs the workflows; launched if stopped"
+    )
+    workflows: list[str] = Field(
+        min_length=1,
+        max_length=20,
+        description="Workflows to run one after the other in the same browser",
+    )
+    variables: dict[str, str] = Field(
+        default_factory=dict,
+        description="Starting values for this run, for each workflow that has the variable",
+    )
+
+
 class AISettingsUpdate(BaseModel):
     api_key: str | None = Field(
         None, max_length=500, description='Omit to keep the saved key; "" removes it'

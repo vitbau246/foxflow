@@ -11,6 +11,7 @@ from ...interfaces.protocols import IBrowserLauncher, IProfileManager
 from ...services.browser import cookies, fingerprint
 from ...services.browser.launcher import ProfileBusyError
 from ..dialogs import open_confirm_dialog, open_cookie_dialog
+from .stop_first import StopThen
 
 _EXTENSIONS = {"json": "json", "netscape": "txt"}
 
@@ -22,12 +23,26 @@ def manage_cookies(
     pm: IProfileManager,
     bl: IBrowserLauncher,
     log: Callable[[str], None],
+    stop_then: StopThen,
 ) -> None:
     profile = pm.profiles.get(name)
     if not profile:
         return
     if bl.is_running(name):
-        log(get_string("cookie_stop_first", name=name))
+        # Cookies and the fingerprint are files the browser holds open: offer to stop it.
+        open_confirm_dialog(
+            page,
+            name,
+            lambda: stop_then(
+                [name],
+                lambda: manage_cookies(page, name, file_picker, pm, bl, log, stop_then),
+            ),
+            title=get_string("cookie_dialog_title"),
+            body=get_string("stop_first_cookies", name=name),
+            action_label=get_string("stop_and_continue"),
+            action_icon=ft.Icons.STOP_ROUNDED,
+            ink=True,
+        )
         return
 
     profile_dir = os.path.join(DATA_DIR, name)

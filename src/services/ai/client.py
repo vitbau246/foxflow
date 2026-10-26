@@ -10,6 +10,7 @@ import json
 import urllib.error
 import urllib.request
 
+from ...utils import net
 from .settings import AISettings
 
 MAX_OUTPUT = 20_000
@@ -52,7 +53,9 @@ def generate(settings: AISettings, prompt: str, timeout: float = 60) -> str:
         raise AIError(f"AI request failed (HTTP {e.code}): {_detail(e)}") from e
     except (urllib.error.URLError, TimeoutError, OSError) as e:
         reason = getattr(e, "reason", e)
-        raise AIError(f"Cannot reach the AI service at {settings.base_url}: {reason}") from e
+        raise AIError(
+            f"Cannot reach the AI service at {settings.base_url}: {reason}. {net.network_hint()}"
+        ) from e
     except ValueError as e:
         raise AIError("The AI service did not answer with JSON") from e
     try:

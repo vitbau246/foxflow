@@ -2,6 +2,8 @@
 // profile is recording and receives the events through the __foxflowRecord
 // binding. Only trusted (user-made) events are recorded. Each element gets
 // several selectors, most stable first; replay uses the first that matches.
+// Selecting text, or resting the mouse on an element for 3 s, offers to record
+// a "Get text" step for it (the offer's own clicks and keys are not recorded).
 (() => {
   const KEY = "__foxflowRecorder";
   const existing = window[KEY];
@@ -82,7 +84,7 @@
     return parts.join(" > ");
   }
 
-  function selectorsFor(el) {
+  function selectorsFor(el, byText = true) {
     const out = [];
     const tag = el.localName;
     const add = (sel, unique) => { if (sel && unique && !out.includes(sel)) out.push(sel); };
@@ -95,7 +97,7 @@
       const v = el.getAttribute(a);
       if (v && v.length <= 120) add(`${tag}[${a}="${esc(v)}"]`, count(`${tag}[${a}="${esc(v)}"]`) === 1);
     }
-    if (!isTextField(el) && tag !== "select") {
+    if (byText && !isTextField(el) && tag !== "select") {
       const text = ownText(el);
       if (text && text.length <= 60) add(`${tag}:text-is("${esc(text)}")`, countTextIs(tag, text) === 1);
     }
@@ -112,12 +114,14 @@
     return out.slice(0, 6);
   }
 
-  function describe(el) {
+  // byText = false leaves out selectors made of the element's text: a "Get text"
+  // step reads text that changes from run to run.
+  function describe(el, byText = true) {
     const tag = el.localName;
     const text = isTextField(el) || tag === "select" ? "" : ownText(el).slice(0, 60);
     const hint = text || el.getAttribute("aria-label") || el.getAttribute("placeholder") ||
       el.getAttribute("name") || el.getAttribute("title") || el.getAttribute("alt") || el.id || "";
-    return { selectors: selectorsFor(el), tag, role: roleOf(el), hint: norm(hint).slice(0, 80) };
+    return { selectors: selectorsFor(el, byText), tag, role: roleOf(el), hint: norm(hint).slice(0, 80) };
   }
 
   function clickTarget(node) {
@@ -138,6 +142,146 @@
     return isTextField(el) ? el : null;
   }
 
+  // --- "Get text" offers ---------------------------------------------------
+  // Shown in a shadow root so the page's CSS cannot reach it; its colours
+  // are FoxFlow's tokens (paper, ink, fox orange on the button you press).
+  const REST_MS = 3000;
+  const MAX_TEXT = 2000;
+  const WORDS = {
+    en: { title: "Get this text?", name: "Save into variable", yes: "Get text", no: "Skip",
+      added: "Added: Get text → {{%s}}", bad: "Letters, digits and _ only; not starting with a digit" },
+    vi: { title: "Lấy text này?", name: "Lưu vào biến", yes: "Lấy text", no: "Bỏ qua",
+      added: "Đã thêm: Lấy text → {{%s}}", bad: "Chỉ dùng chữ, số và _; không bắt đầu bằng số" },
+  };
+  let offerHost = null;
+  const inOffer = (e) => !!offerHost && (e.composedPath ? e.composedPath().includes(offerHost) : e.target === offerHost);
+
+  // The element whose text an offer is about, or null when it has none worth taking.
+  function textElement(node) {
+    const el = node && node.nodeType === 1 ? node : node && node.parentElement;
+    if (!el || el === offerHost || editable(el) || el.closest("select,option,script,style")) return null;
+    if (el === document.body || el === document.documentElement) return null;
+    const text = norm(el.innerText || el.textContent);
+    return text && text.length <= MAX_TEXT ? el : null;
+  }
+
+  function closeOffer() {
+    if (offerHost) offerHost.remove();
+    offerHost = null;
+  }
+
+  async function offer(el, rect) {
+    closeOffer();
+    flush();
+    const host = offerHost = document.createElement("foxflow-offer");
+    host.style.cssText = "all:initial;position:fixed;z-index:2147483647;left:0;top:0";
+    const root = host.attachShadow({ mode: "open" });
+    const answer = await send({ type: "get_text_name" });
+    if (offerHost !== host || !state.active || !answer) return closeOffer();
+    const w = WORDS[answer.lang === "vi" ? "vi" : "en"];
+    const text = norm(el.innerText || el.textContent);
+    root.innerHTML = `<style>
+      .card{font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1E2422;background:#FBFBF8;
+        border:1px solid #BCC3B6;border-radius:9px;box-shadow:0 6px 24px rgba(16,38,34,.18);padding:10px 12px;width:300px}
+      b{display:block;font-size:13px;margin-bottom:4px}
+      .text{font:12px/1.4 ui-monospace,Consolas,monospace;color:#48514C;background:#E9ECE4;border-radius:6px;
+        padding:6px 8px;max-height:72px;overflow:hidden;word-break:break-word;margin-bottom:8px}
+      label{display:block;font-size:12px;color:#48514C;margin-bottom:3px}
+      input{box-sizing:border-box;width:100%;font:12.5px ui-monospace,Consolas,monospace;color:#1E2422;background:#FBFBF8;
+        border:1px solid #BCC3B6;border-radius:6px;padding:5px 7px;outline:none}
+      input:focus{border-color:#17332E}
+      .bad{color:#B42330;font-size:11.5px;min-height:15px}
+      .row{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+      button{font:600 12.5px system-ui,-apple-system,"Segoe UI",sans-serif;border-radius:7px;padding:5px 12px;cursor:pointer}
+      .yes{background:#C2510F;color:#fff;border:1px solid #C2510F}.yes:hover{background:#A84408}
+      .no{background:transparent;color:#48514C;border:1px solid #BCC3B6}
+      .done{color:#1F7A50;font-weight:600}
+    </style><div class="card" role="dialog"><b></b><div class="text"></div>
+      <label for="n"></label><input id="n" maxlength="64" spellcheck="false" autocomplete="off">
+      <div class="bad"></div><div class="row"><button class="no" type="button"></button><button class="yes" type="button"></button></div></div>`;
+    const $ = (sel) => root.querySelector(sel);
+    $(".card").setAttribute("aria-label", w.title);
+    $("b").textContent = w.title;
+    $(".text").textContent = text.length > 240 ? text.slice(0, 239) + "…" : text;
+    $("label").textContent = w.name;
+    $(".no").textContent = w.no;
+    $(".yes").textContent = w.yes;
+    const input = $("input");
+    input.value = answer.name || "text1";
+    const accept = async () => {
+      const name = input.value.trim();
+      if (!/^[A-Za-z_][A-Za-z0-9_]{0,63}$/.test(name)) { $(".bad").textContent = w.bad; return; }
+      const saved = await send({ type: "get_text", save_as: name, text: text.slice(0, 300), ...describe(el, false) });
+      if (offerHost !== host) return;
+      if (!saved) return closeOffer();
+      $(".card").replaceChildren(Object.assign(document.createElement("span"),
+        { className: "done", textContent: w.added.replace("%s", name) }));
+      try { const s = window.getSelection(); if (s && !s.isCollapsed) s.removeAllRanges(); } catch (e) { /* ignore */ }
+      setTimeout(() => { if (offerHost === host) closeOffer(); }, 1500);
+    };
+    $(".yes").addEventListener("click", accept);
+    $(".no").addEventListener("click", closeOffer);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") accept();
+      if (e.key === "Escape") closeOffer();
+    });
+    (document.body || document.documentElement).appendChild(host);
+    // Below what it is about (above when there is no room), inside the window.
+    const card = $(".card");
+    const width = card.offsetWidth || 300, height = card.offsetHeight || 170;
+    const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
+    const top = rect.bottom + 8 + height <= window.innerHeight ? rect.bottom + 8 : Math.max(8, rect.top - height - 8);
+    host.style.left = `${left}px`;
+    host.style.top = `${top}px`;
+  }
+
+  // Selected text: offer the smallest element that holds the whole selection.
+  let offeredSelection = "";
+  document.addEventListener("mouseup", (e) => {
+    if (!state.active || !e.isTrusted || e.button !== 0 || inOffer(e)) return;
+    setTimeout(() => {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || !sel.rangeCount) { offeredSelection = ""; return; }
+      const picked = norm(sel.toString());
+      if (!picked || picked === offeredSelection) return;
+      const range = sel.getRangeAt(0);
+      const el = textElement(range.commonAncestorContainer);
+      if (!el) return;
+      offeredSelection = picked;
+      offer(el, range.getBoundingClientRect());
+    }, 0);
+  }, true);
+
+  // The mouse resting on one element for REST_MS. Pressing a button or key, or
+  // scrolling, starts the wait again; an element is offered once until the
+  // mouse moves to another one.
+  let restTimer = null, restEl = null;
+  const restart = () => { clearTimeout(restTimer); restTimer = null; };
+  document.addEventListener("mousemove", (e) => {
+    if (!state.active || !e.isTrusted || inOffer(e)) return;
+    if (e.buttons) { restart(); return; }
+    const el = e.target;
+    if (el === restEl) return;
+    restEl = el;
+    restart();
+    restTimer = setTimeout(() => {
+      if (!state.active || offerHost || restEl !== el || !el.isConnected) return;
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed) return;
+      const target = textElement(el);
+      if (target) offer(target, target.getBoundingClientRect());
+    }, REST_MS);
+  }, true);
+  for (const type of ["mousedown", "keydown", "wheel"]) {
+    document.addEventListener(type, (e) => {
+      if (inOffer(e)) return;
+      restart();
+      // Pressing anywhere else answers "no" to an open offer.
+      if (offerHost && type !== "wheel") closeOffer();
+    }, { capture: true, passive: true });
+  }
+  document.addEventListener("mouseout", (e) => { if (!e.relatedTarget) { restart(); restEl = null; } }, true);
+
   // Hover menus: Facebook's reaction bar, dropdowns, tooltips. They are built (or
   // shown) while something else is hovered; a click inside one is recorded with
   // that element to hover first. `revealed` holds when nodes were added or shown.
@@ -156,7 +300,7 @@
   }).observe(document, { childList: true, subtree: true, attributes: true,
     attributeFilter: ["style", "hidden", "aria-hidden", "aria-expanded", "open"] });
   document.addEventListener("mouseover", (e) => {
-    if (!state.active || !e.isTrusted) return;
+    if (!state.active || !e.isTrusted || inOffer(e)) return;
     const el = clickTarget(e.target);
     if (!el || (hovers.length && hovers[hovers.length - 1].el === el)) return;
     hovers.push({ el, start: Date.now() });
@@ -196,7 +340,7 @@
   }
 
   document.addEventListener("input", (e) => {
-    if (!state.active || !e.isTrusted) return;
+    if (!state.active || !e.isTrusted || inOffer(e)) return;
     const el = editable(e.target);
     if (!el) return;
     const now = Date.now();
@@ -209,7 +353,7 @@
   }, true);
 
   document.addEventListener("change", (e) => {
-    if (!state.active || !e.isTrusted) return;
+    if (!state.active || !e.isTrusted || inOffer(e)) return;
     const el = e.target;
     if (!el || el.nodeType !== 1) return;
     if (isTextField(el)) {
@@ -226,20 +370,23 @@
   }, true);
 
   document.addEventListener("click", (e) => {
-    if (!state.active || !e.isTrusted || e.button !== 0) return;
+    if (!state.active || !e.isTrusted || e.button !== 0 || inOffer(e)) return;
     const el = clickTarget(e.composedPath ? e.composedPath()[0] : e.target);
     if (!el) return;
     // Fields are focused by the fill step; toggles and selects record a change.
     if (isTextField(el) || isToggle(el) || el.localName === "select" || el.localName === "option") return;
     if (el.localName === "label" && el.control) return;
     if (el.localName === "input" && (el.type || "").toLowerCase() === "file") return;
+    // The end of dragging over text to select it, not a click to replay.
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed && norm(selection.toString())) return;
     flush();
     const hover = hoverBefore(el);
     send({ type: "click", ...describe(el), ...(hover ? { hover: describe(hover) } : {}) });
   }, true);
 
   document.addEventListener("keydown", (e) => {
-    if (!state.active || !e.isTrusted || e.repeat || e.isComposing) return;
+    if (!state.active || !e.isTrusted || e.repeat || e.isComposing || inOffer(e)) return;
     const key = e.key;
     if (["Control", "Shift", "Alt", "Meta"].includes(key)) return;
     const inField = !!editable(e.target);
@@ -282,7 +429,7 @@
   }
 
   window.addEventListener("pagehide", flush, true);
-  Object.defineProperty(state, "stop", { value: () => { flush(); state.active = false; } });
+  Object.defineProperty(state, "stop", { value: () => { flush(); closeOffer(); restart(); state.active = false; } });
 
   // A new document asks whether a recording is still going before it listens.
   send({ type: "ping" }).then((active) => { if (!active) state.active = false; });

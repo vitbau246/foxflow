@@ -11,6 +11,9 @@ import flet as ft
 from ...core.strings import get_string
 from ...services.ai.client import AIError, generate
 from ...services.ai.settings import AISettings, AISettingsStore
+from ...services.workflow.model import uses_ai
+from ...services.workflow.store import WorkflowStore
+from ...utils import net
 from ..theme.colors import COLORS, FONT_BOLD, FONT_DATA, FONT_SEMIBOLD
 from ..theme.styles import ACCENT_STYLE, DLG_FIELD_KWARGS, OUTLINE_STYLE
 
@@ -33,6 +36,32 @@ def _field(label: str, control: ft.Control, hint: str | None = None) -> ft.Colum
             *([ft.Text(hint, size=12, color=COLORS["text_dim"])] if hint else []),
         ],
     )
+
+
+def ai_setup_needed(
+    page: ft.Page,
+    ai: AISettingsStore | None,
+    store: WorkflowStore,
+    workflow: str,
+    log: Callable[[str], None],
+) -> str | None:
+    """Before a run: None when `workflow` needs no AI or AI is set up.
+
+    Otherwise the run would be refused, so this logs why, opens the AI settings
+    and returns the message for the caller to show.
+    """
+    if ai is None:
+        return None
+    try:
+        found = store.get(workflow)
+        if found is None or not uses_ai(found) or ai.load().api_key:
+            return None
+    except Exception:  # an unreadable workflow: the run reports it
+        return None
+    message = get_string("wf_needs_ai")
+    log(message)
+    open_ai_settings_dialog(page, ai)
+    return message
 
 
 def open_ai_settings_dialog(
@@ -206,6 +235,7 @@ def open_ai_settings_dialog(
                             ],
                         ),
                     ),
+                    _network_note(),
                     message,
                 ],
             ),
@@ -223,3 +253,29 @@ def open_ai_settings_dialog(
         ],
     )
     page.show_dialog(dlg)
+
+
+def _network_note() -> ft.Container:
+    """How AI requests leave this machine, and where to set a proxy if they need one."""
+    proxy = net.proxy_label()
+    return ft.Container(
+        margin=ft.Margin.only(top=8),
+        padding=ft.Padding.symmetric(horizontal=12, vertical=10),
+        border_radius=8,
+        bgcolor=COLORS["paper_sunk"],
+        content=ft.Row(
+            spacing=8,
+            vertical_alignment=ft.CrossAxisAlignment.START,
+            controls=[
+                ft.Icon(ft.Icons.PUBLIC, size=16, color=COLORS["text_sub"]),
+                ft.Text(
+                    get_string("ai_net_proxy", proxy=proxy)
+                    if proxy
+                    else get_string("ai_net_direct"),
+                    size=12.5,
+                    color=COLORS["text_sub"],
+                    expand=True,
+                ),
+            ],
+        ),
+    )

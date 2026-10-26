@@ -23,6 +23,7 @@ from ...services.workflow.runner import WorkflowRunner
 from ...services.workflow.store import WorkflowError, WorkflowStore
 from ..theme.colors import COLORS, FONT_BOLD, FONT_DATA, FONT_SEMIBOLD
 from ..theme.styles import ACCENT_STYLE, DLG_FIELD_KWARGS, ICON_STYLE, INK_STYLE, OUTLINE_STYLE
+from .ai_settings import ai_setup_needed
 from .confirm import open_confirm_dialog
 
 POLL_SECONDS = 1.5
@@ -66,6 +67,24 @@ def run_stamp(status: str) -> ft.Container:
     )
 
 
+def log_block(lines: list[str], height: float = 170) -> ft.Container:
+    """A run's log as a code block on cover-deep, kept scrolled to the end."""
+    return ft.Container(
+        bgcolor=COLORS["cover_deep"],
+        border_radius=8,
+        padding=12,
+        content=ft.ListView(
+            height=height,
+            spacing=0,
+            auto_scroll=True,
+            controls=[
+                ft.Text(line, size=12, font_family=FONT_DATA, color="#DDE8E3", selectable=True)
+                for line in lines
+            ],
+        ),
+    )
+
+
 def _panel(*controls: ft.Control, visible: bool = True) -> ft.Container:
     return ft.Container(
         visible=visible,
@@ -100,7 +119,20 @@ def _hint(text: str) -> ft.Text:
     return ft.Text(text, size=13, color=COLORS["text_sub"])
 
 
-def open_workflows_dialog(page: ft.Page, profile: str, services: WorkflowServices) -> None:
+def open_workflows_dialog(
+    page: ft.Page,
+    profile: str,
+    services: WorkflowServices,
+    on_close: Callable[[], None] | None = None,
+    launch: Callable[[str], None] | None = None,
+    is_loading: Callable[[str], bool] | None = None,
+    auto_record: bool = False,
+) -> None:
+    """`launch`/`is_loading`: the app's Launch action and its starting state.
+
+    With `auto_record` a stopped profile is launched and recording starts as soon
+    as its browser is ready.
+    """
     from .workflow_editor import open_workflow_editor
 
     bl, store, runner = services.bl, services.store, services.runner
@@ -119,6 +151,9 @@ def open_workflows_dialog(page: ft.Page, profile: str, services: WorkflowService
         "list": [],
         # Other profiles' workflows run here too, but are listed only on request.
         "all": False,
+        "launching": False,
+        # Start recording once the browser is up (Record workflow picked this profile).
+        "pending": auto_record,
     }
     keys = {"rec": "", "run": "", "list": ""}
 
@@ -178,9 +213,14 @@ def open_workflows_dialog(page: ft.Page, profile: str, services: WorkflowService
             action_label=get_string("wf_discard"),
         )
 
+    def do_launch(_: ft.ControlEvent | None = None) -> None:
+        if launch and not bl.is_running(profile):
+            launch(profile)
+            page.run_task(refresh_state)
+
     def draw_rec() -> None:
         rec, on, run = state["rec"], state["on"], state["run"]
-        key = repr((on, rec, run and run["active"]))
+        key = repr((on, rec, run and run["active"], state["launching"], state["pending"]))
         if key == keys["rec"]:
             return
         keys["rec"] = key
@@ -246,11 +286,35 @@ def open_workflows_dialog(page: ft.Page, profile: str, services: WorkflowService
                     ]
                 ),
             ]
+        elif state["launching"]:
+            controls = [
+                _heading(get_string("wf_record")),
+                _hint(
+                    get_string(
+                        "wf_record_launching_auto" if state["pending"] else "wf_record_launching",
+                        name=profile,
+                    )
+                ),
+            ]
         else:
             controls = [
                 _heading(get_string("wf_record")),
                 _hint(get_string("wf_record_need_launch")),
             ]
+            if launch:
+                controls.append(
+                    ft.Row(
+                        controls=[
+                            ft.Button(
+                                get_string("launch"),
+                                icon=ft.Icons.PLAY_ARROW_ROUNDED,
+                                height=38,
+                                style=ACCENT_STYLE,
+                                on_click=do_launch,
+                            )
+                        ]
+                    )
+                )
         rec_box.content.controls = controls
 
     # --- run --------------------------------------------------------------------
@@ -294,18 +358,7 @@ def open_workflows_dialog(page: ft.Page, profile: str, services: WorkflowService
             )
         if run["error"]:
             lines.append(ft.Text(run["error"], size=13, color=COLORS["error"], selectable=True))
-        log = ft.ListView(
-            height=170,
-            spacing=0,
-            auto_scroll=True,
-            controls=[
-                ft.Text(line, size=12, font_family=FONT_DATA, color="#DDE8E3", selectable=True)
-                for line in run["log"][-60:]
-            ],
-        )
-        lines.append(
-            ft.Container(bgcolor=COLORS["cover_deep"], border_radius=8, padding=12, content=log)
-        )
+        lines.append(log_block(run["log"][-60:]))
         if run["active"]:
             lines.append(
                 ft.Row(
@@ -325,6 +378,10 @@ def open_workflows_dialog(page: ft.Page, profile: str, services: WorkflowService
     # --- saved workflows --------------------------------------------------------
 
     async def run_workflow(e: ft.ControlEvent, name: str) -> None:
+        if message := ai_setup_needed(page, services.ai, store, name, services.log):
+            show_error(message)
+            update()
+            return
         if await act(lambda: runner.start(name, profile), e.control):
             services.log(get_string("wf_started", workflow=name, name=profile))
 
@@ -411,7 +468,7 @@ def open_workflows_dialog(page: ft.Page, profile: str, services: WorkflowService
                                 icon=ft.Icons.EDIT_OUTLINED,
                                 icon_size=19,
                                 icon_color=COLORS["text_sub"],
-                                tooltip=get_string("tooltip_edit"),
+                                tooltip=get_string("tooltip_edit_workflow"),
                                 style=ICON_STYLE,
                                 on_click=lambda _, n=w["name"]: edit_workflow(n),
                             ),
@@ -419,7 +476,7 @@ def open_workflows_dialog(page: ft.Page, profile: str, services: WorkflowService
                                 icon=ft.Icons.DELETE_OUTLINE,
                                 icon_size=19,
                                 icon_color=COLORS["text_sub"],
-                                tooltip=get_string("tooltip_delete"),
+                                tooltip=get_string("tooltip_delete_workflow"),
                                 style=ICON_STYLE,
                                 on_click=lambda _, n=w["name"]: delete_workflow(n),
                             ),
@@ -475,12 +532,27 @@ def open_workflows_dialog(page: ft.Page, profile: str, services: WorkflowService
                 "rec": recording.status(bl, profile),
                 "run": runner.get(profile),
                 "on": bl.is_running(profile),
+                "launching": bool(is_loading and is_loading(profile)),
             }
 
         try:
             state.update(await asyncio.to_thread(read))
         except Exception as e:  # the browser went away mid-call
             show_error(str(e))
+        if state["pending"] and not state["launching"]:
+            state["pending"] = False
+            if not state["on"]:
+                # The launch failed; the activity log has the reason.
+                show_error(get_string("wf_record_launch_failed", name=profile))
+            elif not (state["rec"] or {}).get("recording") and not (state["run"] or {}).get(
+                "active"
+            ):
+                try:
+                    await asyncio.to_thread(recording.start, bl, runner, profile)
+                    services.log(get_string("wf_record_started", name=profile))
+                    state["rec"] = await asyncio.to_thread(recording.status, bl, profile)
+                except Exception as e:  # WorkflowError, or the browser went away
+                    show_error(str(e))
         draw_rec()
         draw_run()
         draw_list()
@@ -502,6 +574,8 @@ def open_workflows_dialog(page: ft.Page, profile: str, services: WorkflowService
         alive = False
         with contextlib.suppress(Exception):
             page.pop_dialog()
+        if on_close:
+            on_close()
 
     dlg = ft.AlertDialog(
         modal=True,
@@ -535,6 +609,9 @@ def open_workflows_dialog(page: ft.Page, profile: str, services: WorkflowService
             ft.OutlinedButton(get_string("close_btn"), style=OUTLINE_STYLE, on_click=close),
         ],
     )
+    if auto_record and not state["on"]:
+        do_launch()
+        state["launching"] = bool(is_loading and is_loading(profile))
     draw_rec()
     draw_list()
     page.show_dialog(dlg)

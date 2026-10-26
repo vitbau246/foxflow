@@ -129,9 +129,7 @@ def build_profile_card(
                             ft.Container(width=8),
                             *_workflow_button(profile.name, on_workflows),
                             *_clone_button(profile.name, on_clone),
-                            *_action_buttons(
-                                profile.name, is_running, on_edit, on_delete, on_cookies
-                            ),
+                            *_action_buttons(profile.name, on_edit, on_delete, on_cookies),
                         ],
                     ),
                 ),
@@ -366,7 +364,6 @@ def _stamp(is_loading: bool, is_running: bool, since: str, failed: bool = False)
 
 def _action_buttons(
     name: str,
-    is_running: bool,
     on_edit: Callable[[str], None],
     on_delete: Callable[[str], None],
     on_cookies: Callable[[str], None] | None,
@@ -377,9 +374,8 @@ def _action_buttons(
             ft.IconButton(
                 icon=ft.Icons.COOKIE_OUTLINED,
                 icon_size=19,
-                icon_color=COLORS["rule_strong"] if is_running else COLORS["text_sub"],
+                icon_color=COLORS["text_sub"],
                 tooltip=get_string("tooltip_cookies"),
-                disabled=is_running,
                 style=ICON_STYLE,
                 on_click=lambda _, n=name: on_cookies(n),
             ),
@@ -397,9 +393,8 @@ def _action_buttons(
         ft.IconButton(
             icon=ft.Icons.DELETE_OUTLINE,
             icon_size=19,
-            icon_color=COLORS["rule_strong"] if is_running else COLORS["text_sub"],
+            icon_color=COLORS["text_sub"],
             tooltip=get_string("tooltip_delete"),
-            disabled=is_running,
             style=DANGER_ICON_STYLE,
             on_click=lambda _, n=name: on_delete(n),
         ),

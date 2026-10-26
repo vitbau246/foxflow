@@ -43,6 +43,7 @@ def main() -> None:
     from src.core.config import API_HOST, API_PORT, API_TOKEN
     from src.core.container import Container
     from src.core.logging import get_logger
+    from src.utils.net import log_network
 
     host = args.host or API_HOST
     port = args.port or API_PORT
@@ -52,6 +53,7 @@ def main() -> None:
     app = create_app(container, self_url=f"http://127.0.0.1:{port}")
     logger = get_logger("server")
     logger.info("FoxFlow server on http://%s:%s (panel at /)", host, port)
+    log_network(logger)
     print(f"FoxFlow panel: http://{host}:{port}/   API docs: http://{host}:{port}/docs")
     try:
         uvicorn.run(app, host=host, port=port, log_level="warning")

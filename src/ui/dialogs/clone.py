@@ -7,7 +7,7 @@ from ...services.profile.clone_parts import PARTS
 from ...services.profile.cloning import WORKFLOWS
 from ...services.profile.manager import MAX_CLONES
 from ..theme.colors import COLORS, FONT_BOLD, FONT_SEMIBOLD
-from ..theme.styles import ACCENT_STYLE, DLG_FIELD_KWARGS
+from ..theme.styles import ACCENT_STYLE, DLG_FIELD_KWARGS, INK_STYLE
 
 
 def open_clone_dialog(
@@ -18,12 +18,14 @@ def open_clone_dialog(
     names_for: Callable[[str, int], list[str]],
     on_clone: Callable[[str, int, set[str]], str | None],
     workflow_count: int = 0,
+    on_stop_browser: Callable[[Callable[[bool], None]], None] | None = None,
 ) -> None:
     """Ask for the copies' name and count, and what to copy besides the settings.
 
     `names_for(base, count)` previews the names; `on_clone(base, count, parts)` gets
     the ticked parts (clone_parts.PARTS and "workflows") and returns an error to
-    show, or None when done.
+    show, or None when done. While the source runs, `on_stop_browser(done)` stops
+    its browser and calls `done(stopped)`; the data parts become available here.
     """
     edited = False
     name_field = ft.TextField(value=suggested, autofocus=True, expand=True, **DLG_FIELD_KWARGS)
@@ -81,6 +83,46 @@ def open_clone_dialog(
         disabled=not workflow_count,
     )
     error = ft.Text("", size=12, color=COLORS["error"], visible=False)
+    stop_btn = ft.Button(
+        get_string("stop_browser"),
+        icon=ft.Icons.STOP_ROUNDED,
+        height=32,
+        style=INK_STYLE,
+        visible=on_stop_browser is not None,
+    )
+    running_note = ft.Container(
+        visible=is_running,
+        padding=ft.Padding.only(left=40),
+        content=ft.Row(
+            spacing=12,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                ft.Text(
+                    get_string("clone_copy_data_running"),
+                    size=12,
+                    color=COLORS["text_dim"],
+                    expand=True,
+                ),
+                stop_btn,
+            ],
+        ),
+    )
+
+    def stopped(ok: bool) -> None:
+        stop_btn.disabled = False
+        if ok:
+            running_note.visible = False
+            for part in PARTS:
+                boxes[part].disabled = False
+        page.update()
+
+    def stop_browser(_: ft.ControlEvent) -> None:
+        assert on_stop_browser is not None
+        stop_btn.disabled = True
+        page.update()
+        on_stop_browser(stopped)
+
+    stop_btn.on_click = stop_browser
 
     def hint(key: str, **kw: object) -> ft.Container:
         return ft.Container(
@@ -165,7 +207,7 @@ def open_clone_dialog(
                             color=COLORS["text_sub"],
                         ),
                     ),
-                    *([hint("clone_copy_data_running")] if is_running else []),
+                    running_note,
                     boxes["cookies"],
                     hint("clone_copy_data_hint"),
                     boxes["history"],

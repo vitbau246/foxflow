@@ -248,3 +248,12 @@ def test_start_refusals(make_runner):
     assert e.value.status == 409
     runner.stop("p1")
     _wait(runner)
+
+
+def test_list_can_leave_out_the_log(make_runner):
+    runner = make_runner(FakeLauncher())
+    runner.start("wf", "p1")
+    _wait(runner)
+    assert runner.list()[0]["log"]
+    brief = runner.list(log=False)[0]
+    assert brief["log"] == [] and brief["status"] == "succeeded"

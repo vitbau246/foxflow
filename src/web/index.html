@@ -274,7 +274,7 @@ pre.code.log { max-height: 190px; }
 .bulk-line input { width: 150px; height: 34px; }
 .bulk-line .btn { height: 34px; padding: 0 12px; font-size: 13px; }
 .steps { container: steps / inline-size; margin-top: 10px; border: 1px solid var(--rule); border-radius: 9px; background: var(--paper-raised); }
-.step-row { display: grid; grid-template-columns: 26px 20px minmax(160px, 1fr) 92px 92px 190px 100px 128px; column-gap: 10px; align-items: center; min-height: 58px; padding: 8px 12px; border-top: 1px solid var(--rule); }
+.step-row { display: grid; grid-template-columns: 26px 20px minmax(160px, 1fr) 92px 92px 190px 100px 164px; column-gap: 10px; align-items: center; min-height: 58px; padding: 8px 12px; border-top: 1px solid var(--rule); }
 .step-row.step-head { min-height: 38px; border-top: 0; border-radius: 9px 9px 0 0; background: var(--paper); color: var(--ink-3); font-size: 12px; font-weight: 600; }
 .step-row.off > :not(.c-on):not(.acts) { opacity: .5; }
 .step-row input:not([type=checkbox]), .step-row select { height: 34px; padding: 0 8px; font-size: 13px; }
@@ -284,6 +284,9 @@ pre.code.log { max-height: 190px; }
 .step-row .acts { display: flex; justify-content: flex-end; }
 .step-row .acts .icon-btn { width: 32px; height: 32px; }
 .step-row .cell-label { display: none; }
+/* Steps inside an If / Repeat block: one rule per level down the left of the step. */
+.step-row .c-label.nested { padding-left: calc(var(--depth) * 18px);
+  background: repeating-linear-gradient(to right, var(--rule-strong) 0 2px, transparent 2px 18px) left top / calc(var(--depth) * 18px) 100% no-repeat; }
 .act-tag { display: inline-flex; align-items: center; height: 20px; margin-right: 6px; padding: 0 6px; border: 1px solid var(--rule-strong); border-radius: 5px; font-size: 11.5px; font-weight: 600; color: var(--ink-2); vertical-align: 1px; }
 .step-name { font-weight: 600; }
 .step-detail { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; padding: 0 0 6px 56px; }
@@ -302,6 +305,42 @@ pre.code.log { max-height: 190px; }
   .step-row .cell-label { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink-3); margin-bottom: 3px; }
   .step-row > .acts { flex-basis: 100%; justify-content: flex-start; }
   .step-detail { flex-basis: 100%; grid-template-columns: minmax(0, 1fr); padding-left: 0; }
+}
+
+/* Automation view: runs and workflows on ruled sheets, like the profile table */
+.section-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin: 28px 0 10px; }
+.section-head:first-child { margin-top: 0; }
+.section-head h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.section-head span { color: var(--ink-3); font-size: 13px; }
+.sheet.runs .row { grid-template-columns: minmax(140px, 1fr) minmax(150px, 1fr) minmax(200px, 1.4fr) 150px 100px 200px; }
+.sheet.wfs .row { grid-template-columns: minmax(200px, 1.5fr) minmax(150px, 1fr) 110px minmax(160px, 1fr) 200px; }
+.auto .actions .main { width: 112px; }
+.stack.start { align-items: flex-start; gap: 4px; }
+.progress { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.track { flex: 1; max-width: 160px; height: 3px; border-radius: 2px; background: var(--rule); overflow: hidden; }
+.track i { display: block; height: 100%; background: var(--ink-3); }
+.track i.running, .track i.starting { background: var(--live); }
+.track i.succeeded { background: var(--ok); }
+.track i.failed { background: var(--err); }
+.stack .minor.err-line { color: var(--err); }
+.head .counts b.err { color: var(--err); }
+.empty.compact { padding: 22px 24px; }
+.empty.compact p { margin: 0 auto; }
+.pick-tools { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.pick-tools input { flex: 1; height: 34px; }
+.pick-tools .btn { height: 34px; padding: 0 10px; font-size: 13px; }
+.pick-list { margin-top: 8px; max-height: 300px; overflow: auto; border: 1px solid var(--rule); border-radius: 9px; background: var(--paper-raised); }
+.pick { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 12px; border-top: 1px solid var(--rule); cursor: pointer; }
+.pick:first-child { border-top: 0; }
+.pick:hover { background: #F6F7F2; }
+.pick.off { cursor: default; background: transparent; }
+.pick.off .stack { opacity: .55; }
+.var-row.two { grid-template-columns: minmax(120px, 220px) minmax(0, 1fr); }
+.var-row.two code { justify-self: start; }
+@container sheet (max-width: 955px) {
+  .sheet.runs .row.body, .sheet.wfs .row.body { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 16px; padding: 12px; }
+  .sheet.runs .row.body > *, .sheet.wfs .row.body > * { flex: 1 1 170px; }
+  .sheet.runs .row.body > .actions, .sheet.wfs .row.body > .actions { flex-basis: 100%; justify-content: flex-start; }
 }
 
 @keyframes fade { from { opacity: 0; } }
@@ -382,6 +421,8 @@ pre.code.log { max-height: 190px; }
   <symbol id="i-rec" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/></symbol>
   <symbol id="i-up" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-id" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h4M14.5 13.5h3"/></symbol>
+  <symbol id="i-log" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
 </svg>
 
@@ -405,7 +446,8 @@ pre.code.log { max-height: 190px; }
       <svg aria-hidden="true"><use href="#fox"/></svg>
       <div><b>FoxFlow</b><span data-t="tagline"></span></div>
     </div>
-    <button class="btn btn-act" id="new-btn"><svg class="i"><use href="#i-plus"/></svg><span data-t="new_profile"></span></button>
+    <button class="btn btn-act" id="new-btn"></button>
+    <nav class="nav" id="views" aria-label="Views"></nav>
     <nav class="nav" id="filters" aria-label="Filters">
       <div class="nav-title" data-t="filters"></div>
     </nav>
@@ -419,9 +461,10 @@ pre.code.log { max-height: 190px; }
   </aside>
   <main>
     <div class="head">
-      <div><h1 data-t="your_profiles"></h1><div class="counts" id="counts"></div></div>
+      <div><h1 id="page-title"></h1><div class="counts" id="counts"></div></div>
       <label class="search"><svg class="i s" aria-hidden="true"><use href="#i-search"/></svg><input id="search" type="search" autocomplete="off"></label>
     </div>
+    <div class="auto hidden" id="auto"></div>
     <div class="sheet" id="sheet" role="table"></div>
   </main>
 </div>
@@ -465,7 +508,7 @@ const I18N = {
     stamp_live: "Đang chạy", stamp_starting: "Đang mở", stamp_stopping: "Đang dừng", stamp_failed: "Lỗi", idle: "Đã dừng",
     direct: "Trực tiếp", follow_ip: "Theo IP", no_fp_short: "chưa có fingerprint", no_proxy_short: "không proxy", selected: "Đã chọn {n}", bulk_launch: "Mở", bulk_stop: "Dừng", bulk_delete: "Xoá", clear_sel: "Bỏ chọn",
     select_all: "Chọn tất cả", select_row: "Chọn {name}",
-    confirm_bulk_delete: "Xoá {n} profile đã chọn? Cookie và dữ liệu của chúng sẽ mất vĩnh viễn.", bulk_skip_running: "Bỏ qua {n} profile",
+    confirm_bulk_delete: "Xoá {n} profile đã chọn? Cookie và dữ liệu của chúng sẽ mất vĩnh viễn.",
     login_side: "Server này chạy FoxFlow. Đăng nhập bằng API token để quản lý profile từ xa.",
     login_hint: "Nhập API token (biến FOXFLOW_API_TOKEN) của server.", token: "API token", login: "Đăng nhập",
     bad_token: "Token không đúng", create: "Tạo profile", edit_title: "Sửa profile", edit_sub: "Đang sửa {name}", create_sub: "Một profile là một danh tính: thiết bị, proxy và vị trí riêng.",
@@ -474,7 +517,7 @@ const I18N = {
     engine_note: "Engine Chromium đang thử nghiệm. Lần đầu dùng sẽ tự tải về máy chạy FoxFlow (~150 MB). Nên chọn đúng hệ điều hành của máy đó, chọn hệ khác sẽ lộ font. Không đổi được engine sau khi tạo.",
     proxy_label: "Proxy", proxy_hint: "user:pass@host:port, host:port:user:pass, hoặc socks5://... Để trống = kết nối trực tiếp.",
     check_proxy: "Kiểm tra proxy", cancel: "Huỷ", save: "Lưu thay đổi", checking: "Đang kiểm tra...",
-    confirm_delete: "Xoá profile “{name}”? Cookie và dữ liệu của profile sẽ mất vĩnh viễn.", confirm_title: "Xác nhận", stop_first: "Hãy dừng trình duyệt trước",
+    confirm_delete: "Xoá profile “{name}”? Cookie và dữ liệu của profile sẽ mất vĩnh viễn.", confirm_title: "Xác nhận",
     cookie_hint: "Trình duyệt của profile phải đang tắt.", export_json: "Xuất cookie JSON", export_json_hint: "Cookie-Editor, GoLogin, GPM",
     export_txt: "Xuất cookies.txt", export_txt_hint: "Netscape: yt-dlp, curl, wget", import: "Nhập cookie", import_hint: "Từ file JSON hoặc cookies.txt",
     reset_fp: "Tạo fingerprint mới", reset_fp_hint: "Lần mở sau trang web sẽ thấy một thiết bị khác", fp_title: "Fingerprint hiện tại", no_fp: "Chưa có fingerprint. Nó được tạo ở lần mở đầu tiên.",
@@ -536,6 +579,21 @@ const I18N = {
     act_navigate: "Mở trang", act_click: "Click", act_fill: "Gõ", act_press: "Bấm phím", act_select: "Chọn", act_check: "Tích",
     act_uncheck: "Bỏ tích", act_hover: "Rê chuột", act_scroll: "Cuộn", act_wait: "Chờ", act_switch_tab: "Đổi tab",
     act_get_text: "Lấy chữ", act_ai: "Sinh bằng AI",
+    act_assign: "Gán biến", act_if: "Nếu", act_else: "Ngược lại", act_end: "Kết thúc khối", act_for: "Lặp theo danh sách",
+    act_while: "Lặp khi", act_break: "Thoát vòng lặp",
+    cond_expression: "Biểu thức trên biến", cond_selector_visible: "Thấy phần tử", cond_text_visible: "Thấy chữ",
+    cond_url_contains: "URL chứa", cond_title_contains: "Tiêu đề chứa",
+    f_condition: "Điều kiện", f_cond_value: "Biểu thức, selector hoặc chữ",
+    f_cond_hint: "Biểu thức: gọi biến bằng tên, ví dụ price > 100 and status == \"ok\", contains(title, \"Sale\"), len(code) == 6. Hàm: len, int, num, str, lower, upper, trim, contains, startswith, endswith, matches, replace. Điều kiện trên trang: selector, hoặc phần chữ / URL / tiêu đề cần tìm.",
+    f_negate: "Vào khối khi điều kiện KHÔNG đúng", f_max_loops: "Tối đa (vòng)", f_cond_wait: "Chờ điều kiện (ms)",
+    f_cond_wait_hint: "Điều kiện trên trang: tìm trong khoảng này rồi mới kết luận là không. Trống = xem một lần.",
+    f_for_value: "Lặp qua", f_for_hint: "Một số N (vòng 1 đến N), hoặc danh sách: mỗi dòng một mục, hoặc cách nhau bằng dấu phẩy. Dùng được {{biến}}.",
+    f_for_var: "Biến cho từng mục", f_for_var_hint: "Tuỳ chọn. Giữ mục hiện tại (hoặc số vòng) cho các bước trong vòng lặp.",
+    f_assign_hint: "Chữ có {{biến}}, hoặc dấu = và biểu thức: = count + 1, = upper(name), = replace(price, \".\", \"\").",
+    ed_block_hint: "Nếu, Lặp theo danh sách và Lặp khi mở một khối, Kết thúc khối đóng lại; các bước bên trong được thụt vào. Ngược lại chia đôi khối Nếu; Thoát vòng lặp rời vòng lặp đang chứa nó.",
+    insert_below: "Chèn bước bên dưới",
+    run_add_wf: "Thêm workflow", run_remove_wf: "Bỏ khỏi lần chạy này", run_chain_pos: "{i}/{n} trong lần chạy",
+    run_chain_note: "Mỗi profile chạy lần lượt các workflow này theo thứ tự, trong cùng một trình duyệt. Biến lưu ở workflow trước được dùng tiếp ở workflow sau; lần chạy dừng ở workflow đầu tiên bị lỗi.",
     f_hover: "Rê chuột vào trước", f_hover_hint: "Selector của phần tử cần rê vào trước (mỗi dòng một cái), cho menu hay thanh cảm xúc chỉ hiện khi rê chuột. Trống = không rê.",
     f_hover_ms: "Chờ sau khi rê (ms)", f_save_as: "Lưu vào biến", f_save_as_hint: "Dùng lại ở các bước sau bằng {{tên}}.",
     ed_vars: "Biến", ed_vars_hint: "Dùng {{tên}} trong giá trị, URL hay selector của bước. Có sẵn {{profile}} là tên profile đang chạy. Bước Lấy chữ và Sinh bằng AI lưu kết quả vào biến.",
@@ -544,6 +602,8 @@ const I18N = {
     ai_key: "API key", ai_key_keep: "Đã lưu {hint}. Để trống để giữ nguyên.", ai_key_env: "Đang dùng key từ FOXFLOW_OPENAI_API_KEY.", ai_base: "Base URL",
     ai_model: "Model", ai_system: "System prompt", ai_temp: "Temperature", ai_temp_hint: "Trống = mặc định của model.", ai_test: "Thử", ai_testing: "Đang thử...",
     ai_privacy: "Prompt, kể cả chữ lấy từ trang web mà nó dùng, được gửi tới dịch vụ này. Key được lưu trong ai_settings.json trên máy chạy FoxFlow.",
+    ai_net_proxy: "Request tới dịch vụ này đi qua FOXFLOW_HTTP_PROXY ({p}).",
+    ai_net_direct: "Request đi thẳng, không qua proxy. Nếu máy chạy FoxFlow vào Internet qua proxy, đặt FOXFLOW_HTTP_PROXY=http://host:port trong .env rồi khởi động lại FoxFlow.",
     ai_on: "AI: {model}", ai_off: "Chưa cấu hình AI", ai_setup: "Cấu hình AI", ai_saved: "Đã lưu cấu hình AI", ai_remove_key: "Xoá key",
     f_action: "Thao tác", f_value: "Giá trị", f_value_hint: "Mở trang: URL · Gõ: chữ · Bấm phím: Enter, Control+A · Chọn: value · Cuộn: x,y · Chờ: ms · Đổi tab: số thứ tự từ 0 · Lấy chữ: regex tuỳ chọn (lấy nhóm đầu) · AI: prompt. Dùng được {{biến}}.",
     f_selectors: "Selector", f_selectors_hint: "Mỗi dòng một selector Playwright, thử lần lượt; cái đầu tiên tìm thấy được dùng.",
@@ -551,6 +611,29 @@ const I18N = {
     f_expect: "URL mong đợi sau bước", f_expect_hint: "Kiểm tra tự động chờ tới trang này (bỏ qua query).", f_timeout: "Chờ tối đa (ms)", f_timeout_hint: "Trống = theo cài đặt chạy.",
     f_sensitive: "Ẩn giá trị (mật khẩu)", ed_add: "Thêm bước", ed_apply_all: "Áp cho mọi bước", ed_bulk: "Đặt nhanh:",
     details: "Chi tiết", move_up: "Lên", move_down: "Xuống", remove_step: "Xoá bước", step_on: "Bật bước {n}",
+    workspace: "Không gian làm việc", view_auto: "Tự động hoá", view_profiles: "Profile", auto_title: "Tự động hoá", auto_search: "Tìm workflow hoặc profile",
+    auto_counts: "{w} workflow · {a} đang chạy · {f} lỗi", auto_counts_none: "{w} workflow · không có lần chạy nào",
+    record_workflow: "Ghi workflow", runs_title: "Lần chạy", runs_sub: "Lần chạy hiện tại hoặc gần nhất của mỗi profile",
+    wfs_title: "Workflow", wfs_sub: "Workflow nào cũng chạy được trên mọi profile",
+    col_workflow: "Workflow", col_progress: "Tiến độ", col_attempts: "Thử lại", col_recorded: "Ghi trên", col_steps: "Số bước", col_last_run: "Lần chạy gần nhất",
+    step_of: "Bước {step}/{total}", attempt_n: "lần thử {n}", restarts_n: "khởi động lại {r}/{m}", run_again: "Chạy lại", run_log: "Log",
+    started_at: "bắt đầu {t}", ended_at: "kết thúc {t}", steps_n: "{n} bước", updated_at: "sửa {t}", created_on: "tạo {t}",
+    never_run: "Chưa chạy", never_run_hint: "bấm Chạy để bắt đầu", running_n: "{n} đang chạy", no_desc: "chưa có mô tả",
+    wf_empty_title: "Chưa có workflow nào", wf_empty: "Ghi một việc một lần trong trình duyệt của profile rồi chạy lại trên bất kỳ profile nào, mỗi bước đều được kiểm tra.",
+    auto_no_match: "Không có gì khớp “{q}”.", run_launching: "đang mở trình duyệt", run_stopping: "Dừng {name} sau thao tác hiện tại",
+    run_title: "Chạy workflow", run_sub: "{wf} · mỗi profile chạy một bản riêng", run_sub_pick: "Chọn workflow và các profile sẽ chạy nó.",
+    run_pick_wf: "Workflow", run_profiles: "Profile", run_filter: "Lọc profile", run_none_sel: "Bỏ chọn", run_vars: "Biến cho lần chạy này",
+    run_note: "Profile đang tắt sẽ được mở trước. Mỗi profile chỉ chạy một workflow một lúc.", run_go: "Chạy trên {n} profile", run_go_one: "Chạy trên 1 profile",
+    run_started_n: "Đã chạy {wf} trên {n} profile", busy_recording: "đang ghi", busy_running: "đang chạy {wf}", state_on: "trình duyệt đang mở", state_off: "đang tắt",
+    bulk_run: "Chạy workflow", record_pick_title: "Ghi workflow", record_pick_sub: "Chọn profile để ghi. Profile đang tắt sẽ được mở, rồi bắt đầu ghi ngay.",
+    record_need_profile: "Cần có một profile trước: workflow được ghi trong trình duyệt của profile.",
+    rec_launching_auto: "Đang mở {name}… Sẽ bắt đầu ghi ngay khi trình duyệt sẵn sàng.", rec_launching: "Đang mở {name}…",
+    log_title: "Log lần chạy · {name}", run_none: "Profile này chưa chạy workflow nào.",
+    stop_for_cookies: "{name} đang chạy. Dừng trình duyệt để thao tác cookie và fingerprint?", stop_continue: "Dừng và tiếp tục",
+    stop_for_rename: "{name} đang chạy. Dừng trình duyệt để đổi tên?", stop_save: "Dừng và lưu", stop_browser: "Dừng trình duyệt",
+    delete_running_note: "Trình duyệt đang chạy sẽ được dừng trước.", bulk_delete_running: "{n} profile đang chạy sẽ được dừng trước.",
+    run_need_wf: "Chưa có workflow nào: hãy ghi một workflow trước.",
+    ai_needed: "Workflow này có bước Sinh bằng AI: hãy cấu hình AI trước rồi chạy lại.",
   },
   en: {
     tagline: "Web automation with profiles", new_profile: "New profile", filters: "Filter",
@@ -564,7 +647,7 @@ const I18N = {
     stamp_live: "Running", stamp_starting: "Starting", stamp_stopping: "Stopping", stamp_failed: "Failed", idle: "Stopped",
     direct: "Direct", follow_ip: "Follows IP", no_fp_short: "no fingerprint yet", no_proxy_short: "no proxy", selected: "{n} selected", bulk_launch: "Launch", bulk_stop: "Stop", bulk_delete: "Delete", clear_sel: "Clear",
     select_all: "Select all", select_row: "Select {name}",
-    confirm_bulk_delete: "Delete {n} selected profiles? Their cookies and data are removed permanently.", bulk_skip_running: "Skipped {n}",
+    confirm_bulk_delete: "Delete {n} selected profiles? Their cookies and data are removed permanently.",
     login_side: "This server runs FoxFlow. Log in with the API token to manage profiles remotely.",
     login_hint: "Enter the server's API token (FOXFLOW_API_TOKEN).", token: "API token", login: "Log in",
     bad_token: "Invalid token", create: "Create profile", edit_title: "Edit profile", edit_sub: "Editing {name}", create_sub: "A profile is an identity: its own device, proxy and location.",
@@ -573,7 +656,7 @@ const I18N = {
     engine_note: "Experimental Chromium engine. It is downloaded automatically to the FoxFlow machine the first time (~150 MB). Pick that machine's OS: other OSes leak its fonts. The engine cannot be changed later.",
     proxy_label: "Proxy", proxy_hint: "user:pass@host:port, host:port:user:pass, or socks5://... Blank = direct connection.",
     check_proxy: "Check proxy", cancel: "Cancel", save: "Save changes", checking: "Checking...",
-    confirm_delete: "Delete profile “{name}”? Its cookies and data are removed permanently.", confirm_title: "Confirm", stop_first: "Stop the browser first",
+    confirm_delete: "Delete profile “{name}”? Its cookies and data are removed permanently.", confirm_title: "Confirm",
     cookie_hint: "The profile's browser must be stopped.", export_json: "Export cookies as JSON", export_json_hint: "Cookie-Editor, GoLogin, GPM",
     export_txt: "Export cookies.txt", export_txt_hint: "Netscape: yt-dlp, curl, wget", import: "Import cookies", import_hint: "From a JSON or cookies.txt file",
     reset_fp: "New fingerprint", reset_fp_hint: "Sites see a different device on the next launch", fp_title: "Current fingerprint", no_fp: "No fingerprint yet. It is created on the first launch.",
@@ -635,6 +718,21 @@ const I18N = {
     act_navigate: "Open page", act_click: "Click", act_fill: "Type", act_press: "Press key", act_select: "Select", act_check: "Check",
     act_uncheck: "Uncheck", act_hover: "Hover", act_scroll: "Scroll", act_wait: "Wait", act_switch_tab: "Switch tab",
     act_get_text: "Get text", act_ai: "AI text",
+    act_assign: "Set variable", act_if: "If", act_else: "Else", act_end: "End", act_for: "Repeat for",
+    act_while: "Repeat while", act_break: "Exit loop",
+    cond_expression: "Expression on variables", cond_selector_visible: "Element visible", cond_text_visible: "Text visible",
+    cond_url_contains: "URL contains", cond_title_contains: "Title contains",
+    f_condition: "Condition", f_cond_value: "Expression, selector or text",
+    f_cond_hint: "Expression: variables by name, e.g. price > 100 and status == \"ok\", contains(title, \"Sale\"), len(code) == 6. Functions: len, int, num, str, lower, upper, trim, contains, startswith, endswith, matches, replace. Page conditions: a selector, or the text / URL / title part to look for.",
+    f_negate: "Go in when the condition does NOT hold", f_max_loops: "At most (rounds)", f_cond_wait: "Wait for it (ms)",
+    f_cond_wait_hint: "Page conditions: keep looking this long before deciding no. Blank = look once.",
+    f_for_value: "Repeat over", f_for_hint: "A number N (rounds 1 to N), or a list: one item per line, or separated by commas. {{variables}} work here.",
+    f_for_var: "Variable for each item", f_for_var_hint: "Optional. Holds the item (or the round number) in the steps inside the loop.",
+    f_assign_hint: "Text with {{variables}}, or = and an expression: = count + 1, = upper(name), = replace(price, \".\", \"\").",
+    ed_block_hint: "If, Repeat for and Repeat while open a block that End closes; steps between them are indented. Else splits an If; Exit loop leaves the loop it is in.",
+    insert_below: "Insert a step below",
+    run_add_wf: "Add workflow", run_remove_wf: "Remove from this run", run_chain_pos: "{i}/{n} in this run",
+    run_chain_note: "Each profile runs these workflows in this order in one browser. Variables saved by one carry over to the next; the run stops at the first that fails.",
     f_hover: "Hover first", f_hover_hint: "Selectors of what to hover before the action (one per line), for menus and reaction bars that only appear on hover. Blank = no hover.",
     f_hover_ms: "Wait after hovering (ms)", f_save_as: "Save into variable", f_save_as_hint: "Use it in later steps as {{name}}.",
     ed_vars: "Variables", ed_vars_hint: "Use {{name}} in a step's value, URL or selector. {{profile}} is always the running profile's name. Get text and AI text steps save their result into a variable.",
@@ -643,6 +741,8 @@ const I18N = {
     ai_key: "API key", ai_key_keep: "{hint} is saved. Leave blank to keep it.", ai_key_env: "Using the key from FOXFLOW_OPENAI_API_KEY.", ai_base: "Base URL",
     ai_model: "Model", ai_system: "System prompt", ai_temp: "Temperature", ai_temp_hint: "Blank = the model's default.", ai_test: "Test", ai_testing: "Testing...",
     ai_privacy: "Prompts, including any page text they use, are sent to this service. The key is kept in ai_settings.json on the FoxFlow machine.",
+    ai_net_proxy: "Requests to this service go through FOXFLOW_HTTP_PROXY ({p}).",
+    ai_net_direct: "Requests go direct, without a proxy. If the FoxFlow machine reaches the internet through a proxy, set FOXFLOW_HTTP_PROXY=http://host:port in .env and restart FoxFlow.",
     ai_on: "AI: {model}", ai_off: "AI not set up", ai_setup: "AI settings", ai_saved: "AI settings saved", ai_remove_key: "Remove key",
     f_action: "Action", f_value: "Value", f_value_hint: "Open page: URL · Type: text · Press key: Enter, Control+A · Select: value · Scroll: x,y · Wait: ms · Switch tab: index from 0 · Get text: optional regex (its first group is kept) · AI text: the prompt. {{variables}} work here.",
     f_selectors: "Selectors", f_selectors_hint: "One Playwright selector per line, tried in order; the first that finds an element is used.",
@@ -650,6 +750,29 @@ const I18N = {
     f_expect: "Expected URL after the step", f_expect_hint: "The automatic check waits for this page (query ignored).", f_timeout: "Timeout (ms)", f_timeout_hint: "Blank = the run settings.",
     f_sensitive: "Hide the value (password)", ed_add: "Add step", ed_apply_all: "Apply to all steps", ed_bulk: "Set all:",
     details: "Details", move_up: "Move up", move_down: "Move down", remove_step: "Remove step", step_on: "Enable step {n}",
+    workspace: "Workspace", view_auto: "Automation", view_profiles: "Profiles", auto_title: "Automation", auto_search: "Search workflows or profiles",
+    auto_counts: "{w} workflows · {a} running · {f} failed", auto_counts_none: "{w} workflows · nothing running",
+    record_workflow: "Record workflow", runs_title: "Runs", runs_sub: "The current or last run of each profile",
+    wfs_title: "Workflows", wfs_sub: "Any workflow runs in any profile",
+    col_workflow: "Workflow", col_progress: "Progress", col_attempts: "Retries", col_recorded: "Recorded in", col_steps: "Steps", col_last_run: "Last run",
+    step_of: "Step {step}/{total}", attempt_n: "attempt {n}", restarts_n: "restarts {r}/{m}", run_again: "Run again", run_log: "Log",
+    started_at: "started {t}", ended_at: "ended {t}", steps_n: "{n} steps", updated_at: "updated {t}", created_on: "created {t}",
+    never_run: "Not run yet", never_run_hint: "press Run to start", running_n: "{n} running", no_desc: "no description",
+    wf_empty_title: "No workflows yet", wf_empty: "Record a task once in a profile's browser and replay it in any profile, with a check after every step.",
+    auto_no_match: "Nothing matches “{q}”.", run_launching: "launching the browser", run_stopping: "Stopping {name} after the current action",
+    run_title: "Run workflow", run_sub: "{wf} · each profile runs its own copy", run_sub_pick: "Pick a workflow and the profiles that run it.",
+    run_pick_wf: "Workflow", run_profiles: "Profiles", run_filter: "Filter profiles", run_none_sel: "None", run_vars: "Variables for this run",
+    run_note: "Stopped profiles are launched first. A profile runs one workflow at a time.", run_go: "Run in {n} profiles", run_go_one: "Run in 1 profile",
+    run_started_n: "Started {wf} in {n} profiles", busy_recording: "recording", busy_running: "running {wf}", state_on: "browser open", state_off: "stopped",
+    bulk_run: "Run workflow", record_pick_title: "Record a workflow", record_pick_sub: "Pick the profile to record in. A stopped profile is launched, then recording starts.",
+    record_need_profile: "Create a profile first: workflows are recorded in a profile's browser.",
+    rec_launching_auto: "Launching {name}… Recording starts as soon as the browser is ready.", rec_launching: "Launching {name}…",
+    log_title: "Run log · {name}", run_none: "This profile has not run a workflow yet.",
+    stop_for_cookies: "{name} is running. Stop its browser to work with its cookies and fingerprint?", stop_continue: "Stop and continue",
+    stop_for_rename: "{name} is running. Stop its browser to rename it?", stop_save: "Stop and save", stop_browser: "Stop browser",
+    delete_running_note: "Its browser is running and will be stopped first.", bulk_delete_running: "{n} of them are running and will be stopped first.",
+    run_need_wf: "No workflows yet: record one first.",
+    ai_needed: "This workflow has AI text steps: set up AI first, then run it again.",
   },
 };
 
@@ -668,6 +791,8 @@ const justLanded = new Set();    // stamps to animate on the next render
 const selected = new Set();
 let recordings = new Map();      // name -> live recording or unsaved draft
 let runs = new Map();            // name -> current or last workflow run
+let workflows = [];              // saved workflows (name, description, profile, step_count, dates)
+let view = store.get("foxflow.view") === "profiles" ? "profiles" : "auto";
 const $ = (id) => document.getElementById(id);
 
 function t(key, vars = {}) {
@@ -678,8 +803,7 @@ function applyI18n() {
   document.documentElement.lang = lang;
   document.querySelectorAll("[data-t]").forEach((el) => { el.textContent = t(el.dataset.t); });
   document.querySelectorAll("[data-title]").forEach((el) => { el.title = t(el.dataset.title); el.setAttribute("aria-label", t(el.dataset.title)); });
-  $("search").placeholder = t("search");
-  $("search").setAttribute("aria-label", t("search"));
+  applyViewChrome();
   $("sheet").setAttribute("aria-label", t("your_profiles"));
   $("v-text").placeholder = t("type_hint");
   document.querySelectorAll("[data-lang]").forEach((b) => b.classList.toggle("active", b.dataset.lang === lang));
@@ -747,9 +871,12 @@ const hhmm = (d) => d.toTimeString().slice(0, 5);
 
 async function refresh() {
   try {
-    const [list, run, recs, wfRuns] = await Promise.all([api("GET", "/profiles"), api("GET", "/browser"),
-      api("GET", "/recordings").catch(() => ({ recordings: [] })), api("GET", "/workflow-runs").catch(() => ({ runs: [] }))]);
+    // Run logs stay out of the poll: only the log dialog needs them.
+    const [list, run, recs, wfRuns, wfs] = await Promise.all([api("GET", "/profiles"), api("GET", "/browser"),
+      api("GET", "/recordings").catch(() => ({ recordings: [] })), api("GET", "/workflow-runs?log=false").catch(() => ({ runs: [] })),
+      api("GET", "/workflows").catch(() => ({ workflows }))]);
     profiles = list.profiles;
+    workflows = wfs.workflows;
     recordings = new Map(recs.recordings.map((r) => [r.profile, r]));
     runs = new Map(wfRuns.runs.map((r) => [r.profile, r]));
     const now = new Set(run.running);
@@ -758,7 +885,8 @@ async function refresh() {
     running = now;
     for (const name of [...selected]) if (!profiles.some((p) => p.name === name)) selected.delete(name);
     for (const name of [...failed.keys()]) if (now.has(name) || !profiles.some((p) => p.name === name)) failed.delete(name);
-    await Promise.all(profiles.filter((p) => !(p.name in fingerprints)).map(loadFingerprint));
+    // Fingerprints are only shown in the profile table; load them when it is on screen.
+    if (view === "profiles") await Promise.all(profiles.filter((p) => !(p.name in fingerprints)).map(loadFingerprint));
     render();
   } catch (e) { if (e.status !== 401) toast(e.message, true); }
 }
@@ -785,10 +913,12 @@ function render() {
   const shown = visible();
   // Rebuilding the list replaces every button; skip it when nothing changed so a
   // periodic refresh cannot swap the button under the user's cursor mid-click.
-  const key = JSON.stringify([lang, q, filter, profiles, [...running].sort(), [...busy], [...failed], [...selected].sort(),
-    [...justLanded], shown.map((p) => fingerprints[p.name] || null), [...recordings], [...runs].map(([n, r]) => [n, r.status, r.step])]);
+  const key = JSON.stringify([lang, view, q, filter, profiles, [...running].sort(), [...busy], [...failed], [...selected].sort(),
+    [...justLanded], view === "profiles" ? shown.map((p) => fingerprints[p.name] || null) : null, [...recordings], [...runs], workflows]);
   if (key === lastRender) return;
   lastRender = key;
+  renderViews();
+  if (view === "auto") return renderAuto(q);
 
   if (running.size) {
     const [before, after] = t("counts", { n: profiles.length, r: "\u0000" }).split("\u0000");
@@ -889,9 +1019,9 @@ function row(p) {
       iconBtn("monitor", t("view"), () => openViewer(p.name), "", !on || isBusy),
       iconBtn("flow", t("workflows"), () => openWorkflows(p)),
       iconBtn("copy", t("clone"), () => openClone(p)),
-      iconBtn("cookie", t("cookies"), () => openCookies(p), "", on),
+      iconBtn("cookie", t("cookies"), () => openCookies(p), "", isBusy),
       iconBtn("edit", t("edit"), () => openEditor(p)),
-      iconBtn("trash", t("delete"), () => removeProfile(p), "danger", on)));
+      iconBtn("trash", t("delete"), () => removeProfile(p), "danger", isBusy)));
 }
 
 function bulkBar() {
@@ -900,6 +1030,7 @@ function bulkBar() {
     h("span", { class: "n" }, t("selected", { n: names.length })),
     h("button", { class: "btn btn-act", onclick: () => bulk("launch") }, icon("play", true), t("bulk_launch")),
     h("button", { class: "btn btn-line", onclick: () => bulk("stop") }, icon("stop", true), t("bulk_stop")),
+    h("button", { class: "btn btn-line", onclick: () => openRunDialog({ preselect: names }) }, icon("flow", true), t("bulk_run")),
     h("button", { class: "btn btn-line", onclick: () => bulk("delete") }, icon("trash", true), t("bulk_delete")),
     h("button", { class: "btn btn-ghost", style: "margin-left:auto", onclick: () => { selected.clear(); render(); } }, t("clear_sel")));
 }
@@ -907,13 +1038,13 @@ function bulkBar() {
 async function bulk(action) {
   const names = [...selected];
   if (action === "delete") {
-    const stopped = names.filter((n) => !running.has(n));
-    if (!stopped.length) return toast(t("stop_first"), true);
-    if (!(await confirmDialog(t("confirm_bulk_delete", { n: stopped.length }), t("bulk_delete"), true))) return;
+    const live = profiles.filter((p) => names.includes(p.name) && running.has(p.name));
+    const message = t("confirm_bulk_delete", { n: names.length }) + (live.length ? " " + t("bulk_delete_running", { n: live.length }) : "");
+    if (!(await confirmDialog(message, t("bulk_delete"), true))) return;
+    await Promise.all(live.map((p) => toggle(p, { quiet: true })));
     let deleted = 0;
-    for (const n of stopped) { try { await api("DELETE", `/profiles/${enc(n)}`); deleted++; selected.delete(n); delete fingerprints[n]; } catch (e) { toast(`${n}: ${e.message}`, true); } }
-    const skipped = names.length - deleted;
-    if (deleted) toast(t("deleted_n", { n: deleted }) + (skipped ? " · " + t("bulk_skip_running", { n: skipped }) : ""));
+    for (const n of names) { try { await api("DELETE", `/profiles/${enc(n)}`); deleted++; selected.delete(n); delete fingerprints[n]; } catch (e) { toast(`${n}: ${e.message}`, true); } }
+    if (deleted) toast(t("deleted_n", { n: deleted }));
     return refresh();
   }
   const targets = profiles.filter((p) => names.includes(p.name) && (action === "launch" ? !running.has(p.name) : running.has(p.name)));
@@ -969,7 +1100,8 @@ function modalHead(title, sub, close) {
     h("div", {}, h("h2", {}, title), sub ? h("p", {}, sub) : null),
     h("button", { type: "button", class: "icon-btn", title: t("close"), "aria-label": t("close"), onclick: close }, icon("x")));
 }
-function confirmDialog(message, actionLabel, danger = false) {
+// style: true (red, destructive), "ink" (stopping a browser), otherwise the action colour.
+function confirmDialog(message, actionLabel, style = false) {
   return new Promise((resolve) => {
     let done = false;
     const finish = (v) => { if (!done) { done = true; close(); resolve(v); } };
@@ -978,15 +1110,23 @@ function confirmDialog(message, actionLabel, danger = false) {
       h("div", { class: "modal-body" }, h("p", { style: "margin:8px 0 0" }, message)),
       h("div", { class: "modal-foot" },
         h("button", { class: "btn btn-line", onclick: () => finish(false) }, t("cancel")),
-        h("button", { class: "btn " + (danger ? "btn-danger" : "btn-act"), onclick: () => finish(true) }, actionLabel))),
+        h("button", { class: "btn " + (style === "ink" ? "btn-ink" : style ? "btn-danger" : "btn-act"), onclick: () => finish(true) }, actionLabel))),
       { onDismiss: () => finish(false) });
   });
 }
+// Some actions need the browser closed: ask, stop it (and its workflow run), then go on.
+async function stopToContinue(p, message, actionLabel) {
+  if (!running.has(p.name)) return true;
+  if (!(await confirmDialog(message, actionLabel, "ink"))) return false;
+  await toggle(p, { quiet: true });
+  return !running.has(p.name);  // toggle() reports a failed stop itself
+}
+
 function field(label, input, hint) {
   return h("div", { class: "field" }, h("label", { for: input.id }, label), input, hint ? h("div", { class: "hint" }, hint) : null);
 }
 
-function openEditor(p) {
+function openEditor(p, { onCreated = null } = {}) {
   modal((close) => {
     const name = h("input", { id: "f-name", value: p ? p.name : "", required: true, maxlength: 64, autocomplete: "off" });
     const os = h("select", { id: "f-os" }, [["windows", "Windows"], ["macos", "macOS"], ["linux", "Linux"]].map(([v, label]) =>
@@ -1030,9 +1170,13 @@ function openEditor(p) {
         timezone: tz.value.trim(), locale: loc.value.trim() };
       if (!p) body.engine = engine.value;
       try {
+        if (p && body.name !== p.name && !(await stopToContinue(p, t("stop_for_rename", { name: p.name }), t("stop_save")))) return;
         if (p) { await api("PATCH", `/profiles/${enc(p.name)}`, body); delete fingerprints[p.name]; toast(t("saved")); }
         else { await api("POST", "/profiles", body); toast(t("created", { name: body.name })); }
-        close(); refresh();
+        close();
+        await refresh();
+        const created = !p && profiles.find((x) => x.name.toLowerCase() === body.name.toLowerCase());
+        if (created && onCreated) onCreated(created);
       } catch (ex) { say("err", ex.message); }
       finally { if (submitBtn) submitBtn.disabled = false; }
     } },
@@ -1120,6 +1264,14 @@ async function openClone(p) {
     }
     // Browser data needs the browser stopped: copying its open files gives a torn copy.
     const boxes = Object.fromEntries(CLONE_PARTS.map((part) => [part, h("input", { type: "checkbox", disabled: on })]));
+    const stopBtn = h("button", { type: "button", class: "btn btn-ink", style: "height:30px;padding:0 10px;font-size:12.5px;margin-left:auto", onclick: async () => {
+      stopBtn.disabled = true;
+      await toggle(p, { quiet: true });
+      if (running.has(p.name)) { stopBtn.disabled = false; return; }
+      CLONE_PARTS.forEach((part) => { boxes[part].disabled = false; });
+      runningNote.remove();
+    } }, icon("stop", true), t("stop_browser"));
+    const runningNote = h("div", { class: "note", style: "align-items:center" }, icon("alert", true), h("span", {}, t("clone_data_running")), stopBtn);
     boxes.workflows = h("input", { type: "checkbox", disabled: !workflowCount });
     const option = (part, label, hint) => [h("label", { class: "check-line", style: "margin-top:8px" }, boxes[part], label),
       hint ? h("div", { class: "hint", style: "margin:2px 0 0 24px;font-size:12px;color:var(--ink-3)" }, hint) : null];
@@ -1145,7 +1297,7 @@ async function openClone(p) {
           h("div", { class: "field" }, nameLabel, name), field(t("clone_count"), count)),
         previewLine,
         h("div", { class: "field" }, h("label", {}, t("clone_copy"))),
-        on ? h("div", { class: "note" }, icon("alert", true), h("span", {}, t("clone_data_running"))) : null,
+        on ? runningNote : null,
         option("cookies", t("clone_part_cookies"), t("clone_data_hint")),
         option("history", t("clone_part_history")),
         option("site_data", t("clone_part_site_data")),
@@ -1163,8 +1315,10 @@ async function openClone(p) {
 }
 
 async function removeProfile(p) {
-  if (running.has(p.name)) return toast(t("stop_first"), true);
-  if (!(await confirmDialog(t("confirm_delete", { name: p.name }), t("delete"), true))) return;
+  const live = running.has(p.name);
+  const message = t("confirm_delete", { name: p.name }) + (live ? " " + t("delete_running_note") : "");
+  if (!(await confirmDialog(message, t("delete"), true))) return;
+  if (live) { await toggle(p, { quiet: true }); if (running.has(p.name)) return; }
   try { await api("DELETE", `/profiles/${enc(p.name)}`); selected.delete(p.name); toast(t("deleted", { name: p.name })); delete fingerprints[p.name]; refresh(); }
   catch (e) { toast(e.message, true); }
 }
@@ -1176,8 +1330,8 @@ function download(filename, text, type) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function openCookies(p) {
-  if (running.has(p.name)) return toast(t("stop_first"), true);
+async function openCookies(p) {
+  if (!(await stopToContinue(p, t("stop_for_cookies", { name: p.name }), t("stop_continue")))) return;
   modal((close) => {
     const msg = h("div", { class: "msg", role: "status" });
     const fpSection = h("div");
@@ -1298,13 +1452,376 @@ async function openMcpGuide() {
   }, { wide: true });
 }
 
+// --- Automation view: runs and workflows ----------------------------------------
+const VIEWS = [["auto", "view_auto", "flow"], ["profiles", "view_profiles", "id"]];
+// "2026-10-23T17:21:08" -> "23/10 17:21" and "17:21"
+const when = (s) => (s ? `${s.slice(8, 10)}/${s.slice(5, 7)} ${s.slice(11, 16)}` : "—");
+const clock = (s) => (s ? s.slice(11, 16) : "");
+// t() with elements in place of some {placeholders}.
+function tNodes(key, nodes) {
+  const marks = Object.fromEntries(Object.keys(nodes).map((k) => [k, `\u0000${k}\u0000`]));
+  return t(key, marks).split("\u0000").map((part, i) => (i % 2 ? nodes[part] : part));
+}
+function iconButton(name, label, target, fn, cls = "", disabled = false) {
+  return h("button", { class: "icon-btn " + cls, title: label, "aria-label": `${label}: ${target}`, disabled, onclick: fn }, icon(name));
+}
+
+function setView(id) {
+  if (id === view) return;
+  view = id;
+  store.set("foxflow.view", id);
+  $("search").value = "";
+  applyViewChrome();
+  lastRender = "";
+  refresh();
+}
+function applyViewChrome() {
+  const auto = view === "auto";
+  $("filters").classList.toggle("hidden", auto);
+  $("sheet").classList.toggle("hidden", auto);
+  $("auto").classList.toggle("hidden", !auto);
+  $("page-title").textContent = t(auto ? "auto_title" : "your_profiles");
+  $("search").placeholder = t(auto ? "auto_search" : "search");
+  $("search").setAttribute("aria-label", $("search").placeholder);
+  $("new-btn").replaceChildren(icon(auto ? "rec" : "plus"), h("span", {}, t(auto ? "record_workflow" : "new_profile")));
+}
+function renderViews() {
+  const count = { auto: [...runs.values()].filter((r) => r.active).length, profiles: profiles.length };
+  $("views").replaceChildren(h("div", { class: "nav-title" }, t("workspace")),
+    ...VIEWS.map(([id, label, ic]) => h("button", { class: view === id ? "active" : "", "aria-pressed": String(view === id),
+      onclick: () => setView(id) }, icon(ic, true), t(label), h("span", { class: "count" }, String(count[id])))));
+}
+
+function renderAuto(q) {
+  const ql = q.toLowerCase();
+  const all = [...runs.values()];
+  const active = all.filter((r) => r.active).length;
+  const failedRuns = all.filter((r) => r.status === "failed").length;
+  $("counts").replaceChildren(...(active || failedRuns
+    ? tNodes("auto_counts", { w: String(workflows.length), a: h("b", {}, String(active)),
+      f: failedRuns ? h("b", { class: "err" }, String(failedRuns)) : "0" })
+    : [t("auto_counts_none", { w: workflows.length })]));
+  const has = (...values) => !ql || values.some((v) => (v || "").toLowerCase().includes(ql));
+  const shownRuns = all.filter((r) => has(r.profile, r.workflow))
+    .sort((a, b) => (b.active - a.active) || (b.started_at || "").localeCompare(a.started_at || ""));
+  const shownWfs = workflows.filter((w) => has(w.name, w.description, w.profile));
+  const noMatch = () => h("div", { class: "empty compact" }, h("p", {}, t("auto_no_match", { q })));
+  const headRowOf = (labels) => h("div", { class: "row head-row", role: "row" }, labels.map((l) => h("div", { role: "columnheader" }, l)));
+  const kids = [];
+  if (all.length) {
+    kids.push(sectionHead(t("runs_title"), t("runs_sub")),
+      h("div", { class: "sheet runs", role: "table", "aria-label": t("runs_title") },
+        headRowOf([t("col_profile"), t("col_workflow"), t("col_progress"), t("col_attempts"), t("col_status"), ""]),
+        shownRuns.length ? shownRuns.map(runRow) : noMatch()));
+  }
+  kids.push(sectionHead(t("wfs_title"), workflows.length ? t("wfs_sub") : ""),
+    h("div", { class: "sheet wfs", role: "table", "aria-label": t("wfs_title") }, workflows.length
+      ? [headRowOf([t("col_workflow"), t("col_recorded"), t("col_steps"), t("col_last_run"), ""]), ...(shownWfs.length ? shownWfs.map(wfRow) : [noMatch()])]
+      : h("div", { class: "empty" }, h("h2", {}, t("wf_empty_title")), h("p", {}, t("wf_empty")),
+        h("button", { class: "btn btn-act", onclick: openRecordPicker }, icon("rec"), t("record_workflow")))));
+  $("auto").replaceChildren(...kids);
+}
+function sectionHead(title, sub) {
+  return h("div", { class: "section-head" }, h("h2", {}, title), sub ? h("span", {}, sub) : null);
+}
+
+function runRow(r) {
+  const on = running.has(r.profile);
+  const done = r.status === "succeeded" ? r.step_total : Math.max(r.step - 1, 0);
+  const pct = r.step_total ? Math.round((done / r.step_total) * 100) : 0;
+  const rec = recordings.get(r.profile);
+  const chain = r.workflows && r.workflows.length ? r.workflows : [r.workflow];
+  const main = r.active
+    ? h("button", { class: "btn btn-ink main", onclick: () => stopRun(r.profile, main) }, icon("stop", true), t("stop"))
+    : h("button", { class: "btn btn-act main", disabled: !!(rec && rec.recording), onclick: () => startRuns(chain, [r.profile], {}, main) },
+      icon("play", true), t("run_again"));
+  const when = r.finished_at ? t("ended_at", { t: clock(r.finished_at) }) : t("started_at", { t: clock(r.started_at) });
+  const detail = r.status === "failed" && r.error
+    ? h("span", { class: "minor err-line", title: r.error }, r.error)
+    : h("span", { class: "minor", title: r.step_label || "" }, r.step_label || (r.status === "starting" ? t("run_launching") : "—"));
+  return h("div", { class: "row body" + (r.active ? " live" : ""), role: "row" },
+    h("div", { class: "stack", role: "cell" }, h("span", { class: "name", title: r.profile }, r.profile),
+      h("span", { class: "minor" }, t(on ? "state_on" : "state_off"))),
+    h("div", { class: "stack", role: "cell" }, h("span", { title: chain.join(" → ") }, r.workflow),
+      h("span", { class: "minor" }, chain.length > 1 ? `${t("run_chain_pos", { i: r.workflow_index, n: chain.length })} · ${when}` : when)),
+    h("div", { class: "stack", role: "cell" },
+      h("span", { class: "progress" }, h("span", { class: "data" }, t("step_of", { step: r.step, total: r.step_total })),
+        h("span", { class: "track", "aria-hidden": "true" }, h("i", { class: r.status, style: `width:${pct}%` }))),
+      detail),
+    h("div", { class: "stack", role: "cell" }, h("span", { class: "data" }, t("attempt_n", { n: r.attempt || 0 })),
+      h("span", { class: "minor data" }, t("restarts_n", { r: r.restarts, m: r.max_restarts }))),
+    h("div", { role: "cell" }, runStamp(r)),
+    h("div", { class: "actions", role: "cell" }, main,
+      iconButton("log", t("run_log"), r.profile, () => openRunLog(r.profile)),
+      iconButton("monitor", t("view"), r.profile, () => openViewer(r.profile), "", !on)));
+}
+
+function wfRow(w) {
+  const mine = [...runs.values()].filter((r) => r.workflow === w.name);
+  const live = mine.filter((r) => r.active);
+  const last = mine.filter((r) => !r.active).sort((a, b) => (b.finished_at || "").localeCompare(a.finished_at || ""))[0];
+  const lastRun = live.length ? [runStamp(live[0]), h("span", { class: "minor" }, t("running_n", { n: live.length }))]
+    : last ? [runStamp(last), h("span", { class: "minor data" }, `${last.profile} · ${when(last.finished_at)}`)]
+      : [h("span", { class: "idle" }, t("never_run")), h("span", { class: "minor" }, t("never_run_hint"))];
+  return h("div", { class: "row body", role: "row" },
+    h("div", { class: "stack", role: "cell" }, h("span", { class: "name", title: w.name }, w.name),
+      h("span", { class: "minor", title: w.description || "" }, w.description || t("no_desc"))),
+    h("div", { class: "stack", role: "cell" }, h("span", { class: "data", title: w.profile || "" }, w.profile || "—"),
+      h("span", { class: "minor" }, t("updated_at", { t: when(w.updated_at) }))),
+    h("div", { class: "stack", role: "cell" }, h("span", { class: "data" }, t("steps_n", { n: w.step_count })),
+      h("span", { class: "minor" }, t("created_on", { t: when(w.created_at).slice(0, 5) }))),
+    h("div", { class: "stack start", role: "cell" }, lastRun),
+    h("div", { class: "actions", role: "cell" },
+      h("button", { class: "btn btn-act main", onclick: () => openRunDialog({ workflow: w.name }) }, icon("play", true), t("wf_run")),
+      iconButton("edit", t("edit"), w.name, () => openStepEditor(w.name, refresh)),
+      iconButton("trash", t("delete"), w.name, () => deleteWorkflow(w.name), "danger")));
+}
+
+async function deleteWorkflow(name) {
+  if (!(await confirmDialog(t("confirm_wf_delete", { name }), t("delete"), true))) return;
+  try { await api("DELETE", `/workflows/${enc(name)}`); toast(t("wf_deleted", { name })); } catch (e) { toast(e.message, true); }
+  await refresh();
+}
+async function stopRun(profile, btn) {
+  if (btn) btn.disabled = true;
+  try { await api("POST", `/workflow-runs/${enc(profile)}/stop`); toast(t("run_stopping", { name: profile })); } catch (e) { toast(e.message, true); }
+  await refresh();
+}
+// AI text steps need an API key: open AI settings instead of letting every run fail.
+async function aiReady(wf) {
+  try {
+    const [detail, ai] = await Promise.all([api("GET", `/workflows/${enc(wf)}`), api("GET", "/ai/settings")]);
+    if (ai.configured || !detail.steps.some((st) => st.enabled && st.action === "ai")) return true;
+  } catch { return true; }  // the run itself reports any other problem
+  toast(t("ai_needed"));
+  openAISettings();
+  return false;
+}
+
+// Start a workflow, or a chain of them (an array) run one after the other, in every
+// profile of `names`; returns how many started.
+async function startRuns(wfs, names, variables = {}, btn = null) {
+  const chain = Array.isArray(wfs) ? wfs : [wfs];
+  for (const name of new Set(chain)) if (!(await aiReady(name))) return 0;
+  const wf = chain.join(" → ");
+  if (btn) btn.disabled = true;
+  const results = await Promise.allSettled(names.map((n) => chain.length === 1
+    ? api("POST", `/workflows/${enc(chain[0])}/run`, { profile: n, variables })
+    : api("POST", "/workflow-runs", { profile: n, workflows: chain, variables })));
+  const errors = results.map((r, i) => (r.status === "rejected" ? `${names[i]}: ${r.reason.message}` : null)).filter(Boolean);
+  const ok = names.length - errors.length;
+  const first = names[results.findIndex((r) => r.status === "fulfilled")];
+  const started = ok === 1 ? t("wf_started", { wf, name: first }) : t("run_started_n", { wf, n: ok });
+  if (errors.length) toast((ok ? started + " · " : "") + errors.join(" · "), true);
+  else toast(started);
+  if (btn) btn.disabled = false;
+  await refresh();
+  return ok;
+}
+
+// Run a workflow, or several one after the other, in many profiles. From a workflow's row it
+// comes first; from the bulk bar the first one is picked. More can be added to the chain.
+function openRunDialog({ workflow = null, preselect = [] } = {}) {
+  if (!workflows.length) {
+    toast(t("run_need_wf"));
+    // One profile picked: record in it right away; otherwise pick where to record.
+    const only = preselect.length === 1 && profiles.find((x) => x.name === preselect[0]);
+    return only ? openWorkflows(only, { record: true }) : openRecordPicker();
+  }
+  const chain = [workflow || workflows[0].name];
+  const chosen = new Set(preselect);
+  if (!preselect.length) {
+    const w = workflows.find((x) => x.name === chain[0]);
+    const owner = w && profiles.find((p) => p.name.toLowerCase() === (w.profile || "").toLowerCase());
+    if (owner) chosen.add(owner.name);
+  }
+  // Why a profile cannot take a run now, or "".
+  const blocked = (name) => {
+    const rec = recordings.get(name), run = runs.get(name);
+    if (rec && rec.recording) return t("busy_recording");
+    return run && run.active ? t("busy_running", { wf: run.workflow }) : "";
+  };
+  modal((close) => {
+    const list = h("div", { class: "pick-list", role: "group", "aria-label": t("run_profiles") });
+    const filterInput = h("input", { type: "search", placeholder: t("run_filter"), "aria-label": t("run_filter"), autocomplete: "off" });
+    const varsBox = h("div");
+    const chainBox = h("div", { class: "vars" });
+    const varInputs = new Map();
+    const go = h("button", { class: "btn btn-act" });
+    const ready = () => [...chosen].filter((n) => !blocked(n) && profiles.some((p) => p.name === n));
+    const listed = () => {
+      const q = filterInput.value.trim().toLowerCase();
+      return profiles.filter((p) => !q || p.name.toLowerCase().includes(q));
+    };
+    function drawGo() {
+      const n = ready().length;
+      go.disabled = !n;
+      go.replaceChildren(icon("play", true), t(n === 1 ? "run_go_one" : "run_go", { n }));
+    }
+    function drawList() {
+      list.replaceChildren(...listed().map((p) => {
+        const why = blocked(p.name);
+        const box = h("input", { type: "checkbox", disabled: !!why, onchange: (e) => {
+          if (e.target.checked) chosen.add(p.name); else chosen.delete(p.name);
+          drawGo(); } });
+        box.checked = chosen.has(p.name) && !why;
+        return h("label", { class: "pick" + (why ? " off" : "") }, box,
+          h("div", { class: "stack" }, h("span", { class: "name" }, p.name), h("span", { class: "minor" }, why || t(running.has(p.name) ? "state_on" : "state_off"))));
+      }));
+      drawGo();
+    }
+    function drawChain() {
+      chainBox.replaceChildren(...chain.map((name, i) => h("div", { style: "display:flex;align-items:center;gap:8px" },
+        h("span", { class: "data muted", style: "width:22px" }, `${i + 1}.`),
+        h("select", { "aria-label": `${t("run_pick_wf")} ${i + 1}`, style: "flex:1;min-width:0", onchange: (e) => { chain[i] = e.target.value; drawChain(); loadVars(); } },
+          workflows.map((w) => h("option", { value: w.name, selected: w.name === name }, w.name))),
+        h("button", { type: "button", class: "icon-btn", title: t("run_remove_wf"), "aria-label": `${t("run_remove_wf")} ${i + 1}`,
+          disabled: chain.length === 1, onclick: () => { chain.splice(i, 1); drawChain(); loadVars(); } }, icon("x", true)))),
+        h("div", { class: "inline-btns" }, h("button", { type: "button", class: "btn btn-ghost", onclick: () => {
+          const unused = workflows.find((w) => !chain.includes(w.name));
+          chain.push(unused ? unused.name : chain[chain.length - 1]);
+          drawChain(); loadVars();
+        } }, icon("plus", true), t("run_add_wf"))),
+        chain.length > 1 ? h("div", { class: "hint", style: "font-size:12.5px;color:var(--ink-2)" }, t("run_chain_note")) : null);
+    }
+    // Every variable of the chain, with the first workflow's value for a shared one.
+    let varsLoad = 0;
+    async function loadVars() {
+      const mine = ++varsLoad;
+      const vars = new Map();
+      for (const name of chain) {
+        let detail;
+        try { detail = await api("GET", `/workflows/${enc(name)}`); } catch (e) { return toast(e.message, true); }
+        for (const [k, v] of Object.entries(detail.variables || {})) if (!vars.has(k)) vars.set(k, v);
+      }
+      if (mine !== varsLoad) return;
+      varInputs.clear();
+      varsBox.replaceChildren();
+      if (!vars.size) return;
+      varsBox.append(h("div", { class: "field" }, h("label", {}, t("run_vars")), h("div", { class: "vars" }, [...vars].map(([k, v]) => {
+        const input = valueInput(v, { class: "data", autocomplete: "off", "aria-label": k });
+        varInputs.set(k, input);
+        return h("div", { class: "var-row two" }, h("code", {}, `{{${k}}}`), input);
+      }))));
+    }
+    filterInput.oninput = drawList;
+    go.onclick = async () => {
+      const variables = Object.fromEntries([...varInputs].map(([k, input]) => [k, input.value]));
+      if (await startRuns([...chain], ready(), variables, go)) close();
+    };
+    drawChain();
+    drawList();
+    loadVars();
+    return h("div", {},
+      modalHead(t("run_title"), workflow ? t("run_sub", { wf: workflow }) : t("run_sub_pick"), close),
+      h("div", { class: "modal-body" },
+        h("div", { class: "field" }, h("label", {}, t("run_pick_wf")), chainBox),
+        h("div", { class: "field" }, h("label", {}, t("run_profiles")),
+          h("div", { class: "pick-tools" }, filterInput,
+            h("button", { type: "button", class: "btn btn-ghost", onclick: () => { listed().forEach((p) => chosen.add(p.name)); drawList(); } }, t("select_all")),
+            h("button", { type: "button", class: "btn btn-ghost", onclick: () => { chosen.clear(); drawList(); } }, t("run_none_sel"))),
+          list),
+        varsBox,
+        h("div", { class: "note calm" }, icon("alert", true), h("span", {}, t("run_note")))),
+      h("div", { class: "modal-foot" }, h("button", { type: "button", class: "btn btn-line", onclick: close }, t("cancel")), go));
+  }, { wide: true });
+}
+
+// A profile's current or last run with its log, live while it runs.
+function openRunLog(profile) {
+  let timer = null, key = "", closeModal = () => {};
+  const box = h("div", { class: "panel" });
+  const done = () => { clearInterval(timer); closeModal(); };
+  function draw(run) {
+    const k = JSON.stringify([lang, run]);
+    if (k === key) return;
+    key = k;
+    if (!run) return box.replaceChildren(h("p", {}, t("run_none")));
+    const log = h("pre", { class: "code log" }, run.log.slice(-60).join("\n"));
+    const stop = run.active ? h("button", { class: "btn btn-ink", onclick: async () => { await stopRun(profile, stop); poll(); } },
+      icon("stop", true), t("run_stop")) : null;
+    box.replaceChildren(...[
+      h("h3", {}, runStamp(run), h("span", { class: "data", style: "font-weight:500" }, run.workflow)),
+      run.step ? h("div", { class: "run-line" }, t("run_progress", { step: run.step, total: run.step_total, attempt: run.attempt,
+        restarts: run.restarts, max: run.max_restarts }), run.step_label ? h("span", { class: "data" }, " · " + run.step_label) : null) : null,
+      run.error ? h("div", { class: "run-err" }, run.error) : null,
+      log,
+      stop ? h("div", { class: "row-btns" }, stop) : null].filter(Boolean));
+    log.scrollTop = log.scrollHeight;
+  }
+  async function poll() {
+    try { draw(await api("GET", `/workflow-runs/${enc(profile)}`)); }
+    catch (e) { if (e.status === 404) draw(null); else if (e.status === 401) done(); }
+  }
+  closeModal = modal(() => h("div", {},
+    modalHead(t("log_title", { name: profile }), null, done),
+    h("div", { class: "modal-body" }, box),
+    h("div", { class: "modal-foot" }, h("button", { type: "button", class: "btn btn-line", onclick: done }, t("close")))),
+  { wide: true, onDismiss: done });
+  poll();
+  timer = setInterval(() => { if (!document.hidden) poll(); }, 1500);
+}
+
+// Recording happens in a profile's browser: pick the profile, then its workflows dialog takes over.
+function openRecordPicker() {
+  modal((close) => {
+    const sorted = [...profiles].sort((a, b) => (running.has(b.name) - running.has(a.name)) || a.name.localeCompare(b.name));
+    return h("div", {},
+      modalHead(t("record_pick_title"), t("record_pick_sub"), close),
+      h("div", { class: "modal-body" }, sorted.length
+        ? h("div", { class: "choice" }, sorted.map((p) => h("button", { type: "button", onclick: () => { close(); openWorkflows(p, { record: true }); } },
+          icon(running.has(p.name) ? "monitor" : "play"),
+          h("div", {}, h("b", {}, p.name), h("span", {}, t(running.has(p.name) ? "state_on" : "state_off"))))))
+        : h("div", { class: "note calm" }, icon("alert", true), h("span", {}, t("record_need_profile")))),
+      h("div", { class: "modal-foot" },
+        h("button", { type: "button", class: "btn btn-line", onclick: close }, t("cancel")),
+        sorted.length ? null : h("button", { type: "button", class: "btn btn-act", onclick: () => {
+          close();
+          openEditor(null, { onCreated: (created) => openWorkflows(created, { record: true }) });
+        } }, icon("plus", true), t("new_profile"))));
+  });
+}
+
 // --- Workflows: record, run, edit ----------------------------------------------
-const ACTIONS = ["navigate", "click", "fill", "press", "select", "check", "uncheck", "hover", "scroll", "wait", "switch_tab", "get_text", "ai"];
+const ACTIONS = ["navigate", "click", "fill", "press", "select", "check", "uncheck", "hover", "scroll", "wait", "switch_tab", "get_text", "ai",
+  "assign", "if", "else", "end", "for", "while", "break"];
+// Run by FoxFlow between the browser steps; If / Repeat open a block that End closes.
+const CONTROL_ACTIONS = ["assign", "if", "else", "end", "for", "while", "break"];
+const BLOCK_ACTIONS = ["if", "for", "while"];
+const MARKER_ACTIONS = ["else", "end", "break"];
+const CONDITIONS = ["expression", "selector_visible", "text_visible", "url_contains", "title_contains"];
 const ELEMENT_ACTIONS = ["click", "fill", "select", "check", "uncheck", "hover", "press", "get_text"];
 const CHECKS = ["auto", "none", "url_contains", "title_contains", "selector_visible", "text_visible"];
 const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 5];
 const toInt = (v, fallback) => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : fallback; };
 const stepId = () => Math.random().toString(16).slice(2, 10);
+// A variable's value: a text box when it has several lines (a list for Repeat for),
+// since an input would drop the line breaks.
+function valueInput(value, props) {
+  if (!String(value || "").includes("\n")) return h("input", { ...props, value: value || "" });
+  const box = h("textarea", { ...props, rows: 3, spellcheck: "false" });
+  box.value = value;
+  return box;
+}
+const newStep = (changes = {}) => ({ id: stepId(), action: "wait", value: "1000", label: "", selectors: [], frame: "", expect_url: "",
+  delay_ms: 0, char_delay_ms: 0, timeout_ms: null, retries: null, check: { type: "auto", value: "" }, enabled: true, sensitive: false,
+  hover_selectors: [], hover_ms: 800, save_as: "", condition: "expression", negate: false, max_loops: 100, ...changes });
+// How deep each step sits in the blocks (services/workflow/model.depths).
+function stepDepths(steps) {
+  let depth = 0;
+  return steps.map((st) => {
+    if (st.action === "else") return Math.max(0, depth - 1);
+    if (st.action === "end") { depth = Math.max(0, depth - 1); return depth; }
+    return BLOCK_ACTIONS.includes(st.action) ? depth++ : depth;
+  });
+}
+// Add an End after step i when it opens a block nothing closes (model.unclosed).
+function closeBlock(steps, i) {
+  if (!BLOCK_ACTIONS.includes(steps[i].action)) return;
+  const open = [];
+  steps.forEach((st, j) => { if (BLOCK_ACTIONS.includes(st.action)) open.push(j); else if (st.action === "end") open.pop(); });
+  if (open.includes(i)) steps.splice(i + 1, 0, newStep({ action: "end", value: "" }));
+}
 
 // The second line of a step: what it types, opens or acts on.
 function stepTarget(st) {
@@ -1313,6 +1830,14 @@ function stepTarget(st) {
 }
 function stepWhat(st) {
   const into = st.save_as ? ` → {{${st.save_as}}}` : "";
+  if (MARKER_ACTIONS.includes(st.action)) return "";
+  if (st.action === "assign") return `{{${st.save_as || ""}}} = ${st.value || ""}`;
+  if (st.action === "for") return (st.value || "").split("\n").map((x) => x.trim()).filter(Boolean).join(" · ") + into;
+  if (["if", "while"].includes(st.action)) {
+    const cond = st.condition || "expression";
+    const text = cond === "expression" ? st.value || "" : `${t("cond_" + cond)}: ${st.value || ""}`;
+    return (st.negate ? "not " : "") + text + (st.action === "while" ? ` · ≤ ${st.max_loops || 100}` : "");
+  }
   if (st.action === "fill") return st.sensitive ? "•••" : `“${st.value || ""}” → ${st.selectors[0] || ""}`;
   if (st.action === "get_text") return (st.selectors[0] || "body") + (st.value ? ` /${st.value}/` : "") + into;
   if (st.action === "ai") return `“${st.value || ""}”` + into;
@@ -1329,8 +1854,10 @@ function runStamp(run) {
   return h("span", { class: "run-state " + run.status }, t("run_state_" + run.status));
 }
 
-function openWorkflows(p) {
+// record: launch the profile if needed and start recording as soon as its browser is ready.
+function openWorkflows(p, { record = false } = {}) {
   let timer = null, closeModal = () => {};
+  let autoRecord = record;
   let state = { rec: null, run: null, on: running.has(p.name) }, list = [];
   let showAll = false;  // other profiles' workflows run here too, but are listed on request
   let recKey = "", runKey = "", listKey = "";
@@ -1364,7 +1891,7 @@ function openWorkflows(p) {
 
   function drawRec() {
     const { rec, on, run } = state;
-    const key = JSON.stringify([lang, on, rec, run && run.active]);
+    const key = JSON.stringify([lang, on, rec, run && run.active, busy.get(p.name) || "", autoRecord]);
     if (key === recKey) return;
     recKey = key;
     const hadFocus = document.activeElement === nameInput;
@@ -1386,8 +1913,13 @@ function openWorkflows(p) {
         toast(t("rec_started", { name: p.name }));
       }) }, icon("rec", true), t("rec_start"));
       kids = [h("h3", {}, icon("rec", true), t("rec_section")), h("p", {}, t("rec_hint")), h("div", { class: "row-btns" }, start, viewBtn())];
+    } else if (busy.get(p.name) === "starting") {
+      kids = [h("h3", {}, icon("rec", true), t("rec_section")),
+        h("p", {}, t(autoRecord ? "rec_launching_auto" : "rec_launching", { name: p.name }))];
     } else {
-      kids = [h("h3", {}, icon("rec", true), t("rec_section")), h("p", {}, t("rec_need_launch"))];
+      const launch = h("button", { class: "btn btn-act", disabled: busy.has(p.name), onclick: () => busyDo(launch, () => toggle(p)) },
+        icon("play", true), t("launch"));
+      kids = [h("h3", {}, icon("rec", true), t("rec_section")), h("p", {}, t("rec_need_launch")), h("div", { class: "row-btns" }, launch)];
     }
     recBox.replaceChildren(...kids.filter(Boolean));
     if (hadFocus && nameInput.isConnected) nameInput.focus();
@@ -1422,6 +1954,7 @@ function openWorkflows(p) {
     const others = list.length - mine.length;
     const items = (showAll ? list : mine).map((w) => {
       const run = h("button", { class: "btn btn-act", disabled: blocked, onclick: () => busyDo(run, async () => {
+        if (!(await aiReady(w.name))) return;
         await api("POST", `/workflows/${enc(w.name)}/run`, { profile: p.name });
         toast(t("wf_started", { wf: w.name, name: p.name }));
       }) }, icon("play", true), t("wf_run"));
@@ -1454,6 +1987,13 @@ function openWorkflows(p) {
     } catch (e) {
       if (e.status === 401 || e.status === 404) return done();
     }
+    if (autoRecord && state.on && !busy.has(p.name)) {
+      autoRecord = false;
+      if (!(state.rec && state.rec.recording) && !(state.run && state.run.active)) {
+        try { await api("POST", `${base}/record/start`); toast(t("rec_started", { name: p.name })); state.rec = await api("GET", `${base}/record`); }
+        catch (e) { toast(e.message, true); }
+      }
+    }
     drawRec(); drawRun(); drawList();
   }
   async function loadList() {
@@ -1469,6 +2009,11 @@ function openWorkflows(p) {
   drawRec(); drawList();
   poll(); loadList();
   timer = setInterval(() => { if (!document.hidden) poll(); }, 1500);
+  if (record && !running.has(p.name) && !busy.has(p.name)) {
+    // toggle() reports a failed launch itself; then there is nothing to record in.
+    toggle(p, { quiet: true }).then(() => { if (!running.has(p.name)) autoRecord = false; poll(); });
+    drawRec();
+  }
 }
 
 async function openAISettings(onSaved) {
@@ -1511,6 +2056,8 @@ async function openAISettings(onSaved) {
         field(t("ai_system"), system),
         field(t("ai_temp"), temp, t("ai_temp_hint")),
         h("div", { class: "note" }, icon("alert", true), h("span", {}, t("ai_privacy"))),
+        h("div", { class: "note calm" }, icon("globe", true),
+          h("span", {}, a.network_proxy ? t("ai_net_proxy", { p: a.network_proxy }) : t("ai_net_direct"))),
         msg),
       h("div", { class: "modal-foot" },
         test,
@@ -1549,7 +2096,7 @@ async function openStepEditor(name, onSaved) {
       varsBox.replaceChildren(...vars.map((v, i) => h("div", { class: "var-row" },
         h("input", { class: "data", value: v.name, placeholder: t("var_name"), "aria-label": t("var_name"), maxlength: 64,
           pattern: "[A-Za-z_][A-Za-z0-9_]*", autocomplete: "off", oninput: (e) => { v.name = e.target.value.trim(); } }),
-        h("input", { value: v.value, placeholder: t("var_value"), "aria-label": t("var_value"), autocomplete: "off",
+        valueInput(v.value, { placeholder: t("var_value"), "aria-label": t("var_value"), autocomplete: "off",
           oninput: (e) => { v.value = e.target.value; } }),
         h("button", { type: "button", class: "icon-btn danger", title: t("var_remove"), "aria-label": t("var_remove"),
           onclick: () => { vars.splice(i, 1); drawVars(); } }, icon("trash", true)))));
@@ -1583,12 +2130,13 @@ async function openStepEditor(name, onSaved) {
       drawSteps();
     }
     function drawSteps() {
+      const levels = stepDepths(wf.steps);
       stepsBox.replaceChildren(
         h("div", { class: "step-row step-head" }, h("div", {}, "#"), h("div"), h("div", {}, t("col_step")), h("div", {}, t("col_delay")),
           h("div", {}, t("col_typing")), h("div", {}, t("col_check")), h("div", {}, t("col_retries")), h("div")),
-        ...wf.steps.map(stepRow));
+        ...wf.steps.map((st, i) => stepRow(st, i, levels[i])));
     }
-    function stepRow(st, i) {
+    function stepRow(st, i, depth = 0) {
       const cell = (label, input) => h("div", { class: "c-field" }, h("span", { class: "cell-label" }, label), input);
       const on = h("input", { type: "checkbox", "aria-label": t("step_on", { n: i + 1 }), onchange: (e) => {
         st.enabled = e.target.checked; row.classList.toggle("off", !st.enabled); } });
@@ -1611,19 +2159,23 @@ async function openStepEditor(name, onSaved) {
       const btn = (name, label, fn, disabled = false, cls = "") =>
         h("button", { type: "button", class: "icon-btn " + cls, title: label, "aria-label": `${label} ${i + 1}`, disabled, onclick: fn }, icon(name, true));
       const target = stepTarget(st);
+      // Control steps have no check; markers no delay; only conditions retry.
+      const dash = () => h("span", { class: "muted-cell" }, "—");
+      const control = CONTROL_ACTIONS.includes(st.action);
       const row = h("div", { class: "step-row" + (st.enabled === false ? " off" : "") },
         h("div", { class: "num" }, String(i + 1)),
         h("div", { class: "c-on" }, on),
-        h("div", { class: "c-label stack" },
+        h("div", { class: "c-label stack" + (depth ? " nested" : ""), style: depth ? `--depth:${depth}` : null },
           h("span", {}, h("span", { class: "act-tag" }, t("act_" + st.action)), h("span", { class: "step-name" }, st.label || "")),
           h("span", { class: "minor data", title: target }, target)),
-        cell(t("col_delay"), delay), cell(t("col_typing"), typing),
-        cell(t("col_check"), h("div", { class: "check-cell" }, checkSel, checkVal)),
-        cell(t("col_retries"), retriesIn),
+        cell(t("col_delay"), MARKER_ACTIONS.includes(st.action) ? dash() : delay), cell(t("col_typing"), typing),
+        cell(t("col_check"), control ? dash() : h("div", { class: "check-cell" }, checkSel, checkVal)),
+        cell(t("col_retries"), control && !["if", "while"].includes(st.action) ? dash() : retriesIn),
         h("div", { class: "acts" },
           btn("sliders", t("details"), () => { expanded.has(st.id) ? expanded.delete(st.id) : expanded.add(st.id); drawSteps(); }),
           btn("up", t("move_up"), () => move(i, -1), i === 0),
           btn("down", t("move_down"), () => move(i, 1), i === wf.steps.length - 1),
+          btn("plus", t("insert_below"), () => { const added = newStep(); wf.steps.splice(i + 1, 0, added); expanded.add(added.id); drawSteps(); }),
           btn("trash", t("remove_step"), () => { wf.steps.splice(i, 1); drawSteps(); }, false, "danger")));
       if (expanded.has(st.id)) row.append(stepDetail(st));
       return row;
@@ -1634,9 +2186,15 @@ async function openStepEditor(name, onSaved) {
         const v = e.target.value;
         st[key] = numeric ? (v.trim() === "" ? null : toInt(v, null)) : v;
       };
-      const action = h("select", { id: id("action"), onchange: (e) => { st.action = e.target.value; drawSteps(); } },
-        ACTIONS.map((a) => h("option", { value: a, selected: st.action === a }, t("act_" + a))));
+      const action = h("select", { id: id("action"), onchange: (e) => {
+        st.action = e.target.value;
+        // The new step's wait time means nothing to a control step.
+        if (MARKER_ACTIONS.includes(st.action) || (CONTROL_ACTIONS.includes(st.action) && st.value === "1000")) st.value = "";
+        closeBlock(wf.steps, wf.steps.indexOf(st));
+        drawSteps();
+      } }, ACTIONS.map((a) => h("option", { value: a, selected: st.action === a }, t("act_" + a))));
       const label = h("input", { id: id("label"), value: st.label || "", maxlength: 300, autocomplete: "off", oninput: bind("label") });
+      if (CONTROL_ACTIONS.includes(st.action)) return controlDetail(st, id, bind, action, label);
       const value = h("input", { id: id("value"), type: st.sensitive ? "password" : "text", class: "data", value: st.value || "", autocomplete: "off", oninput: bind("value") });
       const selectors = h("textarea", { id: id("sel"), rows: 3, spellcheck: "false", oninput: (e) => {
         st.selectors = e.target.value.split("\n").map((x) => x.trim()).filter(Boolean); } });
@@ -1668,11 +2226,47 @@ async function openStepEditor(name, onSaved) {
         field(t("f_frame"), frame, t("f_frame_hint")), field(t("f_timeout"), timeoutIn, t("f_timeout_hint")),
         h("div", { class: "wide" }, field(t("f_expect"), expect, t("f_expect_hint"))));
     }
+    // The fields of an assign, if, for, while, or a block marker.
+    function controlDetail(st, id, bind, action, label) {
+      const kind = st.action;
+      const saveAs = h("input", { id: id("save"), class: "data", value: st.save_as || "", maxlength: 64, autocomplete: "off",
+        pattern: "[A-Za-z_][A-Za-z0-9_]*", oninput: bind("save_as") });
+      const out = [field(t("f_action"), action), field(t("f_label"), label)];
+      if (kind === "assign") {
+        out.push(h("div", { class: "wide" }, field(t("f_save_as"), saveAs, t("f_save_as_hint"))),
+          h("div", { class: "wide" }, field(t("f_value"), h("input", { id: id("value"), class: "data", value: st.value || "", autocomplete: "off",
+            oninput: bind("value") }), t("f_assign_hint"))));
+      } else if (kind === "for") {
+        const over = h("textarea", { id: id("value"), rows: 3, spellcheck: "false", oninput: bind("value") });
+        over.value = st.value || "";
+        out.push(h("div", { class: "wide" }, field(t("f_for_value"), over, t("f_for_hint"))),
+          h("div", { class: "wide" }, field(t("f_for_var"), saveAs, t("f_for_var_hint"))));
+      } else if (kind === "if" || kind === "while") {
+        const cond = st.condition || "expression";
+        const condSel = h("select", { id: id("cond"), onchange: (e) => { st.condition = e.target.value; drawSteps(); } },
+          CONDITIONS.map((c) => h("option", { value: c, selected: cond === c }, t("cond_" + c))));
+        const negate = h("input", { type: "checkbox", onchange: (e) => { st.negate = e.target.checked; drawSteps(); } });
+        negate.checked = !!st.negate;
+        out.push(field(t("f_condition"), condSel),
+          field(t("f_cond_value"), h("input", { id: id("value"), class: "data", value: st.value || "", autocomplete: "off", oninput: bind("value") })),
+          h("div", { class: "wide hint", style: "font-size:12px;color:var(--ink-3);margin:-4px 0 8px" }, t("f_cond_hint")),
+          h("label", { class: "check-line wide" }, negate, t("f_negate")));
+        if (kind === "while") {
+          out.push(field(t("f_max_loops"), h("input", { id: id("max"), type: "number", min: 1, max: 10000, class: "data",
+            value: String(st.max_loops || 100), oninput: (e) => { st.max_loops = toInt(e.target.value, 100); } })));
+        }
+        if (cond !== "expression") {
+          out.push(field(t("f_cond_wait"), h("input", { id: id("timeout"), type: "number", min: 500, max: 300000, class: "data",
+            value: st.timeout_ms == null ? "" : String(st.timeout_ms), oninput: bind("timeout_ms", true) }), t("f_cond_wait_hint")),
+          field(t("f_frame"), h("input", { id: id("frame"), class: "data", value: st.frame || "", autocomplete: "off", oninput: bind("frame") }), t("f_frame_hint")));
+        }
+      }
+      return h("div", { class: "step-detail" }, out);
+    }
     drawSteps();
 
     const addStep = h("button", { type: "button", class: "btn btn-line", onclick: () => {
-      const st = { id: stepId(), action: "wait", value: "1000", label: "", selectors: [], frame: "", expect_url: "", delay_ms: 0,
-        char_delay_ms: 0, timeout_ms: null, retries: null, check: { type: "auto", value: "" }, enabled: true, sensitive: false };
+      const st = newStep();
       wf.steps.push(st);
       expanded.add(st.id);
       drawSteps();
@@ -1709,6 +2303,7 @@ async function openStepEditor(name, onSaved) {
         varsBox,
         h("div", { class: "inline-btns" }, addVar, aiBtn, aiLine),
         h("div", { class: "step" }, t("ed_steps")),
+        h("div", { class: "hint", style: "font-size:12.5px;color:var(--ink-2);margin-top:4px" }, t("ed_block_hint")),
         h("div", { class: "bulk-line" }, t("ed_bulk"), bulkDelay, bulkTyping, applyAll),
         stepsBox,
         h("div", { class: "inline-btns" }, addStep),
@@ -1784,9 +2379,17 @@ $("v-type").onsubmit = (e) => {
 document.querySelectorAll("[data-key]").forEach((b) => { b.onclick = () => act("POST", page("press"), { key: b.dataset.key }); });
 
 // --- Boot ----------------------------------------------------------------------
-let listTimer = null;
+let listTimer = null, polling = false;
+// Every 4 s, or 1.5 s while a workflow runs or a browser is starting, so progress stays live.
+function schedulePoll() {
+  const fast = busy.size > 0 || [...runs.values()].some((r) => r.active);
+  listTimer = setTimeout(async () => {
+    if (!viewing && !document.hidden) await refresh();
+    if (polling) schedulePoll();
+  }, fast ? 1500 : 4000);
+}
 function showLogin() {
-  clearInterval(listTimer); listTimer = null;
+  polling = false; clearTimeout(listTimer); listTimer = null;
   $("app").classList.add("hidden"); $("viewer").classList.add("hidden"); $("login").classList.remove("hidden");
   $("token").focus();
 }
@@ -1794,7 +2397,7 @@ async function showApp(authRequired) {
   $("login").classList.add("hidden"); $("app").classList.remove("hidden");
   $("logout-btn").classList.toggle("hidden", !authRequired);
   await refresh();
-  if (!listTimer) listTimer = setInterval(() => { if (!viewing && !document.hidden) refresh(); }, 4000);
+  if (!polling) { polling = true; schedulePoll(); }
 }
 $("login-form").onsubmit = async (e) => {
   e.preventDefault();
@@ -1803,7 +2406,7 @@ $("login-form").onsubmit = async (e) => {
   catch (err) { $("login-err").textContent = err.status === 401 ? t("bad_token") : (err.message || t("bad_token")); token = ""; }
 };
 $("logout-btn").onclick = () => { token = ""; store.set("foxflow.token", null); store.set("foxprofile.token", null); showLogin(); };
-$("new-btn").onclick = () => openEditor(null);
+$("new-btn").onclick = () => (view === "auto" ? openRecordPicker() : openEditor(null));
 $("mcp-btn").onclick = openMcpGuide;
 $("search").oninput = render;
 document.querySelectorAll("[data-lang]").forEach((b) => { b.onclick = () => { lang = b.dataset.lang; store.set("foxflow.lang", lang); applyI18n(); lastRender = ""; render(); }; });

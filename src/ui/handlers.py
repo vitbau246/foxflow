@@ -1,15 +1,15 @@
 """Event handlers extracted from App for Single Responsibility compliance."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 
 import flet as ft
 
-from ..core.strings import get_string
 from ..interfaces.protocols import IBrowserLauncher, IProfileManager, IProxyService
 from .actions.browser import launch_or_stop
 from .actions.bulk import bulk_delete_profiles, bulk_launch_profiles, bulk_stop_profiles
 from .actions.cookies import manage_cookies
 from .actions.profile import add_profile, clone_profile, delete_profile, edit_profile
+from .actions.stop_first import stop_then
 from .actions.transfer import export_profile, import_profile
 from .dialogs import open_log_dialog
 from .dialogs.workflows import WorkflowServices, open_workflows_dialog
@@ -51,6 +51,23 @@ class AppHandlers:
                 if self._bl.is_running(name):
                     self._workflows.runner.stop(name)
 
+    def stop_then(
+        self, names: Iterable[str], then: Callable[[], None], *, partial: bool = False
+    ) -> None:
+        """Stop these browsers as the row's Stop does, then call `then` (see stop_first)."""
+        page = self._get_page()
+        assert page is not None
+        stop_then(
+            page,
+            names,
+            self._bl,
+            self._state,
+            self._log,
+            then,
+            stop_runs=self._stop_runs,
+            partial=partial,
+        )
+
     def on_launch(self, name: str) -> None:
         self._stop_runs([name])
         launch_or_stop(name, self._pm, self._bl, self._state, self._log)
@@ -58,12 +75,14 @@ class AppHandlers:
     def on_workflows(self, name: str) -> None:
         page = self._get_page()
         assert page is not None and self._workflows is not None
-        open_workflows_dialog(page, name, self._workflows)
+        open_workflows_dialog(
+            page, name, self._workflows, launch=self.on_launch, is_loading=self._state.is_loading
+        )
 
     def on_delete(self, name: str) -> None:
         page = self._get_page()
         assert page is not None
-        delete_profile(page, name, self._pm, self._log, self._refresh)
+        delete_profile(page, name, self._pm, self._bl, self._log, self._refresh, self.stop_then)
 
     def on_edit(self, name: str) -> None:
         page = self._get_page()
@@ -76,6 +95,7 @@ class AppHandlers:
             self._ps,
             self._log,
             self._refresh,
+            self.stop_then,
             on_renamed=self._workflows.store.reassign if self._workflows else None,
         )
 
@@ -84,19 +104,26 @@ class AppHandlers:
         assert page is not None
         assert self._workflows is not None
         clone_profile(
-            page, name, self._pm, self._bl, self._workflows.store, self._log, self._refresh
+            page,
+            name,
+            self._pm,
+            self._bl,
+            self._workflows.store,
+            self._log,
+            self._refresh,
+            self.stop_then,
         )
 
     def on_cookies(self, name: str) -> None:
         page = self._get_page()
         refs = self._get_refs()
         assert page is not None and refs is not None
-        manage_cookies(page, name, refs.file_picker, self._pm, self._bl, self._log)
+        manage_cookies(page, name, refs.file_picker, self._pm, self._bl, self._log, self.stop_then)
 
-    def open_add_dialog(self) -> None:
+    def open_add_dialog(self, on_created: Callable[[str], None] | None = None) -> None:
         page = self._get_page()
         assert page is not None
-        add_profile(page, self._pm, self._ps, self._log, self._refresh)
+        add_profile(page, self._pm, self._ps, self._log, self._refresh, on_created=on_created)
 
     async def on_import(self, _: ft.ControlEvent | None = None) -> None:
         refs = self._get_refs()
@@ -136,19 +163,17 @@ class AppHandlers:
     def on_bulk_delete(self) -> None:
         page = self._get_page()
         assert page is not None
-        selected = self._state.selected_names()
-        # Like the web panel and the API: a running profile is never deleted.
-        if running := [n for n in selected if self._bl.is_running(n)]:
-            self._log(get_string("bulk_skip_running", count=len(running)))
-        if names := [n for n in selected if not self._bl.is_running(n)]:
-            bulk_delete_profiles(
-                page,
-                names,
-                self._pm,
-                self._log,
-                self._refresh,
-                on_done=self._state.clear_selection,
-            )
+        # Running ones are stopped first (the API still refuses to delete them).
+        bulk_delete_profiles(
+            page,
+            sorted(self._state.selected_names()),
+            self._pm,
+            self._bl,
+            self._log,
+            self._refresh,
+            on_done=self._state.clear_selection,
+            stop_then=self.stop_then,
+        )
 
     def on_bulk_launch(self) -> None:
         if names := list(self._state.selected_names()):

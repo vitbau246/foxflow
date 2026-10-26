@@ -11,6 +11,7 @@ from ...services.ai.settings import AISettings
 from ...services.workflow import recording
 from ...services.workflow.model import Workflow
 from ...services.workflow.store import WorkflowError
+from ...utils import net
 from ..dependencies import (
     get_ai_settings,
     get_browser_launcher,
@@ -21,7 +22,13 @@ from ..dependencies import (
 )
 from ..helpers import require_profile
 from ..schemas.common import SuccessResponse
-from ..schemas.workflows import AISettingsUpdate, AITestRequest, RecordStopRequest, RunRequest
+from ..schemas.workflows import (
+    AISettingsUpdate,
+    AITestRequest,
+    ChainRunRequest,
+    RecordStopRequest,
+    RunRequest,
+)
 
 if TYPE_CHECKING:
     from ...core.events import EventBus
@@ -112,8 +119,8 @@ _AI = Depends(get_ai_settings)
 
 @router.get("/ai/settings")
 def ai_settings(settings: AISettingsStore = _AI) -> dict:
-    """AI used by "ai" steps; the API key only as a hint."""
-    return settings.public()
+    """AI used by "ai" steps; the API key only as a hint, and the outbound proxy's host:port."""
+    return {**settings.public(), "network_proxy": net.proxy_label()}
 
 
 @router.put("/ai/settings")
@@ -127,7 +134,7 @@ def save_ai_settings(body: AISettingsUpdate, settings: AISettingsStore = _AI) ->
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e).splitlines()[-1]) from e
     settings.save(updated)
-    return settings.public()
+    return {**settings.public(), "network_proxy": net.proxy_label()}
 
 
 @router.post("/ai/test")
@@ -143,8 +150,23 @@ def test_ai(body: AITestRequest, settings: AISettingsStore = _AI) -> dict:
 
 
 @router.get("/workflow-runs")
-def list_runs(runner: WorkflowRunner = _WR) -> dict:
-    return {"runs": runner.list()}
+def list_runs(log: bool = True, runner: WorkflowRunner = _WR) -> dict:
+    """Each profile's current or last run. `log=false` leaves out the log lines (dashboards)."""
+    return {"runs": runner.list(log)}
+
+
+@router.post("/workflow-runs", status_code=202)
+def run_workflows(body: ChainRunRequest, runner: WorkflowRunner = _WR) -> dict:
+    """Run several workflows one after the other in one profile's browser.
+
+    Each keeps its own settings and restarts from its own first step; variables
+    saved by one carry over to the next. The run stops at the first workflow
+    that fails. Follow it with GET /workflow-runs/{profile}.
+    """
+    try:
+        return runner.start_chain(body.workflows, body.profile, body.variables)
+    except WorkflowError as e:
+        raise _http(e) from e
 
 
 @router.get("/workflow-runs/{profile}")

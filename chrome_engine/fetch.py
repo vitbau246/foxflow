@@ -26,6 +26,8 @@ import zipfile
 from collections.abc import Callable
 from pathlib import Path
 
+from src.utils import net
+
 from .release import Asset, Release, get_release, host_platform
 
 MARKER = ".installed"
@@ -207,7 +209,7 @@ def download(asset: Asset, dest: Path, progress: Progress | None = None) -> None
                 if progress:
                     progress(done, total)
     except OSError as e:
-        raise FetchError(f"Download failed: {asset.url}: {e}") from e
+        raise FetchError(f"Download failed: {asset.url}: {e}. {net.network_hint()}") from e
     if digest.hexdigest() != asset.sha256:
         raise FetchError(
             f"Checksum mismatch for {asset.url}: expected {asset.sha256}, got {digest.hexdigest()}"

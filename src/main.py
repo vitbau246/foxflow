@@ -10,6 +10,7 @@ from src.core.config import API_HOST, API_PORT, API_TOKEN
 from src.core.container import Container
 from src.core.logging import get_logger
 from src.ui.app import App
+from src.utils.net import log_network
 
 logger = get_logger("main")
 
@@ -22,6 +23,7 @@ def main() -> None:
     api_server = APIServer(fastapi_app)
     api_server.start()
     logger.info("API available at http://%s:%s/api/v1", API_HOST, API_PORT)
+    log_network(logger)
 
     try:
         gui = App(container)

@@ -5,7 +5,11 @@ try:
 except ImportError:
     pass
 
-from src.core.env import getenv
+from src.core.env import apply_outbound_proxy, getenv
+
+# FoxFlow's own internet requests use FOXFLOW_HTTP_PROXY, or no proxy at all;
+# set before anything opens a connection, and inherited by the browser runners.
+apply_outbound_proxy()
 
 
 def _env(key: str, default: str) -> str:

@@ -7,6 +7,20 @@ FoxFlow là bản fork của [FoxProfile](https://github.com/chienbm98/foxprofil
 ## [Unreleased]
 
 ### Thêm
+- Workflow: **lấy text ngay lúc ghi.** Bôi đen chữ hoặc để chuột yên trên một phần tử 3 giây, một khung nhỏ trong trang hỏi có lấy text đó không (kèm tên biến gợi ý `text1`, `text2`...); đồng ý là thêm bước *Lấy chữ*. Kéo chuột để bôi đen không còn bị ghi thành click.
+- Workflow: bước **Gán biến**, **Nếu / Ngược lại**, **Lặp theo danh sách** (một số N hoặc danh sách), **Lặp khi**, **Thoát vòng lặp** và **Kết thúc khối**, với điều kiện là biểu thức trên biến (`price > 100 and status == "ok"`, hàm `contains`, `len`, `matches`...) hoặc trên trang (thấy phần tử, thấy chữ, URL / tiêu đề chứa). Trình sửa thụt lề các bước trong khối, có nút chèn bước bên dưới và tự thêm Kết thúc khối.
+- **Chạy nhiều workflow trong một lần**: hộp thoại chạy có **Thêm workflow**; mỗi profile chạy lần lượt các workflow trong cùng một trình duyệt, biến được dùng tiếp sang workflow sau. REST `POST /workflow-runs`, MCP `run_workflows`.
+- **Bảng Tự động hoá** trên app desktop và web panel, là màn hình mở đầu: bảng **Lần chạy** (lần chạy hiện tại hoặc gần nhất của mỗi profile: bước đang chạy và vạch tiến độ, số lần thử và khởi động lại, dấu trạng thái, lý do lỗi; Dừng, Chạy lại, Log trực tiếp, Xem màn hình) và bảng **Workflow** (profile đã ghi, số bước, kết quả lần chạy gần nhất; Chạy, sửa, xoá). Thanh bên có công tắc **Tự động hoá / Profile**; nút chính đổi thành **Ghi workflow** (chọn profile rồi ghi).
+- **Chạy một workflow trên nhiều profile** cùng lúc qua hộp thoại chạy (tick profile, điền biến cho lần chạy) hoặc nút **Chạy workflow** trên thanh thao tác hàng loạt của bảng profile. Profile đang ghi hoặc đang chạy workflow khác bị làm mờ kèm lý do.
+- **`FOXFLOW_HTTP_PROXY`** trong `.env`: proxy cho các request ra Internet của chính FoxFlow (AI, tải engine Chrome và GeoIP, tra IP ra và Kiểm tra IP của profile không có proxy riêng). Không đặt thì đi thẳng: proxy hệ thống và `HTTP(S)_PROXY` không còn được dùng ngầm. Log khởi động cho biết đang đi đường nào, hộp thoại Cấu hình AI hiện proxy đang dùng, và lỗi mất mạng kèm hướng dẫn đặt proxy. Trình duyệt không bị ảnh hưởng.
+- `GET /workflow-runs?log=false` bỏ phần log để bảng điều khiển tải nhẹ hơn; web panel tự cập nhật mỗi 1,5 giây khi có lần chạy, 4 giây khi rảnh, và chỉ tải fingerprint khi đang xem bảng profile.
+- Bớt các bước "làm X trước" phải tự quay lại làm, trên cả app desktop và web panel:
+  - **Ghi workflow** mở luôn profile đang tắt rồi tự bắt đầu ghi. Chưa có profile thì tạo xong là ghi ngay.
+  - **Cookie & fingerprint**, **đổi tên**, **xoá** (kể cả xoá hàng loạt) một profile đang chạy: hỏi lại rồi tự dừng trình duyệt, thay vì từ chối.
+  - **Nhân bản** có nút **Dừng trình duyệt** ngay trong hộp thoại để chép được dữ liệu.
+  - **Chạy workflow** khi chưa có workflow nào: chuyển sang ghi workflow.
+  - Workflow có bước Sinh bằng AI mà chưa có API key: mở luôn Cấu hình AI thay vì báo lỗi.
+  - Hộp thoại Workflow của profile đang tắt có nút **Mở**.
 - **Workflow: ghi lại và chạy lại thao tác.** Nút **Workflow** trên mỗi dòng profile (app desktop và web panel) ghi mọi click, gõ phím, chọn, bấm phím, cuộn và mở trang trong trình duyệt của profile thành các bước, mỗi phần tử kèm nhiều selector dự phòng. Mỗi bước có delay riêng (lấy từ nhịp thật lúc ghi) và tốc độ gõ (ms/ký tự); workflow có tốc độ chung (x0.25–x5). Khi chạy, mọi bước được kiểm tra kết quả (ô đã gõ đúng chữ, ô tích đã tích, click tới đúng trang như lúc ghi, hoặc chờ URL/tiêu đề/phần tử/chữ tuỳ chọn); bước lỗi được thử lại 2 lần, vẫn lỗi thì tắt trình duyệt và chạy lại từ bước 1, tối đa 3 lần (đều chỉnh được). Bản ghi chưa lưu được giữ lại kể cả khi trình duyệt đóng. Dùng được với cả engine Camoufox và Chrome.
 - **Nhân bản profile**: nút sao chép trên mỗi dòng profile (app desktop và web panel), `POST /profiles/{name}/clone` và MCP `clone_profile`, một bản hoặc tối đa 50 bản một lần (tên gốc thêm -1, -2...). Bản sao giữ proxy, hệ điều hành, engine, timezone, locale và luôn có fingerprint mới; tick để chép thêm từng phần: cookie, lịch sử và bookmark, dữ liệu trang web, mật khẩu đã lưu, các tab đang mở (profile phải đang tắt) và workflow của profile (mỗi bản sao có workflow riêng).
 - Hộp thoại Workflow của một profile chỉ hiện workflow của profile đó, kèm nút hiện cả workflow của profile khác. Đổi tên profile thì workflow của nó đi theo tên mới.
@@ -16,6 +30,8 @@ FoxFlow là bản fork của [FoxProfile](https://github.com/chienbm98/foxprofil
 - REST API cho workflow: `/browser/{name}/record/*`, `/recordings`, `/workflows`, `/workflows/{name}/run`, `/workflow-runs`; MCP thêm `list_workflows`, `get_workflow`, `run_workflow`, `workflow_run_status`, `stop_workflow_run`. Workflow lưu ở `workflows/` (`FOXPROFILE_WORKFLOWS_DIR`).
 
 ### Sửa
+- Windows: **Dừng** một profile giờ tắt hẳn cả trình duyệt trước khi xong. Trước đây trình duyệt còn giữ thư mục dữ liệu thêm một lúc, nên đổi tên ngay sau khi dừng báo "Update failed (name conflict?)" và xoá có thể để sót file. Đổi tên và xoá cũng chờ thêm nếu Windows còn khoá file.
+- Workflow, điều khiển trang và MCP không còn hỏng (`JSONDecodeError`) trên máy có cấu hình proxy hệ thống hoặc `HTTP(S)_PROXY`: các kết nối tới `127.0.0.1` (control server của trình duyệt, API của chính FoxFlow) giờ luôn đi thẳng, không qua proxy.
 - App desktop: nút "Launch" không còn bị gãy chữ thành hai dòng khi dùng giao diện English.
 - Proxy dạng `host:port:user:pass` có `@` hoặc `:` trong mật khẩu không còn bị bỏ qua (trước đây profile mở mà không qua proxy). Chấp nhận proxy IPv6 dạng `[2001:db8::1]`; host proxy tối đa 253 ký tự.
 - Tên profile không phân biệt hoa thường: "Demo" và "demo" không còn tạo được hai profile dùng chung một thư mục dữ liệu trên Windows/macOS. Đổi tên chỉ khác hoa thường vẫn giữ nguyên dữ liệu; tên chứa ký tự điều khiển bị từ chối.

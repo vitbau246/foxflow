@@ -51,11 +51,31 @@ def spawn_browser(profile: Profile) -> subprocess.Popen:
     )
 
 
+def _kill_tree(proc: subprocess.Popen) -> None:
+    """Windows: kill the runner with its Playwright driver and browser, synchronously.
+
+    TerminateProcess stops only the runner (Windows has no SIGTERM for it to clean
+    up on); its browser would exit on its own moments later, still holding the
+    profile's files, and a rename, delete or clone right after Stop would fail.
+    """
+    try:
+        subprocess.run(
+            ["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+            capture_output=True,
+            timeout=15,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+    except (OSError, subprocess.SubprocessError) as e:
+        logger.warning("taskkill failed for pid %s: %s", proc.pid, e)
+
+
 def terminate(proc: subprocess.Popen, name: str, timeout: int = 5) -> None:
     """Gracefully terminate a browser process, force-kill on timeout."""
     if proc.poll() is not None:
         return
     try:
+        if sys.platform == "win32":
+            _kill_tree(proc)
         proc.terminate()
         try:
             proc.wait(timeout=timeout)

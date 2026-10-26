@@ -17,6 +17,7 @@ from src.services.browser import control, session
 from src.services.browser import display as xvfb
 from src.services.browser.fingerprint import load_or_create
 from src.services.proxy.geo_check import requests_proxy_url
+from src.utils import net
 from src.utils.proxy_parser import parse_proxy
 
 _shutdown = asyncio.Event()
@@ -130,7 +131,9 @@ def exit_ip(proxy_str: str) -> str:
         # The raw error is a urllib3 retry chain (class names, object addresses,
         # the lookup host); log it, but report something a user can act on.
         if not proxy_str or proxy_str == "None":
-            raise
+            # No proxy of the profile's own: FoxFlow's route to the internet failed.
+            _safe_print(f"Exit IP lookup failed: {_compact_error(e, 300)}")
+            raise NoInternet(f"no internet connection. {net.network_hint()}") from e
         _safe_print(f"Exit IP lookup failed: {_compact_error(e, 300)}")
         parsed = parse_proxy(proxy_str)
         server = parsed["server"].split("://", 1)[-1] if parsed else "the proxy"
@@ -138,6 +141,10 @@ def exit_ip(proxy_str: str) -> str:
 
 
 class ProxyUnreachable(RuntimeError):
+    pass
+
+
+class NoInternet(RuntimeError):
     pass
 
 

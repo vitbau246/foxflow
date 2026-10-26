@@ -20,6 +20,7 @@ from mcp.server.fastmcp import FastMCP, Image
 from mcp.types import ToolAnnotations
 
 from src.core.env import getenv
+from src.utils import net
 
 BASE_URL = getenv("URL", "http://127.0.0.1:8000").rstrip("/") + "/api/v1"
 TOKEN = getenv("API_TOKEN", "")
@@ -72,7 +73,7 @@ def _request(
     data = json.dumps(body).encode() if body is not None else None
     request = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
-        with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+        with net.urlopen(request, timeout=TIMEOUT) as response:
             payload = response.read()
     except urllib.error.HTTPError as e:
         raise FoxFlowError(f"FoxFlow API {e.code}: {_error_detail(e.read())}") from e
@@ -409,6 +410,20 @@ async def run_workflow(name: str, profile: str, variables: dict[str, str] | None
         "POST",
         f"/workflows/{_quote(name)}/run",
         {"profile": profile, "variables": variables or {}},
+    )
+
+
+@mcp.tool(annotations=_PAGE_ACT)
+async def run_workflows(
+    names: list[str], profile: str, variables: dict[str, str] | None = None
+) -> dict:
+    """Run several workflows one after the other in one profile's browser. Each uses its
+    own settings and restarts; variables saved by one carry over to the next, and the run
+    stops at the first that fails. Returns at once: poll workflow_run_status(profile)."""
+    return await _arequest(
+        "POST",
+        "/workflow-runs",
+        {"profile": profile, "workflows": names, "variables": variables or {}},
     )
 
 

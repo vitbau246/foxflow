@@ -21,6 +21,9 @@ def _progress(done: int, total: int) -> None:
 
 
 def cmd_fetch(args: argparse.Namespace) -> int:
+    # Loads .env, so the download uses FOXFLOW_HTTP_PROXY like FoxFlow does.
+    import src.core.config  # noqa: F401
+
     exe = fetch.install(args.version, progress=_progress)
     print(exe)
     return 0

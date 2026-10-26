@@ -3,7 +3,9 @@
 Runs inside the runner process, next to the control server. recorder.js is
 injected into every frame and reports trusted clicks, typing, selections, key
 presses and scrolls through a Playwright binding; navigations come from the
-browser itself. The steps so far are written to recording.json in the profile
+browser itself. Text the user selects, or an element the mouse rests on, is
+offered as a "Get text" step; the page asks here for the variable name to
+suggest (get_text_name) and sends the step once the user accepts. The steps so far are written to recording.json in the profile
 directory after every change, so closing the browser does not lose them.
 """
 
@@ -18,7 +20,7 @@ import time
 from typing import Any
 from urllib.parse import urlsplit
 
-from ..workflow.model import new_step_id
+from ..workflow.model import VARIABLE_NAME, new_step_id
 
 RECORDING_FILE = "recording.json"
 BINDING = "__foxflowRecord"
@@ -97,10 +99,13 @@ class Recorder:
         self._last_at = 0.0
         self._last_action: dict[str, Any] | None = None
         self._last_action_at = 0.0
+        # Language of the "Get text" offer shown in the page.
+        self.lang = "en"
 
     # --- lifecycle --------------------------------------------------------
 
-    async def start(self, start_page: Any) -> dict[str, Any]:
+    async def start(self, start_page: Any, lang: str = "en") -> dict[str, Any]:
+        self.lang = lang if lang in ("en", "vi") else "en"
         if not self._installed:
             await self._context.expose_binding(BINDING, self._on_binding)
             await self._context.add_init_script(script=_SCRIPT)
@@ -194,9 +199,11 @@ class Recorder:
         self._append({"action": "navigate", "value": url, "label": _short_url(url)}, tab)
         self._mark_action()
 
-    async def _on_binding(self, source: dict[str, Any], event: Any) -> bool:
+    async def _on_binding(self, source: dict[str, Any], event: Any) -> Any:
         if not isinstance(event, dict) or event.get("type") == "ping":
             return self.active
+        if event.get("type") == "get_text_name":
+            return {"name": self.next_text_name(), "lang": self.lang} if self.active else None
         if not self.active or len(self.steps) >= MAX_RECORDED_STEPS:
             return False
         page = source.get("page")
@@ -209,6 +216,14 @@ class Recorder:
             frame_ref = frame.name or frame.url
         self._record(event, tab, frame_ref)
         return True
+
+    def next_text_name(self) -> str:
+        """text1, text2...: the first not yet saved into by this recording."""
+        used = {s.get("save_as") for s in self.steps}
+        n = 1
+        while f"text{n}" in used:
+            n += 1
+        return f"text{n}"
 
     # --- turning events into steps ----------------------------------------
 
@@ -251,6 +266,13 @@ class Recorder:
                 step["hover_selectors"] = [
                     s for s in hover.get("selectors") or [] if isinstance(s, str)
                 ][:6]
+        elif kind == "get_text":
+            name = str(event.get("save_as") or "").strip()
+            if not VARIABLE_NAME.match(name) or name == "profile":
+                name = self.next_text_name()
+            if not step["label"]:
+                step["label"] = " ".join(str(event.get("text") or "").split())[:60]
+            step.update(action="get_text", value="", save_as=name)
         elif kind == "select":
             step.update(action="select", value=str(event.get("value", "")))
         elif kind in ("check", "uncheck"):

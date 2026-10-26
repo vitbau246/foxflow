@@ -19,12 +19,24 @@ from ..theme.page import build_engine_dropdown, build_os_dropdown
 from ..theme.styles import ACCENT_STYLE, DLG_FIELD_KWARGS, OUTLINE_STYLE
 
 
+class Pending:
+    """on_save's answer when it finishes later, through the `finish` the dialog returns."""
+
+
+PENDING = Pending()
+
+
 def open_profile_dialog(
     page: ft.Page,
     proxy_service: IProxyService,
-    on_save: Callable[[str, str, str, str, str, str], str | None],
+    on_save: Callable[[str, str, str, str, str, str], str | Pending | None],
     profile: Profile | None = None,
-) -> None:
+) -> Callable[[str | None], None]:
+    """Create or edit a profile; returns `finish(error)`, which closes the dialog on None.
+
+    `on_save` returns an error to show, None when done, or PENDING when it will
+    call `finish` itself (after a confirmation, or to open the next dialog).
+    """
     is_edit = profile is not None
     title = get_string("edit_profile") if is_edit else get_string("create_new_profile")
     subtitle = (
@@ -155,7 +167,11 @@ def open_profile_dialog(
                 page.update()
                 return
 
-        error = on_save(name, proxy, os_type, timezone, locale, engine)
+        result = on_save(name, proxy, os_type, timezone, locale, engine)
+        if not isinstance(result, Pending):
+            finish(result)
+
+    def finish(error: str | None) -> None:
         if error:
             name_error.value = error
             name_error.visible = True
@@ -251,6 +267,7 @@ def open_profile_dialog(
         ],
     )
     page.show_dialog(dlg)
+    return finish
 
 
 _DATA = ft.TextStyle(font_family=FONT_DATA, size=13)

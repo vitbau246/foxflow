@@ -5,7 +5,7 @@ import pathlib
 import shutil
 import threading
 import time
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 
 from ...core.config import DATA_DIR, PROFILES_FILE
 from ...core.logging import get_logger
@@ -22,6 +22,34 @@ from .transfer import export_to_zip, import_from_zip, read_profile_meta
 logger = get_logger("profile.manager")
 
 MAX_CLONES = 50
+
+
+# Windows keeps a file "in use" for a moment after the process holding it exits
+# (and antivirus or the indexer may hold it briefly too).
+_LOCK_RETRIES = 6
+_LOCK_DELAY = 0.5
+
+
+def _retry_locked(action: Callable[[], object]) -> None:
+    for attempt in range(_LOCK_RETRIES):
+        try:
+            action()
+            return
+        except PermissionError:
+            if attempt == _LOCK_RETRIES - 1:
+                raise
+            time.sleep(_LOCK_DELAY)
+
+
+def _remove_tree(path: str) -> None:
+    """Delete a profile's data directory, waiting out files still briefly locked."""
+    for attempt in range(_LOCK_RETRIES):
+        shutil.rmtree(path, ignore_errors=True)
+        if not os.path.exists(path):
+            return
+        if attempt < _LOCK_RETRIES - 1:
+            time.sleep(_LOCK_DELAY)
+    logger.warning("Could not remove every file of %s; some are still in use", path)
 
 
 class CloneError(Exception):
@@ -189,7 +217,7 @@ class ProfileManager:
                             )
                             return False
                     try:
-                        old_dir.rename(new_dir)
+                        _retry_locked(lambda: old_dir.rename(new_dir))
                     except OSError as e:
                         logger.warning("Could not rename data dir for %s: %s", original_name, e)
                         return False
@@ -218,7 +246,7 @@ class ProfileManager:
             # Inside the lock: a profile re-created under the same (or, on a
             # case-insensitive file system, a case-variant) name must not have
             # its fresh data dir removed by this delete.
-            shutil.rmtree(self._data_path(name), ignore_errors=True)
+            _remove_tree(self._data_path(name))
         logger.info("Deleted profile: %s", name)
         return True
 
