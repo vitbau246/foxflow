@@ -34,6 +34,8 @@ FINGERPRINT_FILE = "fingerprint.json"
 
 # Recorded workflows, one JSON file each.
 WORKFLOWS_DIR = _env("WORKFLOWS_DIR", "workflows")
+# Triggers (webhook, clipboard, new file, schedule) that run workflows.
+AUTOMATIONS_FILE = _env("AUTOMATIONS_FILE", "automations.json")
 
 # Optional AI text generation for workflow "ai" steps (OpenAI-compatible API).
 # Off until a key is set here or in the AI settings; the key here is never saved.

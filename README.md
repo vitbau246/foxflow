@@ -60,6 +60,7 @@ Every run happens inside a **browser profile**: an isolated browser with its own
 - **Reliable replays.** Each step is checked (the field holds the text, the box is ticked, the click reached the same page), retried on failure, and the whole run restarts from step 1 in a fresh browser when a step keeps failing.
 - **Human pacing.** Each step keeps the delay you actually took while recording, typing has its own speed per character, and one speed setting (x0.25 to x5) scales the whole workflow.
 - **Variables, page text and AI.** `{{variables}}` in values, URLs and selectors; *Get text* reads the page into a variable (optionally through a regex), and while recording, selecting text or resting the mouse on an element for 3 s offers to add one; *AI text* sends a prompt to an OpenAI-compatible API and saves the reply.
+- **Triggers.** Run workflows by themselves when a webhook is called, text is copied, a file lands in a folder, or on a schedule: open the profiles, run the workflows, close the profiles.
 - **If, loops and chains.** *If / Else*, *Repeat for* (a count or a list), *Repeat while*, *Exit loop* and *Set variable* steps, with conditions on variables or on the page; run several workflows one after the other in one browser.
 - **Hover menus.** Clicks on elements that only appear on hover are recorded with a *Hover first* step.
 - **AI agents over MCP.** Claude Code, Claude Desktop, Cursor, VS Code and others can launch profiles, navigate, read, click, type, take screenshots and run your workflows.
@@ -164,6 +165,29 @@ In the editor, steps inside a block are indented, **+** on a row inserts a step 
 
 In the run dialog, **Add workflow** chains more workflows: each picked profile runs them one after the other in the same browser. Each workflow keeps its own settings and restarts from its own first step; variables saved by one carry over to the next (give the later workflow a variable of that name to use it); the run stops at the first workflow that fails. **Run again** on a run row runs the whole chain. From the API: `POST /workflow-runs` with `{"profile": ..., "workflows": [...], "variables": {...}}`; over MCP: `run_workflows`.
 
+### Triggers: run workflows by themselves
+
+A trigger watches for something, then opens profiles, runs workflows one after the other and closes the profiles. Create one with **New trigger** in the **Triggers** section of Automation:
+
+| When | Fires |
+|---|---|
+| **Webhook** | Another app (Zapier, n8n, a script, a form) calls its URL with `POST` or `GET`. The URL carries the trigger's own key (or send it as the `X-FoxFlow-Key` header); it needs no API token, so share the URL, not the token. A JSON object body fills the workflows' variables of the same names, and its `"text"` (or `?text=`) becomes `{{trigger_text}}`. |
+| **Copied text** | Text is copied on this computer, optionally only text matching a regular expression (e.g. `https?://` for links). Watched while FoxFlow is open; the text stays on the computer. |
+| **New file in a folder** | A file appears in a folder (not its subfolders), optionally only names matching a pattern such as `*.csv`. Files already there do not count, and a file fires once it stops growing. |
+| **Schedule** | Every N minutes, and/or every day at set times (`08:30, 17:00`). |
+
+**Then**: every picked profile runs the workflows, in order, at the same time (a profile already running a workflow is waited for). With *Close each profile afterwards* on, a profile the trigger opened is closed when its run ends, whatever the result; a profile that was already open stays open. Events that come while one is being handled wait in line.
+
+The workflows receive what happened as built-in variables, empty when they run any other way: `{{trigger_type}}` (`webhook`, `clipboard`, `file`, `schedule` or `manual`), `{{trigger_text}}` (the webhook text, the copied text, or the content of a small text file), `{{trigger_file}}` and `{{trigger_file_name}}` (the new file) and `{{trigger_time}}`. Each trigger row shows its last event and its result; **Run now** fires it by hand (also when it is off) and the switch turns it on or off. Runs it started say *via <trigger>* in the Runs table.
+
+```bash
+# Fire a webhook trigger (the URL is in the trigger's editor)
+curl -X POST "http://127.0.0.1:8000/api/v1/hooks/<id>?key=<key>" \
+  -H "Content-Type: application/json" -d '{"text": "new order", "order": "A-17"}'
+```
+
+Triggers are kept in `automations.json` next to `profiles.json`, with each webhook's key: keep that file private. From the API: `/automations`; over MCP: `list_triggers` and `fire_trigger`.
+
 Workflows are JSON files in `workflows/`, one per workflow, editable with the REST API (`PUT /workflows/{name}`) as well. They contain what you typed while recording, **including passwords** (a password field only hides the value in the interface), so treat that folder like `camoufox_data/`. Replays drive the page through Playwright: a site that blocks automation may notice it.
 
 ## MCP: let AI agents drive the browser
@@ -198,7 +222,7 @@ Then just ask, e.g. *"Open profile work-01, go to example.com and send me a scre
 | Cookies & fingerprints | `export_cookies`, `import_cookies`, `get_fingerprint`, `reset_fingerprint`, `check_proxy`, `check_profile_ip` |
 | Page | `browser_navigate`, `browser_back`, `browser_snapshot`, `browser_get_text`, `browser_click`, `browser_click_at`, `browser_type`, `browser_press`, `browser_wait_for`, `browser_screenshot`, `browser_evaluate` |
 | Tabs | `browser_tabs`, `browser_tab_new`, `browser_tab_select`, `browser_tab_close` |
-| Workflows | `list_workflows`, `get_workflow`, `run_workflow`, `run_workflows`, `workflow_run_status`, `stop_workflow_run` |
+| Workflows | `list_workflows`, `get_workflow`, `run_workflow`, `run_workflows`, `workflow_run_status`, `stop_workflow_run`, `list_triggers`, `fire_trigger` |
 
 There is deliberately **no** delete tool, so an agent cannot wipe an account's cookies by mistake. Only `http`, `https` and `about:blank` can be opened; `file://` and `about:config` are blocked.
 
@@ -277,6 +301,7 @@ Everything is optional. To override defaults, copy `.env.example` to `.env`.
 | `FOXFLOW_HEADLESS` | `false` (`true` in server mode) | Hidden browsers: `true`, `false` or `virtual` (Linux + Xvfb) |
 | `FOXFLOW_RESTORE_TABS` | `true` | Reopen the tabs from the previous run |
 | `FOXFLOW_WORKFLOWS_DIR` | `workflows` | Saved workflows, one JSON file each |
+| `FOXFLOW_AUTOMATIONS_FILE` | `automations.json` | Saved triggers, with their webhook keys |
 | `FOXFLOW_OPENAI_API_KEY` | *(empty)* | Key for workflow AI text steps; overrides the one in the AI settings and is never saved |
 | `FOXFLOW_OPENAI_BASE_URL` | `https://api.openai.com/v1` | Default base URL of an OpenAI-compatible API |
 | `FOXFLOW_OPENAI_MODEL` | `gpt-4o-mini` | Default model |
@@ -319,6 +344,7 @@ camoufox_data/<profile>/tabs.json              tabs to reopen on next launch
 camoufox_data/<profile>/recording.json         steps of the recording in progress or not saved yet
 workflows/<workflow>.json                      saved workflows: steps, delays, checks, retries
 ai_settings.json                               AI settings for AI text steps, with the API key
+automations.json                               triggers, with their webhook keys
 logs/foxflow_YYYYMMDD.log                      daily log
 ```
 
@@ -339,6 +365,10 @@ Prefix `/api/v1`. The full reference is at `/docs` while the app is running.
 | `POST` | `/workflows/{name}/run` | Replay it in a profile: `{"profile": "name", "variables": {}}`, launching the browser if needed (202) |
 | `POST` | `/workflow-runs` | Run several workflows one after the other in a profile: `{"profile": "name", "workflows": ["a", "b"], "variables": {}}` (202) |
 | `GET` / `POST` | `/workflow-runs` · `/workflow-runs/{profile}` · `/workflow-runs/{profile}/stop` | Runs (`?log=false` leaves out the log lines); one profile's current or last run (status, step, attempt, restarts, log); stop it |
+| `GET` / `POST` | `/automations` | Triggers with their recent events / create one: `{"name": ..., "trigger": {"type": "webhook"}, "profiles": [...], "workflows": [...]}` |
+| `GET` / `PUT` / `DELETE` | `/automations/{id or name}` | Read / save / delete a trigger |
+| `POST` | `/automations/{id or name}/fire` | Run it now: `{"text": "", "variables": {}}` (202) |
+| `GET` / `POST` | `/hooks/{id}?key=...` | A trigger's webhook: no API token, only its key (202) |
 | `GET` / `PUT` | `/ai/settings` | AI settings (the key only as a hint) / save them (`api_key` omitted keeps it, `""` removes it) |
 | `POST` | `/ai/test` | Send one prompt with the saved AI settings |
 | `POST` | `/browser/{name}/page/navigate` · `back` | Open a URL in the active tab, go back |

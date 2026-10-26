@@ -41,6 +41,7 @@ from .model import (
     MARKER_ACTIONS,
     MAX_LOOP_ROUNDS,
     MAX_VARIABLE_TEXT,
+    TRIGGER_VARIABLES,
     VARIABLE_NAME,
     Block,
     Step,
@@ -90,6 +91,9 @@ class RunState:
         self.stop_event = threading.Event()
         # Values of {{variables}} during the current run (set again on a restart).
         self.variables: dict[str, str] = {}
+        # Set when a trigger started the run: its name, and {{trigger_*}} values.
+        self.origin = ""
+        self.trigger: dict[str, str] = {}
 
     def to_dict(self, log: bool = True) -> dict[str, Any]:
         return {
@@ -109,6 +113,7 @@ class RunState:
             "restarts": self.restarts,
             "max_restarts": self.max_restarts,
             "error": self.error,
+            "origin": self.origin,
             "variables": {k: _short(v, 200) for k, v in self.variables.items()},
             "log": list(self.log[-100:]) if log else [],
         }
@@ -172,10 +177,15 @@ class WorkflowRunner:
         workflow_names: list[str],
         profile_name: str,
         variables: dict[str, str] | None = None,
+        *,
+        trigger: dict[str, str] | None = None,
+        origin: str = "",
     ) -> dict[str, Any]:
         """Run several workflows one after the other in one profile.
 
         `variables` overrides the starting values of every workflow that has them.
+        `trigger` holds the {{trigger_*}} values and `origin` names the trigger
+        that started the run.
         """
         if not workflow_names:
             raise WorkflowError("Pick at least one workflow")
@@ -203,6 +213,12 @@ class WorkflowRunner:
                     status=409,
                 )
             state = self._runs[profile_name] = RunState(workflows, profile_name)
+            state.origin = origin
+            state.trigger = {
+                k: str(v)[:MAX_VARIABLE_TEXT]
+                for k, v in (trigger or {}).items()
+                if k in TRIGGER_VARIABLES
+            }
         threading.Thread(
             target=self._run_chain,
             args=(state, workflows),
@@ -335,7 +351,13 @@ class WorkflowRunner:
                     f"Run {state.restarts + 1}/{settings.max_restarts + 1}: "
                     f"{len(steps)} steps at speed x{settings.speed:g}",
                 )
-                state.variables = {**workflow.variables, **carried, "profile": state.profile}
+                state.variables = {
+                    **dict.fromkeys(TRIGGER_VARIABLES, ""),
+                    **state.trigger,
+                    **workflow.variables,
+                    **carried,
+                    "profile": state.profile,
+                }
                 self._ensure_browser(state)
                 self._set(state, status="running")
                 self._prepare(state)

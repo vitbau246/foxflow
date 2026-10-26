@@ -24,11 +24,13 @@ def main() -> None:
     api_server.start()
     logger.info("API available at http://%s:%s/api/v1", API_HOST, API_PORT)
     log_network(logger)
+    container.automation_engine.start()
 
     try:
         gui = App(container)
         gui.run()
     finally:
+        container.automation_engine.stop()
         api_server.stop()
 
 

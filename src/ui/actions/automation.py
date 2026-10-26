@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
+from typing import Any
 
 import flet as ft
 
+from ...core.config import API_HOST, API_PORT
 from ...core.strings import get_string
 from ...interfaces.protocols import IBrowserLauncher, IProfileManager
 from ..dialogs.ai_settings import ai_setup_needed
@@ -14,6 +16,7 @@ from ..dialogs.confirm import open_confirm_dialog
 from ..dialogs.record_workflow import open_record_dialog
 from ..dialogs.run_log import open_run_log
 from ..dialogs.run_workflow import open_run_dialog
+from ..dialogs.trigger_editor import open_trigger_editor
 from ..dialogs.workflow_editor import open_workflow_editor
 from ..dialogs.workflows import WorkflowServices, open_workflows_dialog
 
@@ -30,10 +33,12 @@ class AutomationHandlers:
         launch: Callable[[str], None] | None = None,
         is_loading: Callable[[str], bool] | None = None,
         add_profile: Callable[[Callable[[str], None]], None] | None = None,
+        copy: Callable[[str], Any] | None = None,
     ) -> None:
         """`get_recording`: profiles recording now; `on_changed`: workflows or runs changed.
 
-        `add_profile(on_created)` opens the create-profile dialog.
+        `add_profile(on_created)` opens the create-profile dialog; `copy(text)` puts
+        text on the clipboard (a webhook URL).
         """
         self._pm = pm
         self._bl = bl
@@ -44,6 +49,7 @@ class AutomationHandlers:
         self._launch = launch
         self._is_loading = is_loading
         self._add_profile = add_profile
+        self._copy = copy
 
     def _page(self) -> ft.Page:
         page = self._get_page()
@@ -118,6 +124,75 @@ class AutomationHandlers:
             workflow,
             confirmed,
             title=get_string("wf_confirm_delete", name=workflow),
+        )
+
+    # --- triggers ---------------------------------------------------------------
+
+    def open_trigger(self, automation_id: str | None = None) -> None:
+        """The trigger editor: a new trigger, or the one with this id."""
+        store = self._wf.automations
+        if store is None:
+            return
+        host = API_HOST if API_HOST not in ("", "0.0.0.0", "::") else "127.0.0.1"
+
+        def saved(name: str) -> None:
+            self._wf.log(get_string("trg_saved", name=name))
+            self._changed()
+
+        open_trigger_editor(
+            self._page(),
+            store,
+            sorted(self._pm.profiles, key=str.casefold),
+            [w["name"] for w in self._wf.store.list()],
+            automation_id,
+            on_saved=saved,
+            hook_base=f"http://{host}:{API_PORT}/api/v1/hooks",
+            copy=self._copy,
+        )
+
+    def fire_trigger(self, automation_id: str) -> None:
+        engine = self._wf.engine
+        if engine is None:
+            return
+        try:
+            event = engine.fire(automation_id, "manual")
+        except Exception as e:  # AutomationError: deleted meanwhile
+            self._wf.log(str(e))
+        else:
+            found = self._wf.automations.get(automation_id) if self._wf.automations else None
+            name = found.name if found else automation_id
+            self._wf.log(get_string("trg_fired", name=name))
+            if event.get("status") == "skipped":
+                self._wf.log(f"{name}: {event.get('detail', '')}")
+        self._changed()
+
+    def toggle_trigger(self, automation_id: str, on: bool) -> None:
+        store = self._wf.automations
+        found = store.get(automation_id) if store else None
+        if store is None or found is None:
+            return
+        found.enabled = on
+        store.save(found)
+        self._changed()
+
+    def delete_trigger(self, automation_id: str) -> None:
+        store = self._wf.automations
+        found = store.get(automation_id) if store else None
+        if store is None or found is None:
+            return
+
+        def confirmed() -> None:
+            if store.delete(found.id):
+                if self._wf.engine:
+                    self._wf.engine.forget(found.id)
+                self._wf.log(get_string("trg_deleted", name=found.name))
+            self._changed()
+
+        open_confirm_dialog(
+            self._page(),
+            found.name,
+            confirmed,
+            title=get_string("trg_confirm_delete", name=found.name),
         )
 
     def record(self, note: str = "") -> None:

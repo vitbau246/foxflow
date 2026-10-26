@@ -60,6 +60,7 @@ Mọi lần chạy diễn ra trong một **profile trình duyệt**: một trìn
 - **Chạy lại tin cậy.** Mỗi bước được kiểm tra (ô đã có đúng chữ, ô đã được tích, click tới đúng trang như lúc ghi), lỗi thì thử lại, và nếu một bước cứ lỗi mãi thì cả lần chạy bắt đầu lại từ bước 1 trên trình duyệt mới.
 - **Nhịp như người thật.** Mỗi bước giữ đúng khoảng dừng của bạn lúc ghi, bước gõ có tốc độ theo từng ký tự, và một mức tốc độ chung (x0.25 đến x5) cho cả workflow.
 - **Biến, lấy chữ và AI.** `{{biến}}` trong giá trị, URL và selector; *Lấy chữ* đọc chữ trên trang vào biến (lọc được bằng regex), và lúc ghi, bôi đen chữ hoặc để chuột yên trên phần tử 3 giây sẽ được hỏi để thêm bước này; *Sinh bằng AI* gửi prompt tới API tương thích OpenAI và lưu câu trả lời.
+- **Trigger.** Workflow tự chạy khi webhook được gọi, khi copy chữ, khi có file mới trong thư mục, hoặc theo lịch: mở profile, chạy workflow, đóng profile.
 - **Điều kiện, vòng lặp và chuỗi.** Các bước *Nếu / Ngược lại*, *Lặp theo danh sách* (một số hoặc danh sách), *Lặp khi*, *Thoát vòng lặp* và *Gán biến*, với điều kiện trên biến hoặc trên trang; chạy nhiều workflow lần lượt trong một trình duyệt.
 - **Menu hiện khi rê chuột.** Click vào phần tử chỉ hiện khi rê chuột được ghi kèm bước *Rê chuột vào trước*.
 - **AI agent qua MCP.** Claude Code, Claude Desktop, Cursor, VS Code... tự mở profile, mở trang, đọc, click, gõ, chụp màn hình và chạy workflow bạn đã ghi.
@@ -164,6 +165,29 @@ Trong trình sửa, các bước trong khối được thụt vào, nút **+** t
 
 Trong hộp thoại chạy, **Thêm workflow** nối thêm workflow: mỗi profile được chọn chạy lần lượt các workflow trong cùng một trình duyệt. Mỗi workflow giữ cài đặt riêng và khởi động lại từ bước đầu của chính nó; biến lưu ở workflow trước được dùng tiếp ở workflow sau (workflow sau cần có biến cùng tên để dùng); lần chạy dừng ở workflow đầu tiên bị lỗi. **Chạy lại** trên dòng lần chạy sẽ chạy lại cả chuỗi. Qua API: `POST /workflow-runs` với `{"profile": ..., "workflows": [...], "variables": {...}}`; qua MCP: `run_workflows`.
 
+### Trigger: workflow tự chạy
+
+Trigger theo dõi một sự kiện, rồi mở profile, chạy lần lượt các workflow và đóng profile. Tạo bằng **Tạo trigger** ở mục **Trigger** trong Tự động hoá:
+
+| Khi | Kích hoạt |
+|---|---|
+| **Webhook** | Ứng dụng khác (Zapier, n8n, script, form) gọi URL của trigger bằng `POST` hoặc `GET`. URL mang key riêng của trigger (hoặc gửi qua header `X-FoxFlow-Key`); không cần API token, nên chia sẻ URL chứ không chia sẻ token. Body JSON điền vào các biến cùng tên của workflow, và trường `"text"` (hoặc `?text=`) thành `{{trigger_text}}`. |
+| **Khi copy chữ** | Có chữ được copy trên máy này, có thể chỉ chữ khớp biểu thức chính quy (ví dụ `https?://` cho link). Chỉ theo dõi khi FoxFlow đang mở; chữ ở lại trên máy. |
+| **File mới trong thư mục** | Có file mới trong thư mục (không tính thư mục con), có thể chỉ tên khớp mẫu như `*.csv`. File có sẵn không tính, và file chỉ kích hoạt khi đã ghi xong (không còn lớn lên). |
+| **Lịch** | Mỗi N phút, và/hoặc hằng ngày vào các giờ đặt sẵn (`08:30, 17:00`). |
+
+**Sau đó**: mọi profile được chọn cùng lúc chạy các workflow theo thứ tự (profile đang chạy workflow khác thì chờ). Bật *Đóng từng profile khi xong* thì profile do trigger mở sẽ được đóng khi chạy xong, dù thành công hay lỗi; profile đã mở sẵn từ trước thì giữ nguyên. Sự kiện đến trong lúc đang xử lý sự kiện trước sẽ xếp hàng chờ.
+
+Workflow nhận thông tin sự kiện qua các biến có sẵn (trống khi chạy theo cách khác): `{{trigger_type}}` (`webhook`, `clipboard`, `file`, `schedule` hoặc `manual`), `{{trigger_text}}` (chữ của webhook, chữ được copy, hoặc nội dung file chữ nhỏ), `{{trigger_file}}` và `{{trigger_file_name}}` (file mới) và `{{trigger_time}}`. Mỗi dòng trigger cho thấy sự kiện gần nhất và kết quả; **Chạy ngay** kích hoạt bằng tay (kể cả khi đang tắt), công tắc để bật/tắt. Lần chạy do trigger khởi động ghi *qua <trigger>* trong bảng Lần chạy.
+
+```bash
+# Gọi một trigger webhook (URL nằm trong trình sửa trigger)
+curl -X POST "http://127.0.0.1:8000/api/v1/hooks/<id>?key=<key>" \
+  -H "Content-Type: application/json" -d '{"text": "đơn mới", "order": "A-17"}'
+```
+
+Trigger lưu trong `automations.json` cạnh `profiles.json`, kèm key của từng webhook: giữ kín file này. Qua API: `/automations`; qua MCP: `list_triggers` và `fire_trigger`.
+
 Workflow là các file JSON trong `workflows/`, mỗi workflow một file, sửa được cả qua REST API (`PUT /workflows/{name}`). File chứa những gì bạn đã gõ lúc ghi, **kể cả mật khẩu** (ô mật khẩu chỉ được ẩn trên giao diện), nên hãy giữ thư mục này cẩn thận như `camoufox_data/`. Khi chạy lại, trang được điều khiển qua Playwright: trang web chặn tự động hoá có thể nhận ra.
 
 ## MCP: cho AI điều khiển trình duyệt
@@ -198,7 +222,7 @@ Sau đó chỉ cần nhắn AI, ví dụ: *"Mở profile work-01, vào example.c
 | Cookie & fingerprint | `export_cookies`, `import_cookies`, `get_fingerprint`, `reset_fingerprint`, `check_proxy`, `check_profile_ip` |
 | Trang | `browser_navigate`, `browser_back`, `browser_snapshot`, `browser_get_text`, `browser_click`, `browser_click_at`, `browser_type`, `browser_press`, `browser_wait_for`, `browser_screenshot`, `browser_evaluate` |
 | Tab | `browser_tabs`, `browser_tab_new`, `browser_tab_select`, `browser_tab_close` |
-| Workflow | `list_workflows`, `get_workflow`, `run_workflow`, `run_workflows`, `workflow_run_status`, `stop_workflow_run` |
+| Workflow | `list_workflows`, `get_workflow`, `run_workflow`, `run_workflows`, `workflow_run_status`, `stop_workflow_run`, `list_triggers`, `fire_trigger` |
 
 MCP **không** có tool xóa profile, để AI không thể vô tình xóa cookie của tài khoản. Trang chỉ mở được `http`, `https` và `about:blank`; `file://` và `about:config` bị chặn.
 
@@ -277,6 +301,7 @@ Mọi cấu hình đều không bắt buộc. Muốn đổi thì sao chép `.env
 | `FOXFLOW_HEADLESS` | `false` (`true` ở chế độ server) | Chạy trình duyệt ẩn: `true`, `false` hoặc `virtual` (Linux + Xvfb) |
 | `FOXFLOW_RESTORE_TABS` | `true` | Mở lại các tab của lần chạy trước |
 | `FOXFLOW_WORKFLOWS_DIR` | `workflows` | Các workflow đã lưu, mỗi workflow một file JSON |
+| `FOXFLOW_AUTOMATIONS_FILE` | `automations.json` | Các trigger đã lưu, kèm key webhook |
 | `FOXFLOW_OPENAI_API_KEY` | *(trống)* | Key cho bước Sinh bằng AI; được ưu tiên hơn key trong Cấu hình AI và không bao giờ được lưu |
 | `FOXFLOW_OPENAI_BASE_URL` | `https://api.openai.com/v1` | Base URL mặc định của API tương thích OpenAI |
 | `FOXFLOW_OPENAI_MODEL` | `gpt-4o-mini` | Model mặc định |
@@ -319,6 +344,7 @@ camoufox_data/<tên-profile>/tabs.json             các tab sẽ được mở l
 camoufox_data/<tên-profile>/recording.json        các bước của bản ghi đang ghi hoặc chưa lưu
 workflows/<tên-workflow>.json                     workflow đã lưu: bước, delay, kiểm tra, thử lại
 ai_settings.json                                  cấu hình AI cho bước Sinh bằng AI, kèm API key
+automations.json                                  các trigger, kèm key webhook
 logs/foxflow_YYYYMMDD.log                         log theo ngày
 ```
 
@@ -339,6 +365,10 @@ Tiền tố: `/api/v1`. Xem đầy đủ tại `/docs` khi ứng dụng đang ch
 | `POST` | `/workflows/{name}/run` | Chạy lại trên một profile: `{"profile": "tên", "variables": {}}`, tự mở trình duyệt nếu cần (202) |
 | `POST` | `/workflow-runs` | Chạy lần lượt nhiều workflow trên một profile: `{"profile": "tên", "workflows": ["a", "b"], "variables": {}}` (202) |
 | `GET` / `POST` | `/workflow-runs` · `/workflow-runs/{profile}` · `/workflow-runs/{profile}/stop` | Các lần chạy (`?log=false` bỏ phần log); lần chạy hiện tại hoặc gần nhất của một profile (trạng thái, bước, lần thử, số lần khởi động lại, log); dừng nó |
+| `GET` / `POST` | `/automations` | Các trigger kèm sự kiện gần đây / tạo trigger: `{"name": ..., "trigger": {"type": "webhook"}, "profiles": [...], "workflows": [...]}` |
+| `GET` / `PUT` / `DELETE` | `/automations/{id hoặc tên}` | Đọc / lưu / xoá một trigger |
+| `POST` | `/automations/{id hoặc tên}/fire` | Chạy ngay: `{"text": "", "variables": {}}` (202) |
+| `GET` / `POST` | `/hooks/{id}?key=...` | Webhook của trigger: không cần API token, chỉ cần key của nó (202) |
 | `GET` / `PUT` | `/ai/settings` | Cấu hình AI (key chỉ hiện gợi ý) / lưu cấu hình (bỏ `api_key` thì giữ key cũ, `""` thì xoá) |
 | `POST` | `/ai/test` | Gửi thử một prompt với cấu hình AI đã lưu |
 | `POST` | `/browser/{name}/page/navigate` · `back` | Mở URL trong tab đang chọn, quay lại trang trước |

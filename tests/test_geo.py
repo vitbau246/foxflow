@@ -7,6 +7,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from src.services.automation.store import AutomationStore
 from src.services.profile import manager as manager_module
 from src.services.profile.transfer import import_from_zip
 from src.services.proxy import geo_check
@@ -154,6 +155,7 @@ def client(tmp_path, monkeypatch):
         browser_launcher=types.SimpleNamespace(is_running=lambda name: False),
         event_bus=types.SimpleNamespace(emit=lambda: None),
         workflow_store=WorkflowStore(str(tmp_path / "workflows")),
+        automation_store=AutomationStore(str(tmp_path / "automations.json")),
     )
     app.include_router(profiles_router)
     app.include_router(proxy_router)

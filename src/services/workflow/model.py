@@ -112,7 +112,15 @@ MAX_VARIABLES = 50
 MAX_VARIABLE_TEXT = 20_000
 # Rounds of one for / while loop.
 MAX_LOOP_ROUNDS = 10_000
-BUILT_IN_VARIABLES = ("profile",)
+# What started the run, set by a trigger (services/automation); "" otherwise.
+TRIGGER_VARIABLES = (
+    "trigger_type",
+    "trigger_text",
+    "trigger_file",
+    "trigger_file_name",
+    "trigger_time",
+)
+BUILT_IN_VARIABLES = ("profile", *TRIGGER_VARIABLES)
 
 VARIABLE_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,63}$")
 _REFERENCE = re.compile(r"\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}")

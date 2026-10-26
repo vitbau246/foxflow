@@ -439,5 +439,25 @@ async def stop_workflow_run(profile: str) -> dict:
     return await _arequest("POST", f"/workflow-runs/{_quote(profile)}/stop")
 
 
+@mcp.tool(annotations=_READ)
+async def list_triggers() -> dict:
+    """Triggers: what fires each (webhook, clipboard, new file, schedule), the profiles and
+    workflows it runs, and its recent events (queued, running, succeeded, failed)."""
+    return await _arequest("GET", "/automations")
+
+
+@mcp.tool(annotations=_PAGE_ACT)
+async def fire_trigger(
+    trigger: str, text: str = "", variables: dict[str, str] | None = None
+) -> dict:
+    """Run a trigger now (by id or name): open its profiles, run its workflows, close them.
+    `text` becomes {{trigger_text}}. Returns the queued event; follow it with list_triggers."""
+    return await _arequest(
+        "POST",
+        f"/automations/{_quote(trigger)}/fire",
+        {"text": text, "variables": variables or {}},
+    )
+
+
 def main() -> None:
     mcp.run(transport="stdio")

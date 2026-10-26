@@ -74,8 +74,15 @@ class App:
         # Profiles recording or holding an unsaved recording, read off the UI thread.
         self._recordings: dict[str, dict] = {}
         c.event_bus.subscribe(self.state.schedule_refresh)
+        self.triggers = c.automation_engine
         services = WorkflowServices(
-            self.bl, c.workflow_store, self.runner, self._log, ai=c.ai_settings
+            self.bl,
+            c.workflow_store,
+            self.runner,
+            self._log,
+            ai=c.ai_settings,
+            automations=c.automation_store,
+            engine=self.triggers,
         )
         self.auto = AutomationHandlers(
             self.pm,
@@ -88,6 +95,7 @@ class App:
             launch=lambda name: self.h.on_launch(name),
             is_loading=self.state.is_loading,
             add_profile=lambda on_created: self.h.open_add_dialog(on_created=on_created),
+            copy=lambda text: self.clipboard.set(text),
         )
         self.h = AppHandlers(
             pm=self.pm,
@@ -142,6 +150,11 @@ class App:
                 on_run_again=self.auto.run_again,
                 on_log=self.auto.show_log,
                 on_record=self.auto.record,
+                on_new_trigger=self.auto.open_trigger,
+                on_edit_trigger=self.auto.open_trigger,
+                on_delete_trigger=self.auto.delete_trigger,
+                on_fire_trigger=self.auto.fire_trigger,
+                on_toggle_trigger=self.auto.toggle_trigger,
             ),
             on_search=self._on_auto_search,
         )
@@ -327,7 +340,13 @@ class App:
             self._refresh_profile_table({run["profile"]: run for run in runs})
         else:
             self.automation.render(
-                AutomationData(self._workflow_list(), runs, running, self.auto_query)
+                AutomationData(
+                    self._workflow_list(),
+                    runs,
+                    running,
+                    self.auto_query,
+                    triggers=self.triggers.overview(),
+                )
             )
         self._safe_update()
 
