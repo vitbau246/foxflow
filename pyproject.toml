@@ -1,0 +1,40 @@
+[project]
+name = "foxflow"
+version = "2.3.1"
+description = "Self-hosted web automation: record and replay workflows in isolated browser profiles, with a REST API and MCP"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+authors = [{ name = "vitbau246" }, { name = "chienbm98" }]  # chienbm98 wrote FoxProfile, which FoxFlow is based on
+keywords = ["web-automation", "workflow", "rpa", "playwright", "browser-profiles", "camoufox", "mcp"]
+# Runtime dependencies live in requirements.txt (this is an application, not a library).
+
+[project.urls]
+Homepage = "https://github.com/vitbau246/foxflow"
+Issues = "https://github.com/vitbau246/foxflow/issues"
+Changelog = "https://github.com/vitbau246/foxflow/blob/main/CHANGELOG.md"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = [".venv", "camoufox_data", "logs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+ignore = [
+    "B008",  # FastAPI declares dependencies as Depends(...) defaults
+    "E501",  # line length is handled by the formatter
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "chrome_engine/tests"]
+
+[tool.ruff.lint.per-file-ignores]
+# Standalone scripts that drive a running FoxFlow; one must edit sys.path first.
+"tests/e2e/control_e2e.py" = ["E402"]
+"chrome_engine/e2e/*.py" = ["E402"]
+"chrome_engine/runner.py" = ["E402"]

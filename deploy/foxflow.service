@@ -1,0 +1,23 @@
+[Unit]
+Description=FoxFlow (web automation server)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=foxflow
+Group=foxflow
+WorkingDirectory=/opt/foxflow/app
+ExecStart=/opt/foxflow/app/.venv/bin/python -m src.server
+Restart=on-failure
+RestartSec=5
+# Hardening: the service can only write its own directory.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/foxflow
+ProtectKernelTunables=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target
