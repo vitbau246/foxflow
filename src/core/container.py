@@ -12,6 +12,8 @@ from .logging import setup_logging
 
 if TYPE_CHECKING:
     from ..services.ai.settings import AISettingsStore
+    from ..services.automation.engine import AutomationEngine
+    from ..services.automation.store import AutomationStore
     from ..services.workflow.runner import WorkflowRunner
     from ..services.workflow.store import WorkflowStore
 
@@ -73,6 +75,28 @@ class Container:
                 self.browser_launcher,
                 on_change=self.event_bus.emit,
                 ai_settings=self.ai_settings,
+            ),
+        )
+
+    @property
+    def automation_store(self) -> AutomationStore:
+        from ..services.automation.store import AutomationStore
+
+        return self._get("as", AutomationStore)
+
+    @property
+    def automation_engine(self) -> AutomationEngine:
+        """Triggers; the app and the server start it (start()) once they are up."""
+        from ..services.automation.engine import AutomationEngine
+
+        return self._get(
+            "ae",
+            lambda: AutomationEngine(
+                self.automation_store,
+                self.workflow_runner,
+                self.browser_launcher,
+                self.profile_manager,
+                on_change=self.event_bus.emit,
             ),
         )
 

@@ -15,6 +15,38 @@ from ..core.strings import get_string
 Run = dict[str, Any]
 
 
+def trigger_when(trigger: dict[str, Any]) -> str:
+    """What fires a trigger, in the UI language."""
+    kind = trigger.get("type", "webhook")
+    if kind == "clipboard":
+        pattern = trigger.get("pattern") or ""
+        return (
+            get_string("trg_when_clipboard_pattern", pattern=pattern)
+            if pattern
+            else get_string("trg_when_clipboard")
+        )
+    if kind == "file":
+        return get_string(
+            "trg_when_file", pattern=trigger.get("pattern") or "*", folder=trigger.get("folder", "")
+        )
+    if kind == "schedule":
+        parts = []
+        if trigger.get("every_minutes"):
+            parts.append(get_string("trg_when_every", count=trigger["every_minutes"]))
+        if trigger.get("at"):
+            parts.append(get_string("trg_when_at", times=", ".join(trigger["at"])))
+        return " · ".join(parts)
+    return get_string("trg_when_webhook")
+
+
+def match_trigger(trigger: dict[str, Any], query: str) -> bool:
+    q = query.strip().casefold()
+    if not q:
+        return True
+    names = [trigger["name"], *trigger.get("profiles", []), *trigger.get("workflows", [])]
+    return any(q in n.casefold() for n in names)
+
+
 def plural(key: str, count: int, **kwargs: object) -> str:
     """`key` with {count}; `key_one` when the count is 1."""
     return get_string(f"{key}_one" if count == 1 else key, count=count, **kwargs)

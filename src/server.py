@@ -55,9 +55,11 @@ def main() -> None:
     logger.info("FoxFlow server on http://%s:%s (panel at /)", host, port)
     log_network(logger)
     print(f"FoxFlow panel: http://{host}:{port}/   API docs: http://{host}:{port}/docs")
+    container.automation_engine.start()
     try:
         uvicorn.run(app, host=host, port=port, log_level="warning")
     finally:
+        container.automation_engine.stop()
         container.browser_launcher.shutdown_all()
 
 

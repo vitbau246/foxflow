@@ -1,4 +1,5 @@
-"""The Automation page: every profile's current or last run, then the saved workflows.
+"""The Automation page: every profile's current or last run, the triggers, then the
+saved workflows.
 
 Both are ruled sheets on the profile table's pattern: a 40px header row on paper
 and 58px rows, every data cell two lines. The body is rebuilt only when what it
@@ -19,14 +20,22 @@ from ..automation_model import (
     ddmm_hhmm,
     hhmm,
     match_run,
+    match_trigger,
     match_workflow,
     plural,
     sort_runs,
+    trigger_when,
     workflow_activity,
 )
 from ..dialogs.workflows import run_stamp
 from ..theme.colors import COLORS, FONT_BOLD, FONT_SEMIBOLD
-from ..theme.styles import ACCENT_STYLE, DANGER_ICON_STYLE, ICON_STYLE, INK_STYLE
+from ..theme.styles import (
+    ACCENT_STYLE,
+    DANGER_ICON_STYLE,
+    ICON_STYLE,
+    INK_STYLE,
+    OUTLINE_STYLE,
+)
 from .empty_state import build_empty_state
 from .factory import build_search_field
 from .profile_card import ROW_HEIGHT, _data, _minor, _stack
@@ -50,6 +59,15 @@ WORKFLOW_COLUMNS = {
     "actions": (None, 188),
 }
 
+TRIGGER_COLUMNS = {
+    "on": (None, 52),
+    "trigger": (12, None),
+    "then": (10, None),
+    "last": (10, None),
+    # Run now (124) + gap (8) + edit and delete icons (2 x 40).
+    "actions": (None, 212),
+}
+
 # Progress track ink: the run-state inks of the stamp.
 _TRACK_INK = {
     "starting": COLORS["live"],
@@ -70,6 +88,12 @@ class AutomationActions:
     on_run_again: Callable[..., None]
     on_log: Callable[[str], None]  # profile
     on_record: Callable[[], None]
+    # Triggers, by id; on_new_trigger opens the editor for a new one.
+    on_new_trigger: Callable[[], None] = lambda: None
+    on_edit_trigger: Callable[[str], None] = lambda _id: None
+    on_delete_trigger: Callable[[str], None] = lambda _id: None
+    on_fire_trigger: Callable[[str], None] = lambda _id: None
+    on_toggle_trigger: Callable[[str, bool], None] = lambda _id, _on: None
 
 
 @dataclass
@@ -78,6 +102,8 @@ class AutomationData:
     runs: list[dict]
     running: set[str] = field(default_factory=set)  # profiles with an open browser
     query: str = ""
+    # Triggers with their state (AutomationEngine.overview()).
+    triggers: list[dict] = field(default_factory=list)
 
 
 class AutomationPage:
@@ -126,7 +152,9 @@ class AutomationPage:
     def render(self, data: AutomationData) -> bool:
         """Redraw if anything shown changed; True when it did."""
         browsers = sorted(data.running & {r["profile"] for r in data.runs})
-        key = repr((data.workflows, data.runs, browsers, data.query, current_language()))
+        key = repr(
+            (data.workflows, data.runs, data.triggers, browsers, data.query, current_language())
+        )
         if key == self._key:
             return False
         self._key = key
@@ -177,6 +205,7 @@ class AutomationPage:
                 ),
                 ft.Container(height=26),
             ]
+        controls += [*self._triggers(data), ft.Container(height=26)]
         controls.append(_section_title(get_string("auto_workflows")))
         if not data.workflows:
             sheet_rows: list[ft.Control] = [
@@ -215,6 +244,55 @@ class AutomationPage:
             ]
         controls.append(_sheet(sheet_rows))
         return controls
+
+    def _triggers(self, data: AutomationData) -> list[ft.Control]:
+        actions = self.actions
+        head = ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.START,
+            controls=[
+                _section_title(get_string("auto_triggers"), get_string("auto_triggers_hint")),
+                ft.OutlinedButton(
+                    get_string("trg_new"),
+                    icon=ft.Icons.ADD,
+                    style=OUTLINE_STYLE,
+                    on_click=lambda _: actions.on_new_trigger(),
+                ),
+            ],
+        )
+        triggers = [t for t in data.triggers if match_trigger(t, data.query)]
+        if not data.triggers:
+            rows: list[ft.Control] = [
+                ft.Container(
+                    padding=ft.Padding.symmetric(vertical=18, horizontal=16),
+                    content=ft.Text(get_string("trg_empty"), size=13, color=COLORS["text_sub"]),
+                )
+            ]
+        elif not triggers:
+            rows = [
+                ft.Container(
+                    padding=ft.Padding.symmetric(vertical=18, horizontal=16),
+                    content=ft.Text(
+                        get_string("auto_no_results", query=data.query.strip()),
+                        size=13,
+                        color=COLORS["text_sub"],
+                    ),
+                )
+            ]
+        else:
+            rows = [
+                _header(
+                    TRIGGER_COLUMNS,
+                    {
+                        "on": "trg_col_on",
+                        "trigger": "trg_col_trigger",
+                        "then": "trg_col_then",
+                        "last": "trg_col_last",
+                    },
+                ),
+                *(_trigger_row(t, actions) for t in triggers),
+            ]
+        return [head, _sheet(rows)]
 
 
 # --- building blocks ----------------------------------------------------------
@@ -341,6 +419,8 @@ def _run_row(run: dict, browser_open: bool, actions: AutomationActions) -> ft.Co
         if active or not run["finished_at"]
         else get_string("auto_ended_at", time=hhmm(run["finished_at"]))
     )
+    if run.get("origin"):
+        when = f"{get_string('auto_via', name=run['origin'])} · {when}"
     if status == "failed" and run["error"]:
         detail: ft.Control = ft.Text(
             run["error"],
@@ -534,4 +614,122 @@ def _workflow_row(workflow: dict, activity: dict | None, actions: AutomationActi
             ),
         ],
         COLORS["card_bg"],
+    )
+
+
+def _trigger_last(trigger: dict) -> ft.Control:
+    """The trigger's last event, or why it cannot watch."""
+    state = trigger.get("state") or {}
+    last = state.get("last")
+    if state.get("error"):
+        detail = ft.Text(
+            state["error"],
+            size=11.5,
+            color=COLORS["error"],
+            no_wrap=True,
+            overflow=ft.TextOverflow.ELLIPSIS,
+            tooltip=state["error"],
+        )
+    elif last and last.get("detail"):
+        detail = ft.Text(
+            last["detail"],
+            size=11.5,
+            color=COLORS["error"] if last["status"] == "failed" else COLORS["text_dim"],
+            no_wrap=True,
+            overflow=ft.TextOverflow.ELLIPSIS,
+            tooltip=last["detail"],
+        )
+    elif last:
+        waiting = state.get("queued") or 0
+        extra = f" · {get_string('trg_waiting', count=waiting)}" if waiting else ""
+        preview = f" · {last['preview']}" if last.get("preview") else ""
+        detail = _minor(f"{ddmm_hhmm(last['at'])}{preview}{extra}")
+    else:
+        detail = _minor("—")
+    if not last:
+        return _stack(ft.Text(get_string("trg_never"), size=13, color=COLORS["text_dim"]), detail)
+    return _stack(ft.Row(controls=[run_stamp(last["status"])]), detail)
+
+
+def _trigger_row(trigger: dict, actions: AutomationActions) -> ft.Container:
+    tid, name = trigger["id"], trigger["name"]
+    c = TRIGGER_COLUMNS
+    profiles = trigger.get("profiles", [])
+    then = " → ".join(trigger.get("workflows", []))
+    where = plural("trg_profiles", len(profiles))
+    if trigger.get("close_profile"):
+        where += f" · {get_string('trg_then_close')}"
+    on = trigger.get("enabled", True)
+    return _row(
+        [
+            _cell(
+                c,
+                "on",
+                ft.Switch(
+                    value=on,
+                    scale=0.8,
+                    tooltip=get_string("trg_toggle", name=name),
+                    active_color=COLORS["sidebar"],
+                    on_change=lambda e: actions.on_toggle_trigger(tid, bool(e.control.value)),
+                ),
+            ),
+            _cell(
+                c,
+                "trigger",
+                _stack(
+                    _strong(name),
+                    _minor(
+                        trigger_when(trigger.get("trigger", {}))
+                        + ("" if on else f" · {get_string('trg_off')}")
+                    ),
+                ),
+            ),
+            _cell(
+                c,
+                "then",
+                _stack(
+                    ft.Text(
+                        then,
+                        size=13.5,
+                        color=COLORS["text_main"],
+                        no_wrap=True,
+                        overflow=ft.TextOverflow.ELLIPSIS,
+                        tooltip=then,
+                    ),
+                    _minor(where),
+                ),
+            ),
+            _cell(c, "last", _trigger_last(trigger)),
+            _cell(
+                c,
+                "actions",
+                ft.Row(
+                    spacing=0,
+                    alignment=ft.MainAxisAlignment.END,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        _main_button(
+                            get_string("trg_run_now"),
+                            ft.Icons.BOLT_ROUNDED,
+                            ACCENT_STYLE,
+                            lambda: actions.on_fire_trigger(tid),
+                            124,
+                        ),
+                        ft.Container(width=8),
+                        _icon(
+                            ft.Icons.EDIT_OUTLINED,
+                            get_string("tooltip_edit_trigger"),
+                            lambda: actions.on_edit_trigger(tid),
+                        ),
+                        _icon(
+                            ft.Icons.DELETE_OUTLINE,
+                            get_string("tooltip_delete_trigger"),
+                            lambda: actions.on_delete_trigger(tid),
+                            DANGER_ICON_STYLE,
+                        ),
+                    ],
+                ),
+            ),
+        ],
+        COLORS["card_hover"] if (trigger.get("state") or {}).get("active") else COLORS["card_bg"],
     )

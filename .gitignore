@@ -181,6 +181,7 @@ profiles.json
 logs/
 workflows/
 ai_settings.json
+automations.json
 
 # Tooling artefacts
 uv.lock

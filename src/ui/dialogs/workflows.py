@@ -17,6 +17,8 @@ import flet as ft
 from ...core.strings import get_string
 from ...interfaces.protocols import IBrowserLauncher
 from ...services.ai.settings import AISettingsStore
+from ...services.automation.engine import AutomationEngine
+from ...services.automation.store import AutomationStore
 from ...services.workflow import recording
 from ...services.workflow.model import ACTIONS
 from ...services.workflow.runner import WorkflowRunner
@@ -30,6 +32,8 @@ POLL_SECONDS = 1.5
 
 # Run states read by form as well as ink, like the profile stamps.
 _RUN_INK = {
+    "queued": COLORS["text_sub"],
+    "skipped": COLORS["text_dim"],
     "starting": COLORS["text_sub"],
     "running": COLORS["live"],
     "succeeded": COLORS["success"],
@@ -45,6 +49,9 @@ class WorkflowServices:
     runner: WorkflowRunner
     log: Callable[[str], None]
     ai: AISettingsStore | None = None
+    # Triggers: saved ones, and the engine that watches and fires them.
+    automations: AutomationStore | None = None
+    engine: AutomationEngine | None = None
 
 
 def run_stamp(status: str) -> ft.Container:

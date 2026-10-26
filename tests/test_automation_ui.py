@@ -339,6 +339,8 @@ def test_app_builds_switches_view_and_language():
         workflow_runner=runner,
         workflow_store=FakeStore(),
         ai_settings=None,
+        automation_store=None,
+        automation_engine=SimpleNamespace(overview=list),
     )
     app = App(container)
     app.page = FakePage()

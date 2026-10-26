@@ -96,8 +96,15 @@ class AppHandlers:
             self._log,
             self._refresh,
             self.stop_then,
-            on_renamed=self._workflows.store.reassign if self._workflows else None,
+            on_renamed=self._renamed if self._workflows else None,
         )
+
+    def _renamed(self, old: str, new: str) -> None:
+        """A renamed profile keeps its workflows and triggers."""
+        assert self._workflows is not None
+        self._workflows.store.reassign(old, new)
+        if self._workflows.automations is not None:
+            self._workflows.automations.rename_profile(old, new)
 
     def on_clone(self, name: str) -> None:
         page = self._get_page()

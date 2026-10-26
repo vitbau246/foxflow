@@ -14,7 +14,9 @@ from . import mcp_http
 from .auth import require_token
 from .guard import LocalOnlyGuard
 from .routes import (
+    automations_router,
     browser_router,
+    hooks_router,
     mcp_setup_router,
     page_router,
     profiles_router,
@@ -73,6 +75,9 @@ def create_app(container: Container, self_url: str | None = None) -> FastAPI:
     app.include_router(proxy_router, prefix=API_PREFIX, dependencies=protected)
     app.include_router(mcp_setup_router, prefix=API_PREFIX, dependencies=protected)
     app.include_router(workflows_router, prefix=API_PREFIX, dependencies=protected)
+    app.include_router(automations_router, prefix=API_PREFIX, dependencies=protected)
+    # No API token: each trigger's own key guards its webhook.
+    app.include_router(hooks_router, prefix=API_PREFIX)
     app.router.routes.append(mcp_route)
 
     @app.get(f"{API_PREFIX}/health", response_model=SuccessResponse, tags=["health"])

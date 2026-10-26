@@ -314,6 +314,9 @@ pre.code.log { max-height: 190px; }
 .section-head span { color: var(--ink-3); font-size: 13px; }
 .sheet.runs .row { grid-template-columns: minmax(140px, 1fr) minmax(150px, 1fr) minmax(200px, 1.4fr) 150px 100px 200px; }
 .sheet.wfs .row { grid-template-columns: minmax(200px, 1.5fr) minmax(150px, 1fr) 110px minmax(160px, 1fr) 200px; }
+.sheet.trg .row { grid-template-columns: 52px minmax(200px, 1.4fr) minmax(160px, 1fr) minmax(170px, 1fr) 212px; }
+.section-head .btn { margin-left: auto; align-self: center; }
+.hook-url { display: block; padding: 8px 10px; border-radius: 8px; background: var(--paper-sunk); font-family: var(--data); font-size: 12px; word-break: break-all; }
 .auto .actions .main { width: 112px; }
 .stack.start { align-items: flex-start; gap: 4px; }
 .progress { display: flex; align-items: center; gap: 10px; min-width: 0; }
@@ -338,9 +341,9 @@ pre.code.log { max-height: 190px; }
 .var-row.two { grid-template-columns: minmax(120px, 220px) minmax(0, 1fr); }
 .var-row.two code { justify-self: start; }
 @container sheet (max-width: 955px) {
-  .sheet.runs .row.body, .sheet.wfs .row.body { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 16px; padding: 12px; }
-  .sheet.runs .row.body > *, .sheet.wfs .row.body > * { flex: 1 1 170px; }
-  .sheet.runs .row.body > .actions, .sheet.wfs .row.body > .actions { flex-basis: 100%; justify-content: flex-start; }
+  .sheet.runs .row.body, .sheet.wfs .row.body, .sheet.trg .row.body { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 16px; padding: 12px; }
+  .sheet.runs .row.body > *, .sheet.wfs .row.body > *, .sheet.trg .row.body > * { flex: 1 1 170px; }
+  .sheet.runs .row.body > .actions, .sheet.wfs .row.body > .actions, .sheet.trg .row.body > .actions { flex-basis: 100%; justify-content: flex-start; }
 }
 
 @keyframes fade { from { opacity: 0; } }
@@ -579,6 +582,30 @@ const I18N = {
     act_navigate: "Mở trang", act_click: "Click", act_fill: "Gõ", act_press: "Bấm phím", act_select: "Chọn", act_check: "Tích",
     act_uncheck: "Bỏ tích", act_hover: "Rê chuột", act_scroll: "Cuộn", act_wait: "Chờ", act_switch_tab: "Đổi tab",
     act_get_text: "Lấy chữ", act_ai: "Sinh bằng AI",
+    trg_title: "Trigger", trg_sub: "Khi có sự kiện: mở profile, chạy workflow rồi đóng profile", run_via: "qua {name}",
+    run_state_queued: "Đang chờ", run_state_skipped: "Bỏ qua", trg_new: "Tạo trigger",
+    trg_empty: "Trigger tự chạy workflow: khi webhook được gọi, khi copy chữ, khi có file mới trong thư mục, hoặc theo lịch.",
+    trg_col_trigger: "Trigger", trg_col_then: "Sau đó", trg_col_last: "Lần gần nhất", trg_col_on: "Bật", trg_type_webhook: "Webhook",
+    trg_type_clipboard: "Khi copy chữ", trg_type_file: "File mới trong thư mục", trg_type_schedule: "Lịch",
+    trg_when_webhook: "Khi webhook được gọi", trg_when_clipboard: "Khi copy chữ",
+    trg_when_clipboard_pattern: "Khi chữ được copy khớp {pattern}", trg_when_file: "File {pattern} mới trong {folder}",
+    trg_when_every: "Mỗi {count} phút", trg_when_at: "Hằng ngày lúc {times}", trg_profiles: "{count} profile",
+    trg_profiles_one: "{count} profile", trg_then_close: "rồi đóng", trg_run_now: "Chạy ngay", trg_never: "Chưa chạy lần nào",
+    trg_waiting: "{count} đang chờ", trg_off: "Tắt", trg_toggle: "Bật hoặc tắt {name}",
+    trg_confirm_delete: "Xoá trigger “{name}”? Các workflow của nó vẫn giữ nguyên.", trg_deleted: "Đã xoá trigger {name}",
+    trg_fired: "Đã xếp lượt chạy trigger {name}", trg_saved: "Đã lưu trigger {name}", trg_title_new: "Tạo trigger",
+    trg_title_edit: "Sửa trigger", trg_subtitle: "Khi có sự kiện: mở profile, chạy lần lượt các workflow, rồi đóng profile.",
+    trg_name: "Tên", trg_enabled: "Bật: tự theo dõi và tự chạy", trg_when: "Khi", trg_then: "Sau đó",
+    trg_profiles_label: "Mở các profile này (mỗi profile chạy các workflow)", trg_workflows_label: "Chạy các workflow này, theo thứ tự",
+    trg_close: "Đóng từng profile khi xong, nếu trigger này đã mở nó", trg_webhook_url: "URL webhook", trg_webhook_hint: "Gọi bằng POST hoặc GET từ ứng dụng khác (Zapier, n8n, script). Body JSON điền vào các biến cùng tên của workflow; trường \"text\" (hoặc ?text=) thành {{trigger_text}}. Ai có URL này đều chạy được trigger: giữ kín.",
+    trg_webhook_save_first: "Lưu trigger để có URL webhook.", trg_new_key: "Đổi key", trg_copy: "Copy", trg_copied: "Đã copy",
+    trg_clip_pattern: "Chỉ chữ khớp với (biểu thức chính quy, tuỳ chọn)",
+    trg_clip_hint: "Chỉ theo dõi khi FoxFlow đang mở. Chữ được copy ở lại trên máy này và thành {{trigger_text}}.", trg_folder: "Thư mục",
+    trg_file_pattern: "Tên file (ví dụ *.csv; trống = mọi file)",
+    trg_file_hint: "File đã có sẵn trong thư mục không tính. {{trigger_file}} là đường dẫn file mới, {{trigger_file_name}} là tên file, {{trigger_text}} là nội dung nếu là file chữ nhỏ.",
+    trg_every: "Mỗi (phút, 0 = không)", trg_at: "Hằng ngày lúc (HH:MM, cách nhau bằng dấu phẩy)",
+    trg_vars_hint: "Workflow nhận được {{trigger_type}}, {{trigger_text}}, {{trigger_file}}, {{trigger_file_name}} và {{trigger_time}}.",
+    trg_need_name: "Đặt tên cho trigger", trg_need_profile: "Chọn ít nhất một profile", trg_need_workflow: "Thêm ít nhất một workflow",
     act_assign: "Gán biến", act_if: "Nếu", act_else: "Ngược lại", act_end: "Kết thúc khối", act_for: "Lặp theo danh sách",
     act_while: "Lặp khi", act_break: "Thoát vòng lặp",
     cond_expression: "Biểu thức trên biến", cond_selector_visible: "Thấy phần tử", cond_text_visible: "Thấy chữ",
@@ -718,6 +745,30 @@ const I18N = {
     act_navigate: "Open page", act_click: "Click", act_fill: "Type", act_press: "Press key", act_select: "Select", act_check: "Check",
     act_uncheck: "Uncheck", act_hover: "Hover", act_scroll: "Scroll", act_wait: "Wait", act_switch_tab: "Switch tab",
     act_get_text: "Get text", act_ai: "AI text",
+    trg_title: "Triggers", trg_sub: "When something happens: open profiles, run workflows, close them", run_via: "via {name}",
+    run_state_queued: "Waiting", run_state_skipped: "Skipped", trg_new: "New trigger",
+    trg_empty: "A trigger runs workflows by itself: when a webhook is called, text is copied, a file lands in a folder, or on a schedule.",
+    trg_col_trigger: "Trigger", trg_col_then: "Then", trg_col_last: "Last fired", trg_col_on: "On", trg_type_webhook: "Webhook",
+    trg_type_clipboard: "Copied text", trg_type_file: "New file in a folder", trg_type_schedule: "Schedule",
+    trg_when_webhook: "When its webhook is called", trg_when_clipboard: "When text is copied",
+    trg_when_clipboard_pattern: "When copied text matches {pattern}", trg_when_file: "New {pattern} in {folder}",
+    trg_when_every: "Every {count} min", trg_when_at: "Daily at {times}", trg_profiles: "{count} profiles",
+    trg_profiles_one: "{count} profile", trg_then_close: "then close", trg_run_now: "Run now", trg_never: "Not fired yet",
+    trg_waiting: "{count} waiting", trg_off: "Off", trg_toggle: "Turn {name} on or off",
+    trg_confirm_delete: "Delete trigger “{name}”? Its workflows stay.", trg_deleted: "Deleted trigger {name}",
+    trg_fired: "Trigger {name} queued", trg_saved: "Saved trigger {name}", trg_title_new: "New trigger", trg_title_edit: "Edit trigger",
+    trg_subtitle: "When something happens, open profiles, run workflows one after the other, then close the profiles.", trg_name: "Name",
+    trg_enabled: "On: watch and run by itself", trg_when: "When", trg_then: "Then",
+    trg_profiles_label: "Open these profiles (each runs the workflows)", trg_workflows_label: "Run these workflows, in this order",
+    trg_close: "Close each profile afterwards, if this trigger opened it", trg_webhook_url: "Webhook URL", trg_webhook_hint: "Call it with POST or GET from another app (Zapier, n8n, a script). A JSON body fills the workflows' variables of the same names; its \"text\" (or ?text=) becomes {{trigger_text}}. Anyone with this URL can run the trigger: keep it private.",
+    trg_webhook_save_first: "Save the trigger to get its webhook URL.", trg_new_key: "New key", trg_copy: "Copy", trg_copied: "Copied",
+    trg_clip_pattern: "Only text matching (regular expression, optional)",
+    trg_clip_hint: "Watched while FoxFlow is open. The copied text stays on this computer and becomes {{trigger_text}}.",
+    trg_folder: "Folder", trg_file_pattern: "File names (e.g. *.csv; blank = every file)",
+    trg_file_hint: "Files already in the folder do not count. {{trigger_file}} is the new file's path, {{trigger_file_name}} its name, {{trigger_text}} its content if it is a small text file.",
+    trg_every: "Every (minutes, 0 = no)", trg_at: "Daily at (HH:MM, separated by commas)",
+    trg_vars_hint: "The workflows get {{trigger_type}}, {{trigger_text}}, {{trigger_file}}, {{trigger_file_name}} and {{trigger_time}}.",
+    trg_need_name: "Give the trigger a name", trg_need_profile: "Pick at least one profile", trg_need_workflow: "Add at least one workflow",
     act_assign: "Set variable", act_if: "If", act_else: "Else", act_end: "End", act_for: "Repeat for",
     act_while: "Repeat while", act_break: "Exit loop",
     cond_expression: "Expression on variables", cond_selector_visible: "Element visible", cond_text_visible: "Text visible",
@@ -792,6 +843,7 @@ const selected = new Set();
 let recordings = new Map();      // name -> live recording or unsaved draft
 let runs = new Map();            // name -> current or last workflow run
 let workflows = [];              // saved workflows (name, description, profile, step_count, dates)
+let triggers = [];               // triggers with their state (GET /automations)
 let view = store.get("foxflow.view") === "profiles" ? "profiles" : "auto";
 const $ = (id) => document.getElementById(id);
 
@@ -872,11 +924,12 @@ const hhmm = (d) => d.toTimeString().slice(0, 5);
 async function refresh() {
   try {
     // Run logs stay out of the poll: only the log dialog needs them.
-    const [list, run, recs, wfRuns, wfs] = await Promise.all([api("GET", "/profiles"), api("GET", "/browser"),
+    const [list, run, recs, wfRuns, wfs, trgs] = await Promise.all([api("GET", "/profiles"), api("GET", "/browser"),
       api("GET", "/recordings").catch(() => ({ recordings: [] })), api("GET", "/workflow-runs?log=false").catch(() => ({ runs: [] })),
-      api("GET", "/workflows").catch(() => ({ workflows }))]);
+      api("GET", "/workflows").catch(() => ({ workflows })), api("GET", "/automations").catch(() => ({ automations: triggers }))]);
     profiles = list.profiles;
     workflows = wfs.workflows;
+    triggers = trgs.automations;
     recordings = new Map(recs.recordings.map((r) => [r.profile, r]));
     runs = new Map(wfRuns.runs.map((r) => [r.profile, r]));
     const now = new Set(run.running);
@@ -914,7 +967,7 @@ function render() {
   // Rebuilding the list replaces every button; skip it when nothing changed so a
   // periodic refresh cannot swap the button under the user's cursor mid-click.
   const key = JSON.stringify([lang, view, q, filter, profiles, [...running].sort(), [...busy], [...failed], [...selected].sort(),
-    [...justLanded], view === "profiles" ? shown.map((p) => fingerprints[p.name] || null) : null, [...recordings], [...runs], workflows]);
+    [...justLanded], view === "profiles" ? shown.map((p) => fingerprints[p.name] || null) : null, [...recordings], [...runs], workflows, triggers]);
   if (key === lastRender) return;
   lastRender = key;
   renderViews();
@@ -1514,6 +1567,12 @@ function renderAuto(q) {
         headRowOf([t("col_profile"), t("col_workflow"), t("col_progress"), t("col_attempts"), t("col_status"), ""]),
         shownRuns.length ? shownRuns.map(runRow) : noMatch()));
   }
+  const shownTrgs = triggers.filter((a) => has(a.name, ...a.profiles, ...a.workflows));
+  kids.push(h("div", { class: "section-head" }, h("h2", {}, t("trg_title")), h("span", {}, t("trg_sub")),
+    h("button", { class: "btn btn-line", onclick: () => openTriggerEditor(null) }, icon("plus", true), t("trg_new"))),
+  h("div", { class: "sheet trg", role: "table", "aria-label": t("trg_title") }, triggers.length
+    ? [headRowOf([t("trg_col_on"), t("trg_col_trigger"), t("trg_col_then"), t("trg_col_last"), ""]), ...(shownTrgs.length ? shownTrgs.map(trgRow) : [noMatch()])]
+    : h("div", { class: "empty compact" }, h("p", {}, t("trg_empty")))));
   kids.push(sectionHead(t("wfs_title"), workflows.length ? t("wfs_sub") : ""),
     h("div", { class: "sheet wfs", role: "table", "aria-label": t("wfs_title") }, workflows.length
       ? [headRowOf([t("col_workflow"), t("col_recorded"), t("col_steps"), t("col_last_run"), ""]), ...(shownWfs.length ? shownWfs.map(wfRow) : [noMatch()])]
@@ -1535,7 +1594,8 @@ function runRow(r) {
     ? h("button", { class: "btn btn-ink main", onclick: () => stopRun(r.profile, main) }, icon("stop", true), t("stop"))
     : h("button", { class: "btn btn-act main", disabled: !!(rec && rec.recording), onclick: () => startRuns(chain, [r.profile], {}, main) },
       icon("play", true), t("run_again"));
-  const when = r.finished_at ? t("ended_at", { t: clock(r.finished_at) }) : t("started_at", { t: clock(r.started_at) });
+  const when = (r.origin ? t("run_via", { name: r.origin }) + " · " : "") +
+    (r.finished_at ? t("ended_at", { t: clock(r.finished_at) }) : t("started_at", { t: clock(r.started_at) }));
   const detail = r.status === "failed" && r.error
     ? h("span", { class: "minor err-line", title: r.error }, r.error)
     : h("span", { class: "minor", title: r.step_label || "" }, r.step_label || (r.status === "starting" ? t("run_launching") : "—"));
@@ -1575,6 +1635,152 @@ function wfRow(w) {
       h("button", { class: "btn btn-act main", onclick: () => openRunDialog({ workflow: w.name }) }, icon("play", true), t("wf_run")),
       iconButton("edit", t("edit"), w.name, () => openStepEditor(w.name, refresh)),
       iconButton("trash", t("delete"), w.name, () => deleteWorkflow(w.name), "danger")));
+}
+
+// What fires a trigger, in the panel's language.
+function trgWhen(tr) {
+  if (tr.type === "clipboard") return tr.pattern ? t("trg_when_clipboard_pattern", { pattern: tr.pattern }) : t("trg_when_clipboard");
+  if (tr.type === "file") return t("trg_when_file", { pattern: tr.pattern || "*", folder: tr.folder });
+  if (tr.type === "schedule") {
+    return [tr.every_minutes ? t("trg_when_every", { count: tr.every_minutes }) : "",
+      tr.at && tr.at.length ? t("trg_when_at", { times: tr.at.join(", ") }) : ""].filter(Boolean).join(" · ");
+  }
+  return t("trg_when_webhook");
+}
+function trgRow(a) {
+  const st = a.state || {}, last = st.last;
+  const on = h("input", { type: "checkbox", role: "switch", "aria-label": t("trg_toggle", { name: a.name }), onchange: async (e) => {
+    try { await api("PUT", `/automations/${enc(a.id)}`, { ...a, enabled: e.target.checked }); } catch (ex) { toast(ex.message, true); }
+    refresh();
+  } });
+  on.checked = a.enabled;
+  const fire = h("button", { class: "btn btn-act main", onclick: async () => {
+    fire.disabled = true;
+    try { await api("POST", `/automations/${enc(a.id)}/fire`, {}); toast(t("trg_fired", { name: a.name })); } catch (e) { toast(e.message, true); }
+    fire.disabled = false;
+    refresh();
+  } }, icon("play", true), t("trg_run_now"));
+  const where = t(a.profiles.length === 1 ? "trg_profiles_one" : "trg_profiles", { count: a.profiles.length }) +
+    (a.close_profile ? " · " + t("trg_then_close") : "");
+  let detail;
+  if (st.error) detail = h("span", { class: "minor err-line", title: st.error }, st.error);
+  else if (last && last.detail) detail = h("span", { class: "minor" + (last.status === "failed" ? " err-line" : ""), title: last.detail }, last.detail);
+  else if (last) detail = h("span", { class: "minor data" }, [when(last.at), last.preview, st.queued ? t("trg_waiting", { count: st.queued }) : ""].filter(Boolean).join(" · "));
+  else detail = h("span", { class: "minor" }, "—");
+  return h("div", { class: "row body" + (st.active ? " live" : ""), role: "row" },
+    h("div", { role: "cell" }, on),
+    h("div", { class: "stack", role: "cell" }, h("span", { class: "name", title: a.name }, a.name),
+      h("span", { class: "minor" }, trgWhen(a.trigger) + (a.enabled ? "" : " · " + t("trg_off")))),
+    h("div", { class: "stack", role: "cell" }, h("span", { title: a.workflows.join(" → ") }, a.workflows.join(" → ")),
+      h("span", { class: "minor", title: a.profiles.join(", ") }, where)),
+    h("div", { class: "stack start", role: "cell" }, last ? runStamp(last) : h("span", { class: "idle" }, t("trg_never")), detail),
+    h("div", { class: "actions", role: "cell" }, fire,
+      iconButton("edit", t("trg_title_edit"), a.name, () => openTriggerEditor(a)),
+      iconButton("trash", t("delete"), a.name, () => deleteTrigger(a), "danger")));
+}
+async function deleteTrigger(a) {
+  if (!(await confirmDialog(t("trg_confirm_delete", { name: a.name }), t("delete"), true))) return;
+  try { await api("DELETE", `/automations/${enc(a.id)}`); toast(t("trg_deleted", { name: a.name })); } catch (e) { toast(e.message, true); }
+  refresh();
+}
+const newKey = () => btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(24)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+// Create (a = null) or edit a trigger: when it fires, which profiles open, which workflows run.
+function openTriggerEditor(a) {
+  const isNew = !a;
+  const data = a ? JSON.parse(JSON.stringify(a)) : { id: stepId(), name: "", enabled: true, close_profile: true, variables: {},
+    profiles: [], workflows: workflows.slice(0, 1).map((w) => w.name),
+    trigger: { type: "webhook", key: newKey(), pattern: "", folder: "", every_minutes: 0, at: [] } };
+  const tr = data.trigger;
+  const chosen = new Set(data.profiles);
+  const chain = [...data.workflows];
+  modal((close) => {
+    const msg = h("div", { class: "msg", role: "status" });
+    const name = h("input", { id: "trg-name", value: data.name, maxlength: 64, autocomplete: "off" });
+    const enabled = h("input", { type: "checkbox" });
+    enabled.checked = data.enabled;
+    const closeBox = h("input", { type: "checkbox" });
+    closeBox.checked = data.close_profile;
+    const whenBox = h("div");
+    const chainBox = h("div", { class: "vars" });
+    const typeSel = h("select", { id: "trg-type", onchange: (e) => { tr.type = e.target.value; drawWhen(); } },
+      ["webhook", "clipboard", "file", "schedule"].map((k) => h("option", { value: k, selected: tr.type === k }, t("trg_type_" + k))));
+    const text = (id, key, placeholder = "") => h("input", { id, class: "data", value: tr[key] || "", placeholder, autocomplete: "off",
+      oninput: (e) => { tr[key] = e.target.value; } });
+    function drawWhen() {
+      const kids = [];
+      if (tr.type === "webhook") {
+        const url = `${location.origin}/api/v1/hooks/${data.id}?key=${tr.key}`;
+        const copyBtn = h("button", { type: "button", class: "btn btn-ghost", onclick: async () => {
+          try { await navigator.clipboard.writeText(url); copyBtn.textContent = t("trg_copied"); } catch { toast(url); }
+        } }, icon("copy", true), t("trg_copy"));
+        kids.push(h("div", { class: "field" }, h("label", {}, t("trg_webhook_url")), h("code", { class: "hook-url" }, url),
+          h("div", { class: "inline-btns" }, copyBtn,
+            h("button", { type: "button", class: "btn btn-ghost", onclick: () => { tr.key = newKey(); drawWhen(); } }, icon("reload", true), t("trg_new_key"))),
+          h("div", { class: "hint" }, t("trg_webhook_hint")), isNew ? h("div", { class: "hint" }, t("trg_webhook_save_first")) : null));
+      } else if (tr.type === "clipboard") {
+        kids.push(field(t("trg_clip_pattern"), text("trg-pattern", "pattern", "https?://"), t("trg_clip_hint")));
+      } else if (tr.type === "file") {
+        kids.push(field(t("trg_folder"), text("trg-folder", "folder")), field(t("trg_file_pattern"), text("trg-file", "pattern", "*.csv"), t("trg_file_hint")));
+      } else {
+        const every = h("input", { id: "trg-every", type: "number", min: 0, max: 10080, class: "data", value: String(tr.every_minutes || 0),
+          oninput: (e) => { tr.every_minutes = toInt(e.target.value, 0); } });
+        const at = h("input", { id: "trg-at", class: "data", value: (tr.at || []).join(", "), placeholder: "08:30, 17:00", autocomplete: "off",
+          oninput: (e) => { tr.at = e.target.value.split(",").map((x) => x.trim()).filter(Boolean); } });
+        kids.push(h("div", { class: "settings-grid" }, field(t("trg_every"), every), field(t("trg_at"), at)));
+      }
+      whenBox.replaceChildren(...kids);
+    }
+    function drawChain() {
+      chainBox.replaceChildren(...chain.map((wf, i) => h("div", { style: "display:flex;align-items:center;gap:8px" },
+        h("span", { class: "data muted", style: "width:22px" }, `${i + 1}.`),
+        h("select", { "aria-label": `${t("run_pick_wf")} ${i + 1}`, style: "flex:1;min-width:0", onchange: (e) => { chain[i] = e.target.value; } },
+          workflows.map((w) => h("option", { value: w.name, selected: w.name === wf }, w.name))),
+        h("button", { type: "button", class: "icon-btn", title: t("run_remove_wf"), "aria-label": `${t("run_remove_wf")} ${i + 1}`,
+          onclick: () => { chain.splice(i, 1); drawChain(); } }, icon("x", true)))),
+      h("div", { class: "inline-btns" }, h("button", { type: "button", class: "btn btn-ghost", disabled: !workflows.length, onclick: () => {
+        const unused = workflows.find((w) => !chain.includes(w.name));
+        chain.push(unused ? unused.name : workflows[0].name);
+        drawChain();
+      } }, icon("plus", true), t("run_add_wf"))));
+    }
+    const list = h("div", { class: "pick-list", role: "group", "aria-label": t("trg_profiles_label") }, profiles.map((p) => {
+      const box = h("input", { type: "checkbox", onchange: (e) => { if (e.target.checked) chosen.add(p.name); else chosen.delete(p.name); } });
+      box.checked = chosen.has(p.name);
+      return h("label", { class: "pick" }, box, h("div", { class: "stack" }, h("span", { class: "name" }, p.name)));
+    }));
+    drawWhen();
+    drawChain();
+    return h("form", { onsubmit: async (e) => {
+      e.preventDefault();
+      msg.className = "msg"; msg.textContent = "";
+      const problem = !name.value.trim() ? t("trg_need_name") : !chosen.size ? t("trg_need_profile") : !chain.length ? t("trg_need_workflow") : "";
+      if (problem) { msg.className = "msg err"; msg.textContent = problem; return; }
+      const body = { ...data, name: name.value.trim(), enabled: enabled.checked, close_profile: closeBox.checked,
+        profiles: profiles.map((p) => p.name).filter((n) => chosen.has(n)), workflows: chain, trigger: tr };
+      delete body.state;
+      try {
+        await api(isNew ? "POST" : "PUT", isNew ? "/automations" : `/automations/${enc(data.id)}`, body);
+        toast(t("trg_saved", { name: body.name }));
+        close();
+        refresh();
+      } catch (ex) { msg.className = "msg err"; msg.textContent = ex.message; }
+    } },
+      modalHead(t(isNew ? "trg_title_new" : "trg_title_edit"), t("trg_subtitle"), close),
+      h("div", { class: "modal-body" },
+        field(t("trg_name"), name),
+        h("label", { class: "check-line" }, enabled, t("trg_enabled")),
+        h("div", { class: "step" }, t("trg_when")),
+        h("div", { class: "field" }, typeSel), whenBox,
+        h("div", { class: "step" }, t("trg_then")),
+        h("div", { class: "field" }, h("label", {}, t("trg_profiles_label")), list),
+        h("div", { class: "field" }, h("label", {}, t("trg_workflows_label")), chainBox),
+        h("label", { class: "check-line" }, closeBox, t("trg_close")),
+        h("div", { class: "note calm" }, icon("alert", true), h("span", {}, t("trg_vars_hint"))),
+        msg),
+      h("div", { class: "modal-foot" }, h("button", { type: "button", class: "btn btn-line", onclick: close }, t("cancel")),
+        h("button", { class: "btn btn-act" }, t("save"))));
+  }, { wide: true });
 }
 
 async function deleteWorkflow(name) {

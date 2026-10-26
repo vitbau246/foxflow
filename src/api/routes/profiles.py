@@ -23,6 +23,7 @@ from ...utils.validation import (
     validate_timezone,
 )
 from ..dependencies import (
+    get_automation_store,
     get_browser_launcher,
     get_event_bus,
     get_profile_manager,
@@ -51,6 +52,7 @@ from ..schemas.proxy import GeoCheckResponse
 if TYPE_CHECKING:
     from ...core.events import EventBus
     from ...interfaces import IBrowserLauncher, IProfileManager
+    from ...services.automation.store import AutomationStore
     from ...services.workflow.store import WorkflowStore
 
 logger = get_logger("api.profiles")
@@ -161,6 +163,7 @@ def update_profile(
     bl: IBrowserLauncher = Depends(get_browser_launcher),
     bus: EventBus = Depends(get_event_bus),
     store: WorkflowStore = Depends(get_workflow_store),
+    triggers: AutomationStore = Depends(get_automation_store),
 ) -> ProfileResponse:
     profile = require_profile(name, pm)
     supplied = body.model_dump(exclude_unset=True)
@@ -200,8 +203,9 @@ def update_profile(
     ):
         raise HTTPException(status_code=409, detail="Update failed (name conflict?)")
     if new_name != name:
-        # The renamed profile keeps its workflows.
+        # The renamed profile keeps its workflows and triggers.
         store.reassign(name, new_name)
+        triggers.rename_profile(name, new_name)
 
     logger.info("API updated profile: %s -> %s", name, new_name)
     bus.emit()
