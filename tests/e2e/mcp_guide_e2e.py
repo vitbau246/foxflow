@@ -12,8 +12,8 @@ from camoufox.async_api import AsyncCamoufox
 OUT_DIR = pathlib.Path(os.getenv("E2E_OUT", "e2e-output"))
 OUT_DIR.mkdir(exist_ok=True)
 
-URL = os.getenv("FOXPROFILE_URL", "http://127.0.0.1:8000").rstrip("/") + "/"
-TOKEN = os.environ.get("FOXPROFILE_API_TOKEN", "")
+URL = os.getenv("FOXFLOW_URL", "http://127.0.0.1:8000").rstrip("/") + "/"
+TOKEN = os.environ.get("FOXFLOW_API_TOKEN", "")
 OUT = str(OUT_DIR)
 errors = []
 
@@ -39,15 +39,15 @@ async def main():
         print("endpoint:", await page.text_content("#modal-root code"))
         code = await page.text_content("pre.code")
         print("claude-code:", code)
-        print("placeholder before insert:", "<FOXPROFILE_API_TOKEN>" in code)
+        print("placeholder before insert:", "<FOXFLOW_API_TOKEN>" in code)
 
         await page.check("#modal-root input[type=checkbox]")
         code = await page.text_content("pre.code")
-        print("token inserted:", TOKEN in code and "<FOXPROFILE_API_TOKEN>" not in code)
+        print("token inserted:", TOKEN in code and "<FOXFLOW_API_TOKEN>" not in code)
 
         await page.click(".chips button:has-text('Cursor')")
         cursor = json.loads(await page.text_content("pre.code"))
-        print("cursor json valid:", cursor["mcpServers"]["foxprofile"]["url"])
+        print("cursor json valid:", cursor["mcpServers"]["foxflow"]["url"])
 
         await page.click(".chips button:has-text('Claude Desktop')")
         print("desktop note:", (await page.text_content("#modal-root .note"))[:70])

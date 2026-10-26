@@ -152,8 +152,29 @@ def test_uninstall(tmp_path, fake_release):
 
 
 def test_engine_home_override(monkeypatch, tmp_path):
+    monkeypatch.setenv("FOXFLOW_CHROME_HOME", str(tmp_path))
+    assert fetch.engine_home() == tmp_path
+
+
+def test_engine_home_legacy_override(monkeypatch, tmp_path):
+    monkeypatch.delenv("FOXFLOW_CHROME_HOME", raising=False)
     monkeypatch.setenv("FOXPROFILE_CHROME_HOME", str(tmp_path))
     assert fetch.engine_home() == tmp_path
+
+
+def test_engine_home_reuses_foxprofile_download(monkeypatch, tmp_path):
+    for var in ("FOXFLOW_CHROME_HOME", "FOXPROFILE_CHROME_HOME"):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+    monkeypatch.setattr(fetch.Path, "home", lambda: tmp_path)
+    home = fetch.engine_home()
+    assert home.parts[-2:] == ("foxflow", "chrome")
+    legacy = home.parent.parent / "foxprofile" / "chrome"
+    legacy.mkdir(parents=True)
+    assert fetch.engine_home() == legacy
+    home.mkdir(parents=True)
+    assert fetch.engine_home() == home
 
 
 @pytest.mark.filterwarnings("ignore:Python 3.14 will:DeprecationWarning")

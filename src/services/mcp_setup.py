@@ -7,8 +7,8 @@ import pathlib
 import sys
 from dataclasses import asdict, dataclass
 
-TOKEN_PLACEHOLDER = "<FOXPROFILE_API_TOKEN>"
-MCP_SCRIPT = pathlib.Path(__file__).resolve().parents[2] / "foxprofile_mcp.py"
+TOKEN_PLACEHOLDER = "<FOXFLOW_API_TOKEN>"
+MCP_SCRIPT = pathlib.Path(__file__).resolve().parents[2] / "foxflow_mcp.py"
 
 
 @dataclass
@@ -35,7 +35,7 @@ def build_configs(
     """Configs for common MCP clients.
 
     `token` is the real token, a placeholder, or None when the API has none.
-    `local` adds a Claude Desktop config that starts FoxProfile's stdio MCP
+    `local` adds a Claude Desktop config that starts FoxFlow's stdio MCP
     server on this machine; otherwise Claude Desktop goes through mcp-remote.
     """
     auth = {"Authorization": f"Bearer {token}"} if token else {}
@@ -47,7 +47,7 @@ def build_configs(
             name="Claude Code",
             where="Terminal",
             language="bash",
-            code=f"claude mcp add --transport http foxprofile {mcp_url}{header_flag}",
+            code=f"claude mcp add --transport http foxflow {mcp_url}{header_flag}",
         ),
         ClientConfig(
             id="cursor",
@@ -57,7 +57,7 @@ def build_configs(
             code=_json(
                 {
                     "mcpServers": {
-                        "foxprofile": {"url": mcp_url, **({"headers": auth} if auth else {})}
+                        "foxflow": {"url": mcp_url, **({"headers": auth} if auth else {})}
                     }
                 },
             ),
@@ -70,7 +70,7 @@ def build_configs(
             code=_json(
                 {
                     "servers": {
-                        "foxprofile": {
+                        "foxflow": {
                             "type": "http",
                             "url": mcp_url,
                             **({"headers": auth} if auth else {}),
@@ -87,9 +87,9 @@ def build_configs(
         else "~/Library/Application Support/Claude/claude_desktop_config.json"
     )
     if local:
-        env = {"FOXPROFILE_URL": api_url or mcp_url.rsplit("/mcp", 1)[0]}
+        env = {"FOXFLOW_URL": api_url or mcp_url.rsplit("/mcp", 1)[0]}
         if token:
-            env["FOXPROFILE_API_TOKEN"] = token
+            env["FOXFLOW_API_TOKEN"] = token
         server = {
             "command": python or sys.executable,
             "args": [str(MCP_SCRIPT)],
@@ -101,15 +101,15 @@ def build_configs(
         args = ["-y", "mcp-remote", mcp_url]
         server = {"command": "npx", "args": args}
         if token:
-            args += ["--header", "Authorization:${FOXPROFILE_AUTH}"]
-            server["env"] = {"FOXPROFILE_AUTH": f"Bearer {token}"}
+            args += ["--header", "Authorization:${FOXFLOW_AUTH}"]
+            server["env"] = {"FOXFLOW_AUTH": f"Bearer {token}"}
     configs.append(
         ClientConfig(
             id="claude-desktop",
             name="Claude Desktop",
             where=desktop_where,
             language="json",
-            code=_json({"mcpServers": {"foxprofile": server}}),
+            code=_json({"mcpServers": {"foxflow": server}}),
         ),
     )
     return configs

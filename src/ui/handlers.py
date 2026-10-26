@@ -9,9 +9,10 @@ from ..interfaces.protocols import IBrowserLauncher, IProfileManager, IProxyServ
 from .actions.browser import launch_or_stop
 from .actions.bulk import bulk_delete_profiles, bulk_launch_profiles, bulk_stop_profiles
 from .actions.cookies import manage_cookies
-from .actions.profile import add_profile, delete_profile, edit_profile
+from .actions.profile import add_profile, clone_profile, delete_profile, edit_profile
 from .actions.transfer import export_profile, import_profile
 from .dialogs import open_log_dialog
+from .dialogs.workflows import WorkflowServices, open_workflows_dialog
 from .refs import UIRefs
 from .state import AppState
 
@@ -30,6 +31,7 @@ class AppHandlers:
         log_fn: Callable[[str], None],
         refresh_fn: Callable[[], None],
         get_page_profiles: Callable[[], tuple],
+        workflows: WorkflowServices | None = None,
     ) -> None:
         self._pm = pm
         self._bl = bl
@@ -40,9 +42,23 @@ class AppHandlers:
         self._log = log_fn
         self._refresh = refresh_fn
         self._get_page_profiles = get_page_profiles
+        self._workflows = workflows
+
+    def _stop_runs(self, names) -> None:
+        # A run would take the stopped browser for a failure and start it again.
+        if self._workflows:
+            for name in names:
+                if self._bl.is_running(name):
+                    self._workflows.runner.stop(name)
 
     def on_launch(self, name: str) -> None:
+        self._stop_runs([name])
         launch_or_stop(name, self._pm, self._bl, self._state, self._log)
+
+    def on_workflows(self, name: str) -> None:
+        page = self._get_page()
+        assert page is not None and self._workflows is not None
+        open_workflows_dialog(page, name, self._workflows)
 
     def on_delete(self, name: str) -> None:
         page = self._get_page()
@@ -60,6 +76,15 @@ class AppHandlers:
             self._ps,
             self._log,
             self._refresh,
+            on_renamed=self._workflows.store.reassign if self._workflows else None,
+        )
+
+    def on_clone(self, name: str) -> None:
+        page = self._get_page()
+        assert page is not None
+        assert self._workflows is not None
+        clone_profile(
+            page, name, self._pm, self._bl, self._workflows.store, self._log, self._refresh
         )
 
     def on_cookies(self, name: str) -> None:
@@ -131,6 +156,7 @@ class AppHandlers:
 
     def on_bulk_stop(self) -> None:
         if names := list(self._state.selected_names()):
+            self._stop_runs(names)
             bulk_stop_profiles(names, self._pm, self._bl, self._state, self._log)
 
     # --- Log handlers ---

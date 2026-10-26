@@ -12,6 +12,9 @@ from ...core.logging import get_logger
 from ...models.profile import ENGINES
 from ...services.browser import chrome_prefetch, cookies, fingerprint
 from ...services.browser.launcher import ProfileBusyError
+from ...services.profile import cloning
+from ...services.profile.clone_parts import PARTS
+from ...services.profile.manager import CloneError
 from ...services.proxy.geo_check import check_geo
 from ...utils.validation import (
     validate_locale,
@@ -19,10 +22,16 @@ from ...utils.validation import (
     validate_proxy_format,
     validate_timezone,
 )
-from ..dependencies import get_browser_launcher, get_event_bus, get_profile_manager
+from ..dependencies import (
+    get_browser_launcher,
+    get_event_bus,
+    get_profile_manager,
+    get_workflow_store,
+)
 from ..helpers import build_profile_response, profile_response, require_profile
 from ..schemas.common import ErrorResponse, SuccessResponse
 from ..schemas.profiles import (
+    CloneResponse,
     CookieImportRequest,
     CookieImportResponse,
     DataDirResponse,
@@ -31,6 +40,7 @@ from ..schemas.profiles import (
     FingerprintResponse,
     ImportRequest,
     ImportResponse,
+    ProfileClone,
     ProfileCreate,
     ProfileListResponse,
     ProfileResponse,
@@ -41,6 +51,7 @@ from ..schemas.proxy import GeoCheckResponse
 if TYPE_CHECKING:
     from ...core.events import EventBus
     from ...interfaces import IBrowserLauncher, IProfileManager
+    from ...services.workflow.store import WorkflowStore
 
 logger = get_logger("api.profiles")
 
@@ -149,6 +160,7 @@ def update_profile(
     pm: IProfileManager = Depends(get_profile_manager),
     bl: IBrowserLauncher = Depends(get_browser_launcher),
     bus: EventBus = Depends(get_event_bus),
+    store: WorkflowStore = Depends(get_workflow_store),
 ) -> ProfileResponse:
     profile = require_profile(name, pm)
     supplied = body.model_dump(exclude_unset=True)
@@ -187,6 +199,9 @@ def update_profile(
         name, new_name, new_proxy or "", new_os, new_timezone or None, new_locale or None
     ):
         raise HTTPException(status_code=409, detail="Update failed (name conflict?)")
+    if new_name != name:
+        # The renamed profile keeps its workflows.
+        store.reassign(name, new_name)
 
     logger.info("API updated profile: %s -> %s", name, new_name)
     bus.emit()
@@ -214,6 +229,41 @@ def delete_profile(
     logger.info("API deleted profile: %s", name)
     bus.emit()
     return SuccessResponse(message=f"Profile '{name}' deleted")
+
+
+@router.post(
+    "/{name}/clone",
+    response_model=CloneResponse,
+    status_code=201,
+    responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
+)
+def clone_profile(
+    name: str,
+    body: ProfileClone,
+    pm: IProfileManager = Depends(get_profile_manager),
+    bl: IBrowserLauncher = Depends(get_browser_launcher),
+    bus: EventBus = Depends(get_event_bus),
+    store: WorkflowStore = Depends(get_workflow_store),
+) -> CloneResponse:
+    """Copy a profile's settings (proxy, OS, engine, timezone, locale) to `count` new
+    profiles, each with a fingerprint of its own, plus the parts listed in `copy`."""
+    require_profile(name, pm)
+    # One copy: a free "<name>-copy"; several: numbered from "<name>-copy".
+    base = (body.name or "").strip() or (
+        pm.clone_name(name) if body.count == 1 else f"{name[:56]}-copy"
+    )
+    copy = set(body.parts) | (set(PARTS) if body.copy_data else set())
+    try:
+        clones, workflows = cloning.clone(pm, bl, store, name, base, body.count, copy)
+    except CloneError as e:
+        bus.emit()  # copies made before a failure are real profiles
+        raise HTTPException(status_code=e.status, detail=str(e)) from e
+    logger.info("API cloned profile: %s -> %s", name, ", ".join(c.name for c in clones))
+    if clones[0].engine == "chrome":
+        chrome_prefetch.start()
+    bus.emit()
+    profiles = [profile_response(c, bl) for c in clones]
+    return CloneResponse(profiles=profiles, total=len(profiles), workflows_copied=workflows)
 
 
 @router.get(

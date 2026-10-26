@@ -1,11 +1,19 @@
+from __future__ import annotations
+
 import logging
 import threading
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from ..interfaces.protocols import IBrowserLauncher, IProfileManager, IProxyService
 from .config import LOG_DIR, LOG_LEVEL
 from .events import EventBus
 from .logging import setup_logging
+
+if TYPE_CHECKING:
+    from ..services.ai.settings import AISettingsStore
+    from ..services.workflow.runner import WorkflowRunner
+    from ..services.workflow.store import WorkflowStore
 
 
 class Container:
@@ -40,6 +48,33 @@ class Container:
         from ..services.browser.launcher import BrowserLauncher
 
         return self._get("bl", BrowserLauncher)
+
+    @property
+    def workflow_store(self) -> WorkflowStore:
+        from ..services.workflow.store import WorkflowStore
+
+        return self._get("ws", WorkflowStore)
+
+    @property
+    def ai_settings(self) -> AISettingsStore:
+        from ..services.ai.settings import AISettingsStore
+
+        return self._get("ai", AISettingsStore)
+
+    @property
+    def workflow_runner(self) -> WorkflowRunner:
+        from ..services.workflow.runner import WorkflowRunner
+
+        return self._get(
+            "wr",
+            lambda: WorkflowRunner(
+                self.workflow_store,
+                self.profile_manager,
+                self.browser_launcher,
+                on_change=self.event_bus.emit,
+                ai_settings=self.ai_settings,
+            ),
+        )
 
     @property
     def proxy_service(self) -> IProxyService:

@@ -1,6 +1,6 @@
 # End-to-end scripts
 
-Chạy thủ công với một FoxProfile thật (không thuộc `pytest`/CI vì cần trình duyệt và mạng).
+Chạy thủ công với một FoxFlow thật (không thuộc `pytest`/CI vì cần trình duyệt và mạng).
 
 | Script | Cần gì | Kiểm tra |
 | --- | --- | --- |
@@ -15,10 +15,10 @@ Chạy thủ công với một FoxProfile thật (không thuộc `pytest`/CI vì
 Biến môi trường:
 
 ```bash
-FOXPROFILE_URL=http://127.0.0.1:8000     # địa chỉ FoxProfile
-FOXPROFILE_API_TOKEN=...                 # nếu server có token
-FOXPROFILE_DATA_DIR=camoufox_data        # api_e2e đọc fingerprint.json ở đây
+FOXFLOW_URL=http://127.0.0.1:8000     # địa chỉ FoxFlow
+FOXFLOW_API_TOKEN=...                 # nếu server có token
+FOXFLOW_DATA_DIR=camoufox_data        # api_e2e đọc fingerprint.json ở đây
 E2E_OUT=e2e-output                       # nơi lưu ảnh chụp
 ```
 
-Các script tạo profile tên `e2e-*`, `mcp-demo`, `http-demo`, `panel-demo`, `ctl-test`; nên chạy với một thư mục dữ liệu riêng (`FOXPROFILE_DATA_DIR`, `FOXPROFILE_PROFILES_FILE`) thay vì dữ liệu thật.
+Các script tạo profile tên `e2e-*`, `mcp-demo`, `http-demo`, `panel-demo`, `ctl-test`; nên chạy với một thư mục dữ liệu riêng (`FOXFLOW_DATA_DIR`, `FOXFLOW_PROFILES_FILE`) thay vì dữ liệu thật.

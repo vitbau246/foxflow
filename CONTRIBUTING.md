@@ -1,4 +1,4 @@
-# Đóng góp cho FoxProfile
+# Đóng góp cho FoxFlow
 
 Cảm ơn bạn đã muốn đóng góp! Mọi đóng góp đều được chào đón: báo lỗi, đề xuất tính năng, sửa tài liệu, dịch thuật hay viết code.
 
@@ -49,25 +49,28 @@ Cảm ơn bạn đã muốn đóng góp! Mọi đóng góp đều được chào
 - Định dạng và lint bằng `ruff` (cấu hình trong `pyproject.toml`).
 - **Chữ hiển thị trên giao diện không viết cứng** mà thêm vào `src/core/strings.py` ở **cả** `en` và `vi`, rồi gọi `get_string("key")`. Test sẽ báo lỗi nếu thiếu khóa ở một trong hai ngôn ngữ.
 - Tên profile luôn phải đi qua `validate_profile_name` trước khi dùng làm đường dẫn.
-- Không commit `profiles.json`, `camoufox_data/`, `logs/` hay file `.env`: chúng chứa cookie và proxy thật.
+- Không commit `profiles.json`, `camoufox_data/`, `workflows/`, `ai_settings.json`, `logs/` hay file `.env`: chúng chứa cookie, proxy, mật khẩu đã gõ lúc ghi và API key thật.
 
 ## Cấu trúc thư mục
 
 ```text
 src/
   api/          REST API (FastAPI): routes, schemas, token auth, /mcp over HTTP
-  mcp_server/   MCP tools (client of the REST API; stdio entry: foxprofile_mcp.py)
+  mcp_server/   MCP tools (client of the REST API; stdio entry: foxflow_mcp.py)
   web/          web panel (one HTML file, no build step)
   server.py     server mode entry point (API + panel, no desktop UI)
   core/         cấu hình, log, chuỗi đa ngôn ngữ
   models/       dataclass Profile
   services/
-    browser/    khởi chạy Camoufox, vân tay, cookie, điều khiển trang (control.py)
-    profile/    lưu, xuất/nhập profile
+    browser/    khởi chạy Camoufox, fingerprint, cookie, điều khiển trang (control.py), ghi thao tác (recorder.py/.js)
+    workflow/   workflow: lưu (store), mô hình bước, chạy lại có kiểm tra và thử lại (runner, steps)
+    ai/         bước Sinh bằng AI: cấu hình và client API tương thích OpenAI
+    profile/    lưu, xuất/nhập, nhân bản profile
     proxy/      kiểm tra proxy, Kiểm tra IP (đối chiếu GeoIP)
   ui/           giao diện Flet: components, dialogs, actions
   utils/        kiểm tra tên, phân tích proxy
-tests/          pytest
+chrome_engine/  engine Chrome (fingerprint-chromium), có test riêng
+tests/          pytest; tests/e2e/ là script chạy tay với FoxFlow thật
 ```
 
 ## Giấy phép

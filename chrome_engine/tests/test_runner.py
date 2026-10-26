@@ -1,4 +1,4 @@
-"""The Chrome runner speaks FoxProfile's runner protocol (real browser)."""
+"""The Chrome runner speaks FoxFlow's runner protocol (real browser)."""
 
 from __future__ import annotations
 
@@ -25,9 +25,9 @@ class Runner:
     def __init__(self, data_dir: Path, *args: str, restore_tabs: bool = True) -> None:
         env = {
             **os.environ,
-            "FOXPROFILE_DATA_DIR": str(data_dir),
-            "FOXPROFILE_HEADLESS": "true",
-            "FOXPROFILE_RESTORE_TABS": "true" if restore_tabs else "false",
+            "FOXFLOW_DATA_DIR": str(data_dir),
+            "FOXFLOW_HEADLESS": "true",
+            "FOXFLOW_RESTORE_TABS": "true" if restore_tabs else "false",
             "PYTHONPATH": str(ROOT),
         }
         self.proc = subprocess.Popen(

@@ -8,6 +8,7 @@ stdout as "CONTROL:<port>:<token>" so the launcher can forward API calls.
 from __future__ import annotations
 
 import base64
+import contextlib
 import re
 import secrets
 from typing import Any
@@ -71,9 +72,11 @@ def _truncate(text: str, limit: int) -> tuple[str, bool]:
 class PageController:
     """Executes control actions against a Playwright BrowserContext."""
 
-    def __init__(self, context: Any) -> None:
+    def __init__(self, context: Any, profile_dir: str | None = None) -> None:
         self._context = context
         self._current: Any = None
+        self._profile_dir = profile_dir
+        self._recorder: Any = None
 
     # --- page selection ---------------------------------------------------
 
@@ -217,6 +220,64 @@ class PageController:
         self._current = None
         return await self.tabs()
 
+    # --- recording and replay (workflows) ---------------------------------
+
+    def _recording(self) -> bool:
+        return self._recorder is not None and self._recorder.active
+
+    async def _focused_page(self) -> Any:
+        """The tab the user is looking at: the visible one, else the active one."""
+        if self._current is not None and not self._current.is_closed():
+            return self._current
+        for page in reversed(self._open_pages()):
+            try:
+                if await page.evaluate("() => document.visibilityState === 'visible'"):
+                    return page
+            except Exception:
+                continue
+        return await self._page()
+
+    async def record_start(self) -> dict[str, Any]:
+        from .recorder import Recorder
+
+        if self._recorder is None:
+            self._recorder = Recorder(self._context, self._profile_dir)
+        if self._recorder.active:
+            return self._recorder.status()
+        page = await self._focused_page()
+        self._current = page
+        return await self._recorder.start(page)
+
+    async def record_stop(self) -> dict[str, Any]:
+        if self._recorder is None:
+            raise ControlError("Not recording")
+        return await self._recorder.stop()
+
+    async def record_status(self) -> dict[str, Any]:
+        if self._recorder is None:
+            return {"recording": False, "started_at": "", "step_count": 0, "recent": []}
+        return self._recorder.status()
+
+    async def run_prepare(self) -> dict[str, Any]:
+        """Start a replay from one tab, as recordings do: close the others."""
+        if self._recording():
+            raise ControlError("The profile is recording; stop the recording first")
+        pages = self._open_pages()
+        if not pages:
+            pages = [await self._context.new_page()]
+        for page in pages[1:]:
+            with contextlib.suppress(Exception):
+                await page.close()
+        self._current = pages[0]
+        return await self.tabs()
+
+    async def run_step(self, step: dict[str, Any], timeout_ms: int = 15_000) -> dict[str, Any]:
+        from ..workflow.steps import run_step
+
+        if self._recording():
+            raise ControlError("The profile is recording; stop the recording first")
+        return await run_step(self, step, timeout_ms)
+
     ACTIONS = (
         "navigate",
         "back",
@@ -234,6 +295,11 @@ class PageController:
         "tab_new",
         "tab_select",
         "tab_close",
+        "record_start",
+        "record_stop",
+        "record_status",
+        "run_prepare",
+        "run_step",
     )
 
     async def dispatch(self, action: str, params: dict[str, Any]) -> Any:
@@ -269,10 +335,14 @@ def build_app(controller: PageController, token: str) -> web.Application:
     return app
 
 
-async def serve(context: Any) -> tuple[web.AppRunner, int, str]:
-    """Start the control server for a context. Returns (runner, port, token)."""
+async def serve(context: Any, profile_dir: str | None = None) -> tuple[web.AppRunner, int, str]:
+    """Start the control server for a context. Returns (runner, port, token).
+
+    `profile_dir` is where a recording keeps its draft (recording.json).
+    """
     token = secrets.token_urlsafe(24)
-    runner = web.AppRunner(build_app(PageController(context), token), access_log=None)
+    controller = PageController(context, profile_dir)
+    runner = web.AppRunner(build_app(controller, token), access_log=None)
     await runner.setup()
     site = web.TCPSite(runner, "127.0.0.1", 0)
     await site.start()

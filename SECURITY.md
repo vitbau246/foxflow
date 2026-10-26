@@ -14,7 +14,7 @@ Maintainer sẽ phản hồi trong vòng 7 ngày và công bố bản sửa trư
 
 ## Phạm vi đáng chú ý
 
-FoxProfile lưu cookie đăng nhập và proxy của nhiều tài khoản, nên các lỗi sau được ưu tiên cao nhất:
+FoxFlow lưu cookie đăng nhập và proxy của nhiều tài khoản, nên các lỗi sau được ưu tiên cao nhất:
 
 - Đọc hoặc ghi file ngoài thư mục dữ liệu (path traversal qua tên profile hay file ZIP nhập vào)
 - Lộ cookie, proxy hoặc mật khẩu proxy ra log hay ra ngoài máy
@@ -24,7 +24,7 @@ FoxProfile lưu cookie đăng nhập và proxy của nhiều tài khoản, nên 
 
 ## Lưu ý cho người dùng
 
-- Khi đưa lên mạng, luôn đặt `FOXPROFILE_API_TOKEN` (ít nhất 24 ký tự ngẫu nhiên) và dùng HTTPS.
+- Khi đưa lên mạng, luôn đặt `FOXFLOW_API_TOKEN` (ít nhất 24 ký tự ngẫu nhiên) và dùng HTTPS.
 - Nội dung trang web là dữ liệu không tin cậy: trang có thể chứa chỉ dẫn nhằm lừa AI agent.
 - Thư mục `camoufox_data/` chứa cookie đăng nhập. Không chia sẻ và không commit.
 - Chỉ nhập profile ZIP hay file cookie từ nguồn bạn tin tưởng.

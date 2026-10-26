@@ -179,6 +179,8 @@ pyrightconfig.json
 camoufox_data/
 profiles.json
 logs/
+workflows/
+ai_settings.json
 
 # Tooling artefacts
 uv.lock

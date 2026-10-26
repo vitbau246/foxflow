@@ -11,6 +11,7 @@ from src.services.profile import manager as manager_module
 from src.services.profile.transfer import import_from_zip
 from src.services.proxy import geo_check
 from src.services.proxy.geo_check import SourceResult, check_geo, compare
+from src.services.workflow.store import WorkflowStore
 from src.utils.validation import validate_locale, validate_timezone
 
 
@@ -152,6 +153,7 @@ def client(tmp_path, monkeypatch):
         profile_manager=manager_module.ProfileManager(),
         browser_launcher=types.SimpleNamespace(is_running=lambda name: False),
         event_bus=types.SimpleNamespace(emit=lambda: None),
+        workflow_store=WorkflowStore(str(tmp_path / "workflows")),
     )
     app.include_router(profiles_router)
     app.include_router(proxy_router)

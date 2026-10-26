@@ -19,6 +19,7 @@ from .routes import (
     page_router,
     profiles_router,
     proxy_router,
+    workflows_router,
 )
 from .schemas.common import SuccessResponse
 
@@ -53,10 +54,10 @@ def create_app(container: Container, self_url: str | None = None) -> FastAPI:
 
     app = FastAPI(
         lifespan=lifespan,
-        title="FoxProfile API",
+        title="FoxFlow API",
         description=(
-            "REST API for FoxProfile (Camoufox profile manager). When "
-            "FOXPROFILE_API_TOKEN is set, send it as `Authorization: Bearer <token>`."
+            "REST API for FoxFlow (web automation in isolated browser profiles). When "
+            "FOXFLOW_API_TOKEN is set, send it as `Authorization: Bearer <token>`."
         ),
         version=VERSION,
     )
@@ -71,17 +72,18 @@ def create_app(container: Container, self_url: str | None = None) -> FastAPI:
     app.include_router(page_router, prefix=API_PREFIX, dependencies=protected)
     app.include_router(proxy_router, prefix=API_PREFIX, dependencies=protected)
     app.include_router(mcp_setup_router, prefix=API_PREFIX, dependencies=protected)
+    app.include_router(workflows_router, prefix=API_PREFIX, dependencies=protected)
     app.router.routes.append(mcp_route)
 
     @app.get(f"{API_PREFIX}/health", response_model=SuccessResponse, tags=["health"])
     def health_check() -> SuccessResponse:
-        return SuccessResponse(message="FoxProfile API is running")
+        return SuccessResponse(message="FoxFlow API is running")
 
     @app.get(f"{API_PREFIX}/info", tags=["health"])
     def info() -> dict:
         """Public, secret-free facts the web panel needs before logging in."""
         return {
-            "name": "FoxProfile",
+            "name": "FoxFlow",
             "version": VERSION,
             "auth_required": bool(API_TOKEN),
             "headless": HEADLESS,

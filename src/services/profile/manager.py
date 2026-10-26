@@ -5,6 +5,7 @@ import pathlib
 import shutil
 import threading
 import time
+from collections.abc import Collection
 
 from ...core.config import DATA_DIR, PROFILES_FILE
 from ...core.logging import get_logger
@@ -15,9 +16,20 @@ from ...utils.validation import (
     validate_profile_name,
     validate_timezone,
 )
+from .clone_parts import PARTS, copy_parts
 from .transfer import export_to_zip, import_from_zip, read_profile_meta
 
 logger = get_logger("profile.manager")
+
+MAX_CLONES = 50
+
+
+class CloneError(Exception):
+    """A profile could not be cloned; `status` is the HTTP status to report."""
+
+    def __init__(self, message: str, status: int = 400) -> None:
+        super().__init__(message)
+        self.status = status
 
 
 def _engine_or_default(value: object) -> str:
@@ -209,6 +221,98 @@ class ProfileManager:
             shutil.rmtree(self._data_path(name), ignore_errors=True)
         logger.info("Deleted profile: %s", name)
         return True
+
+    def clone_name(self, source: str) -> str:
+        """A free name for a copy: "<source>-copy", then "<source>-copy-2"..."""
+        with self._lock:
+            base = f"{source[:56]}-copy"  # room for "-copy-NN" within 64 characters
+            name, n = base, 1
+            while self._find_by_casefold(name) is not None:
+                n += 1
+                name = f"{base}-{n}"
+            return name
+
+    def _name_free(self, name: str) -> bool:
+        if self._find_by_casefold(name) is not None:
+            return False
+        data = pathlib.Path(self._data_path(name))
+        return not (data.exists() and any(data.iterdir()))
+
+    def clone_names(self, base: str, count: int) -> list[str]:
+        """Names for `count` copies: `base` itself for one, else base-1, base-2...
+        skipping names already taken (or left with a data folder)."""
+        if count <= 1:
+            return [base]
+        stem = base[:60]  # room for "-NNN" within 64 characters
+        names: list[str] = []
+        with self._lock:
+            i = 0
+            while len(names) < count:
+                i += 1
+                if self._name_free(candidate := f"{stem}-{i}"):
+                    names.append(candidate)
+        return names
+
+    def clone_profiles(
+        self, source: str, names: list[str], parts: Collection[str] = ()
+    ) -> list[Profile]:
+        """Clone `source` once per name, in order. A failure part way keeps the copies
+        already made and says how many there are."""
+        if not 1 <= len(names) <= MAX_CLONES:
+            raise CloneError(f"Make between 1 and {MAX_CLONES} copies at a time")
+        made: list[Profile] = []
+        for name in names:
+            try:
+                made.append(self.clone_profile(source, name, parts))
+            except CloneError as e:
+                if not made:
+                    raise
+                raise CloneError(
+                    f"Created {len(made)} of {len(names)} copies, then: {e}", e.status
+                ) from e
+        return made
+
+    def clone_profile(self, source: str, new_name: str, parts: Collection[str] = ()) -> Profile:
+        """Create `new_name` with the settings of `source` and a fingerprint of its own.
+
+        `parts` picks the browser data to copy as well (clone_parts.PARTS: cookies,
+        history, site_data, passwords, tabs); the caller must make sure the source
+        browser is stopped when any is given. Raises CloneError.
+        """
+        if unknown := set(parts) - set(PARTS):
+            raise CloneError(f"Unknown part to copy: {', '.join(sorted(unknown))}")
+        with self._lock:
+            original = self.profiles.get(source)
+            if original is None:
+                raise CloneError(f"Profile '{source}' not found", status=404)
+            if (existing := self._find_by_casefold(new_name)) is not None:
+                raise CloneError(f"Profile '{existing}' already exists", status=409)
+            src_dir = pathlib.Path(self._data_path(source))
+            dst_dir = pathlib.Path(self._data_path(new_name))
+            if dst_dir.exists() and any(dst_dir.iterdir()):
+                # Data left by a deleted profile: never mix it into the clone.
+                raise CloneError(f"A data folder for '{new_name}' already exists", status=409)
+            try:
+                dst_dir.mkdir(parents=True, exist_ok=True)
+                if parts and src_dir.is_dir():
+                    copy_parts(src_dir, dst_dir, original.engine, parts)
+            except OSError as e:
+                shutil.rmtree(dst_dir, ignore_errors=True)
+                raise CloneError(f"Could not copy the browser data: {e}", status=500) from e
+            clone = Profile(
+                name=new_name,
+                proxy=original.proxy,
+                os_type=original.os_type,
+                timezone=original.timezone,
+                locale=original.locale,
+                engine=original.engine,
+            )
+            self.profiles[new_name] = clone
+            self.save_profiles()
+        logger.info(
+            "Cloned profile %s -> %s (copied: %s)", source, new_name, ", ".join(parts) or "-"
+        )
+        return clone
 
     def list_profiles(self) -> list[Profile]:
         with self._lock:

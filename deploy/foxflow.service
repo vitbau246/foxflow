@@ -1,13 +1,13 @@
 [Unit]
-Description=FoxProfile (Camoufox profile manager)
+Description=FoxFlow (web automation server)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
-User=foxprofile
-Group=foxprofile
-WorkingDirectory=/opt/foxprofile/app
-ExecStart=/opt/foxprofile/app/.venv/bin/python -m src.server
+User=foxflow
+Group=foxflow
+WorkingDirectory=/opt/foxflow/app
+ExecStart=/opt/foxflow/app/.venv/bin/python -m src.server
 Restart=on-failure
 RestartSec=5
 # Hardening: the service can only write its own directory.
@@ -15,7 +15,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/foxprofile
+ReadWritePaths=/opt/foxflow
 ProtectKernelTunables=true
 ProtectControlGroups=true
 

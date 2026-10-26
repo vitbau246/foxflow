@@ -39,7 +39,7 @@ def _run_dir() -> pathlib.Path | None:
     """The private record directory, or None where records are not supported."""
     if os.name != "posix" or not _PROC.is_dir():
         return None
-    path = pathlib.Path(tempfile.gettempdir()) / f"foxprofile-{os.getuid()}"
+    path = pathlib.Path(tempfile.gettempdir()) / f"foxflow-{os.getuid()}"
     try:
         path.mkdir(mode=0o700, exist_ok=True)
         st = path.lstat()

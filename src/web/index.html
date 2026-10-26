@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>FoxProfile</title>
+<title>FoxFlow</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23D9481A' d='M256 190H200L104 64 82 262 256 456Z'/%3E%3Cpath fill='%23FF6B2C' d='M256 190h56l96-126 22 198-174 194Z'/%3E%3Cpath fill='%23FFF4EC' d='M82 262l114 38 60 156ZM430 262l-114 38-60 156Z'/%3E%3C/svg%3E">
 <style>
 @font-face { font-family: "Be Vietnam Pro"; src: url("/assets/fonts/BeVietnamPro-Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
@@ -26,7 +26,7 @@
   --ui: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
   --data: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
   --row-h: 58px;
-  --cols: 32px minmax(150px, 1.15fr) minmax(170px, 1.05fr) minmax(170px, 1.15fr) minmax(150px, 1fr) 112px 232px;
+  --cols: 32px minmax(150px, 1.15fr) minmax(170px, 1.05fr) minmax(170px, 1.15fr) minmax(150px, 1fr) 112px 304px;
   --ease-out: cubic-bezier(.16, 1, .3, 1);
 }
 * { box-sizing: border-box; }
@@ -63,7 +63,7 @@ svg.i.s { width: 16px; height: 16px; }
 .icon-btn:disabled { opacity: .35; cursor: default; }
 
 /* Fields */
-input[type=text], input[type=search], input[type=password], input:not([type]), select, textarea {
+input[type=text], input[type=search], input[type=password], input[type=number], input:not([type]), select, textarea {
   width: 100%; height: 40px; padding: 0 12px; font-size: 14px; background-color: var(--paper-raised); border: 1px solid var(--rule-strong); border-radius: 8px; outline: none; transition: border-color .15s, box-shadow .15s; }
 textarea { height: auto; padding: 10px 12px; }
 select { appearance: none; -webkit-appearance: none; font-size: 14px; padding-right: 36px; cursor: pointer;
@@ -237,18 +237,85 @@ code { font-family: var(--data); font-size: 12.5px; background: var(--paper-sunk
 .viewer-type { display: flex; gap: 8px; padding: 10px 14px; background: var(--paper); border-top: 1px solid var(--rule); }
 .viewer-type .btn { height: 40px; }
 
+/* Workflows: recording, runs and the step editor */
+.minor.rec { color: var(--live); font-weight: 600; }
+.rec-dot { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--live); vertical-align: 1px; animation: rec-pulse 1.4s ease-in-out infinite; }
+@keyframes rec-pulse { 50% { opacity: .25; } }
+.modal.xwide { width: min(1160px, 100%); }
+.panel { margin-top: 14px; padding: 14px; border: 1px solid var(--rule); border-radius: 9px; background: var(--paper); }
+.panel h3 { margin: 0; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.panel p { margin: 4px 0 0; color: var(--ink-2); font-size: 13px; }
+.panel .row-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+.panel .row-btns input { flex: 1; min-width: 180px; height: 36px; }
+.panel .row-btns .btn { height: 36px; padding: 0 12px; font-size: 13px; }
+.recent { margin: 8px 0 0; padding: 0; list-style: none; font-size: 12.5px; color: var(--ink-2); }
+.recent li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent li::before { content: "\203A  "; color: var(--ink-3); }
+.run-state { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border: 1.5px solid currentColor; border-radius: 5px; font: 700 10.5px/1 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+.run-state.running { color: var(--live); outline: 1px solid currentColor; outline-offset: 2px; }
+.run-state.starting { color: var(--ink-2); border-width: 1px; }
+.run-state.succeeded { color: var(--ok); }
+.run-state.failed { color: var(--err); text-decoration: line-through; }
+.run-state.stopped { color: var(--ink-3); border-width: 1px; }
+.run-line { margin-top: 8px; font-size: 13px; color: var(--ink-2); }
+.run-err { margin-top: 6px; font-size: 13px; color: var(--err); }
+pre.code.log { max-height: 190px; }
+.wf-list { margin-top: 8px; border: 1px solid var(--rule); border-radius: 9px; background: var(--paper-raised); }
+.wf-item { display: flex; align-items: center; gap: 8px; min-height: 58px; padding: 8px 12px; border-top: 1px solid var(--rule); }
+.wf-item:first-child { border-top: 0; }
+.wf-item > .stack { flex: 1; }
+.wf-item .btn { height: 34px; padding: 0 12px; font-size: 13px; }
+.settings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0 12px; }
+.settings-grid .field label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.check-line { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 13px; color: var(--ink-2); }
+.check-line:has(input:disabled) { color: var(--ink-3); }
+.check-line input:disabled { cursor: default; opacity: .5; }
+.bulk-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; color: var(--ink-2); }
+.bulk-line input { width: 150px; height: 34px; }
+.bulk-line .btn { height: 34px; padding: 0 12px; font-size: 13px; }
+.steps { container: steps / inline-size; margin-top: 10px; border: 1px solid var(--rule); border-radius: 9px; background: var(--paper-raised); }
+.step-row { display: grid; grid-template-columns: 26px 20px minmax(160px, 1fr) 92px 92px 190px 100px 128px; column-gap: 10px; align-items: center; min-height: 58px; padding: 8px 12px; border-top: 1px solid var(--rule); }
+.step-row.step-head { min-height: 38px; border-top: 0; border-radius: 9px 9px 0 0; background: var(--paper); color: var(--ink-3); font-size: 12px; font-weight: 600; }
+.step-row.off > :not(.c-on):not(.acts) { opacity: .5; }
+.step-row input:not([type=checkbox]), .step-row select { height: 34px; padding: 0 8px; font-size: 13px; }
+.step-row select { padding-right: 28px; background-position: right 8px center; }
+.step-row .num { font-family: var(--data); font-size: 12px; color: var(--ink-3); }
+.step-row .check-cell { display: flex; flex-direction: column; gap: 4px; }
+.step-row .acts { display: flex; justify-content: flex-end; }
+.step-row .acts .icon-btn { width: 32px; height: 32px; }
+.step-row .cell-label { display: none; }
+.act-tag { display: inline-flex; align-items: center; height: 20px; margin-right: 6px; padding: 0 6px; border: 1px solid var(--rule-strong); border-radius: 5px; font-size: 11.5px; font-weight: 600; color: var(--ink-2); vertical-align: 1px; }
+.step-name { font-weight: 600; }
+.step-detail { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; padding: 0 0 6px 56px; }
+.step-detail .wide { grid-column: 1 / -1; }
+.step-detail textarea { min-height: 72px; font-family: var(--data); font-size: 12px; }
+.muted-cell { color: var(--ink-3); font-size: 13px; }
+.vars { display: grid; gap: 8px; margin-top: 10px; }
+.var-row { display: grid; grid-template-columns: minmax(120px, 220px) minmax(0, 1fr) 34px; gap: 8px; align-items: center; }
+.var-row input { height: 36px; }
+@container steps (max-width: 900px) {
+  .step-row.step-head { display: none; }
+  .step-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 10px; }
+  .step-row > .num { padding-top: 2px; }
+  .step-row > .c-label { flex: 1 1 calc(100% - 70px); }
+  .step-row > .c-field { flex: 1 1 calc(50% - 10px); min-width: 0; }
+  .step-row .cell-label { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink-3); margin-bottom: 3px; }
+  .step-row > .acts { flex-basis: 100%; justify-content: flex-start; }
+  .step-detail { flex-basis: 100%; grid-template-columns: minmax(0, 1fr); padding-left: 0; }
+}
+
 @keyframes fade { from { opacity: 0; } }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
 /* The table follows its own width, not the viewport: all columns need about
-   1140px, the version without Timezone · Locale about 870px. */
-@container sheet (max-width: 1150px) {
-  .row { --cols: 32px minmax(140px, 1.1fr) minmax(140px, 1fr) minmax(140px, 1.1fr) 108px 218px; column-gap: 12px; }
+   1215px, the version without Timezone · Locale about 945px. */
+@container sheet (max-width: 1225px) {
+  .row { --cols: 32px minmax(140px, 1.1fr) minmax(140px, 1fr) minmax(140px, 1.1fr) 108px 290px; column-gap: 12px; }
   .col-geo { display: none; }
   .geo-inline { display: block; }
 }
-@container sheet (max-width: 880px) {
+@container sheet (max-width: 955px) {
   .row.head-row { display: none; }
   .row.body { grid-template-columns: 24px 1fr auto; grid-template-areas: "sel name stamp" "sel device device" "sel proxy proxy" "acts acts acts"; row-gap: 6px; padding: 12px; }
   .row.body > .c-sel { grid-area: sel; align-self: start; padding-top: 3px; }
@@ -310,11 +377,17 @@ code { font-family: var(--data); font-size: 12.5px; background: var(--paper-sunk
   <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
   <symbol id="i-fingerprint" viewBox="0 0 24 24"><path d="M12 10a2 2 0 0 0-2 2c0 1-.1 2.5-.3 4M14 13.1c0 2.4 0 6.4-1 8.9M17.3 21c.1-.6.4-2.3.5-3M2 12a10 10 0 0 1 18-6M21.8 16c.2-2 .1-5.4 0-6M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .3-2M8.7 22c.2-.7.4-1.3.6-2M9 6.8a6 6 0 0 1 9 5.2v2"/></symbol>
   <symbol id="i-tab" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M12 13v4M10 15h4"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></symbol>
+  <symbol id="i-flow" viewBox="0 0 24 24"><rect x="3" y="3.5" width="7" height="5" rx="1.5"/><rect x="14" y="15.5" width="7" height="5" rx="1.5"/><path d="M6.5 8.5v4.5a2.5 2.5 0 0 0 2.5 2.5h5M17.5 15.5V11"/><circle cx="17.5" cy="8.5" r="2.5"/></symbol>
+  <symbol id="i-rec" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
 </svg>
 
 <div id="login" class="login hidden">
   <div class="cover-side rail">
-    <div class="brand"><svg aria-hidden="true"><use href="#fox"/></svg><div><b>FoxProfile</b></div></div>
+    <div class="brand"><svg aria-hidden="true"><use href="#fox"/></svg><div><b>FoxFlow</b></div></div>
     <p data-t="login_side"></p>
   </div>
   <form id="login-form">
@@ -330,7 +403,7 @@ code { font-family: var(--data); font-size: 12.5px; background: var(--paper-sunk
   <aside class="rail">
     <div class="brand">
       <svg aria-hidden="true"><use href="#fox"/></svg>
-      <div><b>FoxProfile</b><span data-t="tagline"></span></div>
+      <div><b>FoxFlow</b><span data-t="tagline"></span></div>
     </div>
     <button class="btn btn-act" id="new-btn"><svg class="i"><use href="#i-plus"/></svg><span data-t="new_profile"></span></button>
     <nav class="nav" id="filters" aria-label="Filters">
@@ -381,7 +454,7 @@ code { font-family: var(--data); font-size: 12.5px; background: var(--paper-sunk
 "use strict";
 const I18N = {
   vi: {
-    tagline: "Quản lý profile anti-detect", new_profile: "Tạo profile", filters: "Lọc",
+    tagline: "Tự động hoá web theo profile", new_profile: "Tạo profile", filters: "Lọc",
     f_all: "Tất cả", f_running: "Đang chạy", f_proxy: "Có proxy", f_direct: "Không proxy", f_chrome: "Engine Chrome",
     api_docs: "Tài liệu API", logout: "Đăng xuất", your_profiles: "Profile", search: "Tìm theo tên hoặc proxy",
     counts: "{n} profile · {r} đang chạy", counts_none: "{n} profile · chưa có profile nào chạy",
@@ -393,12 +466,12 @@ const I18N = {
     direct: "Trực tiếp", follow_ip: "Theo IP", no_fp_short: "chưa có fingerprint", no_proxy_short: "không proxy", selected: "Đã chọn {n}", bulk_launch: "Mở", bulk_stop: "Dừng", bulk_delete: "Xoá", clear_sel: "Bỏ chọn",
     select_all: "Chọn tất cả", select_row: "Chọn {name}",
     confirm_bulk_delete: "Xoá {n} profile đã chọn? Cookie và dữ liệu của chúng sẽ mất vĩnh viễn.", bulk_skip_running: "Bỏ qua {n} profile",
-    login_side: "Server này chạy FoxProfile. Đăng nhập bằng API token để quản lý profile từ xa.",
-    login_hint: "Nhập API token (biến FOXPROFILE_API_TOKEN) của server.", token: "API token", login: "Đăng nhập",
+    login_side: "Server này chạy FoxFlow. Đăng nhập bằng API token để quản lý profile từ xa.",
+    login_hint: "Nhập API token (biến FOXFLOW_API_TOKEN) của server.", token: "API token", login: "Đăng nhập",
     bad_token: "Token không đúng", create: "Tạo profile", edit_title: "Sửa profile", edit_sub: "Đang sửa {name}", create_sub: "Một profile là một danh tính: thiết bị, proxy và vị trí riêng.",
     name: "Tên profile", os: "Hệ điều hành", engine: "Engine",
     engine_camoufox: "Camoufox (Firefox)", engine_chrome: "Chrome (thử nghiệm)", engine_locked: "Engine không đổi được sau khi tạo.",
-    engine_note: "Engine Chromium đang thử nghiệm. Lần đầu dùng sẽ tự tải về máy chạy FoxProfile (~150 MB). Nên chọn đúng hệ điều hành của máy đó, chọn hệ khác sẽ lộ font. Không đổi được engine sau khi tạo.",
+    engine_note: "Engine Chromium đang thử nghiệm. Lần đầu dùng sẽ tự tải về máy chạy FoxFlow (~150 MB). Nên chọn đúng hệ điều hành của máy đó, chọn hệ khác sẽ lộ font. Không đổi được engine sau khi tạo.",
     proxy_label: "Proxy", proxy_hint: "user:pass@host:port, host:port:user:pass, hoặc socks5://... Để trống = kết nối trực tiếp.",
     check_proxy: "Kiểm tra proxy", cancel: "Huỷ", save: "Lưu thay đổi", checking: "Đang kiểm tra...",
     confirm_delete: "Xoá profile “{name}”? Cookie và dữ liệu của profile sẽ mất vĩnh viễn.", confirm_title: "Xác nhận", stop_first: "Hãy dừng trình duyệt trước",
@@ -413,7 +486,7 @@ const I18N = {
     mcp_intro: "Cho Claude, Cursor hay VS Code tự quản lý profile và lướt web giúp bạn: mở trang, đọc nội dung, click, gõ và chụp màn hình.",
     mcp_endpoint: "Địa chỉ MCP", mcp_pick: "1. Chọn ứng dụng AI bạn dùng", mcp_paste: "2. Dán vào: {where}",
     mcp_copy: "Sao chép", mcp_copied: "Đã sao chép", mcp_insert_token: "Chèn token đang đăng nhập vào cấu hình",
-    mcp_restart: "3. Khởi động lại ứng dụng AI, giữ FoxProfile đang chạy, rồi thử nhắn:",
+    mcp_restart: "3. Khởi động lại ứng dụng AI, giữ FoxFlow đang chạy, rồi thử nhắn:",
     mcp_example: "Mở profile {name}, vào google.com tìm “thời tiết Hà Nội” và chụp màn hình cho tôi.",
     mcp_remote_note: "Claude Desktop chỉ chạy MCP server cục bộ, nên cấu hình này dùng cầu nối mcp-remote (cần cài Node.js).",
     mcp_security: "Nội dung trang web không đáng tin: AI được dặn không làm theo chỉ dẫn nằm trên trang. MCP không thể xoá profile.",
@@ -431,9 +504,56 @@ const I18N = {
     go: "Đi", new_tab: "Tab mới", type: "Gõ", type_hint: "Gõ vào ô đang chọn (bấm lên ảnh để chọn ô)", working: "Đang xử lý...",
     back: "Quay lại", reload: "Tải lại",
     retry: "Thử lại", boot_error: "Không thể kết nối với server",
+    clone: "Nhân bản", clone_title: "Nhân bản profile", clone_sub: "Bản sao của {name}: cùng proxy, hệ điều hành, engine, timezone và locale.",
+    clone_name: "Tên profile mới", clone_copy: "Chép thêm", clone_part_cookies: "Cookie (phiên đăng nhập)", clone_part_history: "Lịch sử và bookmark",
+    clone_part_site_data: "Dữ liệu trang web (localStorage, IndexedDB, quyền của trang)", clone_part_passwords: "Mật khẩu đã lưu", clone_part_tabs: "Các tab đang mở",
+    clone_part_workflows: "Workflow của profile này ({n})", clone_wf_hint: "Mỗi bản sao có workflow riêng, tên <workflow>-<profile mới>.", cloned_wf: "đã chép {n} workflow",
+    clone_data_hint: "Trang web sẽ thấy cùng các phiên đăng nhập trên một thiết bị mới.", clone_data_running: "Dừng profile trước để chép dữ liệu của nó.",
+    clone_fp_note: "Bản sao có fingerprint mới của riêng nó, nên trang web thấy đây là một thiết bị khác.", cloned: "Đã nhân bản {name} thành {copy}",
+    clone_count: "Số bản", clone_base: "Tên gốc (thêm -1, -2...)", clone_preview: "Sẽ tạo: {names}", cloned_n: "Đã tạo {n} bản sao của {name}",
+    workflows: "Workflow", wf_title: "Workflow · {name}",
+    wf_sub: "Ghi lại thao tác trong trình duyệt của profile, chỉnh delay và tốc độ từng bước rồi chạy lại. Mỗi bước đều được kiểm tra kết quả.",
+    rec_section: "Ghi thao tác", rec_need_launch: "Mở profile trước, rồi làm việc cần ghi trong trình duyệt của nó.",
+    rec_hint: "Mọi click, gõ phím, chọn và cuộn trang trong trình duyệt của profile sẽ thành từng bước. Trình duyệt chạy trên server thì thao tác qua Xem màn hình.",
+    rec_start: "Bắt đầu ghi", rec_live: "Đang ghi · {n} bước", rec_draft: "Bản ghi chưa lưu · {n} bước",
+    rec_draft_hint: "Bản ghi đã dừng (hoặc trình duyệt đã đóng) nhưng các bước vẫn còn. Đặt tên để lưu thành workflow.",
+    rec_name: "Tên workflow", rec_save: "Dừng & lưu", rec_save_draft: "Lưu workflow", rec_discard: "Bỏ bản ghi",
+    confirm_discard: "Bỏ bản ghi {n} bước này?", rec_started: "Đang ghi thao tác trong {name}", rec_saved: "Đã lưu workflow {name}", rec_need_name: "Đặt tên cho workflow",
+    run_section: "Lần chạy gần nhất", run_state_starting: "Đang mở", run_state_running: "Đang chạy", run_state_succeeded: "Xong",
+    run_state_failed: "Lỗi", run_state_stopped: "Đã dừng", run_progress: "Bước {step}/{total} · lần thử {attempt} · khởi động lại {restarts}/{max}",
+    run_stop: "Dừng chạy", run_row: "{wf} · bước {step}/{total}", wf_list: "Workflow đã lưu",
+    wf_none: "Chưa có workflow nào. Ghi thao tác ở trên để tạo workflow đầu tiên.",
+    wf_none_here: "Profile này chưa có workflow. Ghi một workflow ở trên, hoặc hiện workflow của profile khác; workflow nào cũng chạy được trên mọi profile.",
+    wf_show_others: "Hiện cả workflow của profile khác ({n})", wf_hide_others: "Chỉ hiện workflow của profile này", wf_meta: "{n} bước · ghi trên {profile}",
+    wf_run: "Chạy", confirm_wf_delete: "Xoá workflow “{name}”? Không thể hoàn tác.", wf_started: "Đang chạy {wf} trên {name}", wf_deleted: "Đã xoá workflow {name}",
+    ed_title: "Sửa workflow", ed_sub: "{name} · {n} bước", ed_desc: "Mô tả", ed_settings: "Cài đặt chạy",
+    set_speed: "Tốc độ", set_timeout: "Chờ tối đa mỗi bước (s)", set_retries: "Thử lại mỗi bước", set_retry_delay: "Chờ trước khi thử lại (ms)",
+    set_restarts: "Khởi động lại tối đa", set_close: "Đóng trình duyệt khi chạy xong",
+    set_policy: "Mỗi bước được kiểm tra kết quả. Bước lỗi được thử lại {r} lần; vẫn lỗi thì tắt trình duyệt và chạy lại từ bước 1, tối đa {m} lần. Tốc độ chia mọi delay: x2 là nhanh gấp đôi.",
+    ed_steps: "Các bước", col_step: "Bước", col_delay: "Delay (ms)", col_typing: "Gõ (ms/ký tự)", col_check: "Kiểm tra", col_retries: "Thử lại",
+    check_auto: "Tự động", check_none: "Không kiểm tra", check_url_contains: "URL chứa", check_title_contains: "Tiêu đề chứa",
+    check_selector_visible: "Thấy phần tử", check_text_visible: "Thấy chữ", check_value: "Giá trị cần thấy", retries_default: "mặc định",
+    act_navigate: "Mở trang", act_click: "Click", act_fill: "Gõ", act_press: "Bấm phím", act_select: "Chọn", act_check: "Tích",
+    act_uncheck: "Bỏ tích", act_hover: "Rê chuột", act_scroll: "Cuộn", act_wait: "Chờ", act_switch_tab: "Đổi tab",
+    act_get_text: "Lấy chữ", act_ai: "Sinh bằng AI",
+    f_hover: "Rê chuột vào trước", f_hover_hint: "Selector của phần tử cần rê vào trước (mỗi dòng một cái), cho menu hay thanh cảm xúc chỉ hiện khi rê chuột. Trống = không rê.",
+    f_hover_ms: "Chờ sau khi rê (ms)", f_save_as: "Lưu vào biến", f_save_as_hint: "Dùng lại ở các bước sau bằng {{tên}}.",
+    ed_vars: "Biến", ed_vars_hint: "Dùng {{tên}} trong giá trị, URL hay selector của bước. Có sẵn {{profile}} là tên profile đang chạy. Bước Lấy chữ và Sinh bằng AI lưu kết quả vào biến.",
+    var_name: "Tên biến", var_value: "Giá trị ban đầu", var_add: "Thêm biến", var_remove: "Xoá biến",
+    ai_title: "Cấu hình AI", ai_sub: "Cho bước Sinh bằng AI: OpenAI hoặc API tương thích (Azure OpenAI, OpenRouter, LLM chạy trên máy).",
+    ai_key: "API key", ai_key_keep: "Đã lưu {hint}. Để trống để giữ nguyên.", ai_key_env: "Đang dùng key từ FOXFLOW_OPENAI_API_KEY.", ai_base: "Base URL",
+    ai_model: "Model", ai_system: "System prompt", ai_temp: "Temperature", ai_temp_hint: "Trống = mặc định của model.", ai_test: "Thử", ai_testing: "Đang thử...",
+    ai_privacy: "Prompt, kể cả chữ lấy từ trang web mà nó dùng, được gửi tới dịch vụ này. Key được lưu trong ai_settings.json trên máy chạy FoxFlow.",
+    ai_on: "AI: {model}", ai_off: "Chưa cấu hình AI", ai_setup: "Cấu hình AI", ai_saved: "Đã lưu cấu hình AI", ai_remove_key: "Xoá key",
+    f_action: "Thao tác", f_value: "Giá trị", f_value_hint: "Mở trang: URL · Gõ: chữ · Bấm phím: Enter, Control+A · Chọn: value · Cuộn: x,y · Chờ: ms · Đổi tab: số thứ tự từ 0 · Lấy chữ: regex tuỳ chọn (lấy nhóm đầu) · AI: prompt. Dùng được {{biến}}.",
+    f_selectors: "Selector", f_selectors_hint: "Mỗi dòng một selector Playwright, thử lần lượt; cái đầu tiên tìm thấy được dùng.",
+    f_label: "Tên bước", f_frame: "Frame", f_frame_hint: "Tên hoặc URL của iframe; trống = trang chính.",
+    f_expect: "URL mong đợi sau bước", f_expect_hint: "Kiểm tra tự động chờ tới trang này (bỏ qua query).", f_timeout: "Chờ tối đa (ms)", f_timeout_hint: "Trống = theo cài đặt chạy.",
+    f_sensitive: "Ẩn giá trị (mật khẩu)", ed_add: "Thêm bước", ed_apply_all: "Áp cho mọi bước", ed_bulk: "Đặt nhanh:",
+    details: "Chi tiết", move_up: "Lên", move_down: "Xuống", remove_step: "Xoá bước", step_on: "Bật bước {n}",
   },
   en: {
-    tagline: "Anti-detect profile manager", new_profile: "New profile", filters: "Filter",
+    tagline: "Web automation with profiles", new_profile: "New profile", filters: "Filter",
     f_all: "All", f_running: "Running", f_proxy: "With proxy", f_direct: "No proxy", f_chrome: "Chrome engine",
     api_docs: "API docs", logout: "Log out", your_profiles: "Profiles", search: "Search by name or proxy",
     counts: "{n} profiles · {r} running", counts_none: "{n} profiles · none running",
@@ -445,12 +565,12 @@ const I18N = {
     direct: "Direct", follow_ip: "Follows IP", no_fp_short: "no fingerprint yet", no_proxy_short: "no proxy", selected: "{n} selected", bulk_launch: "Launch", bulk_stop: "Stop", bulk_delete: "Delete", clear_sel: "Clear",
     select_all: "Select all", select_row: "Select {name}",
     confirm_bulk_delete: "Delete {n} selected profiles? Their cookies and data are removed permanently.", bulk_skip_running: "Skipped {n}",
-    login_side: "This server runs FoxProfile. Log in with the API token to manage profiles remotely.",
-    login_hint: "Enter the server's API token (FOXPROFILE_API_TOKEN).", token: "API token", login: "Log in",
+    login_side: "This server runs FoxFlow. Log in with the API token to manage profiles remotely.",
+    login_hint: "Enter the server's API token (FOXFLOW_API_TOKEN).", token: "API token", login: "Log in",
     bad_token: "Invalid token", create: "Create profile", edit_title: "Edit profile", edit_sub: "Editing {name}", create_sub: "A profile is an identity: its own device, proxy and location.",
     name: "Profile name", os: "Operating system", engine: "Engine",
     engine_camoufox: "Camoufox (Firefox)", engine_chrome: "Chrome (experimental)", engine_locked: "The engine cannot be changed after creation.",
-    engine_note: "Experimental Chromium engine. It is downloaded automatically to the FoxProfile machine the first time (~150 MB). Pick that machine's OS: other OSes leak its fonts. The engine cannot be changed later.",
+    engine_note: "Experimental Chromium engine. It is downloaded automatically to the FoxFlow machine the first time (~150 MB). Pick that machine's OS: other OSes leak its fonts. The engine cannot be changed later.",
     proxy_label: "Proxy", proxy_hint: "user:pass@host:port, host:port:user:pass, or socks5://... Blank = direct connection.",
     check_proxy: "Check proxy", cancel: "Cancel", save: "Save changes", checking: "Checking...",
     confirm_delete: "Delete profile “{name}”? Its cookies and data are removed permanently.", confirm_title: "Confirm", stop_first: "Stop the browser first",
@@ -465,7 +585,7 @@ const I18N = {
     mcp_intro: "Let Claude, Cursor or VS Code manage profiles and browse for you: open pages, read them, click, type and take screenshots.",
     mcp_endpoint: "MCP endpoint", mcp_pick: "1. Pick your AI app", mcp_paste: "2. Paste into: {where}",
     mcp_copy: "Copy", mcp_copied: "Copied", mcp_insert_token: "Insert the token you are logged in with",
-    mcp_restart: "3. Restart the AI app, keep FoxProfile running, then try:",
+    mcp_restart: "3. Restart the AI app, keep FoxFlow running, then try:",
     mcp_example: "Open profile {name}, search google.com for “weather in Hanoi” and send me a screenshot.",
     mcp_remote_note: "Claude Desktop only starts local MCP servers, so this config bridges through mcp-remote (requires Node.js).",
     mcp_security: "Page content is untrusted: the AI is told never to follow instructions found on web pages. Profiles cannot be deleted through MCP.",
@@ -483,6 +603,53 @@ const I18N = {
     go: "Go", new_tab: "New tab", type: "Type", type_hint: "Type into the focused field (click the screen to focus one)", working: "Working...",
     back: "Back", reload: "Reload",
     retry: "Retry", boot_error: "Cannot reach the server",
+    clone: "Clone", clone_title: "Clone profile", clone_sub: "A copy of {name}: same proxy, operating system, engine, timezone and locale.",
+    clone_name: "New profile name", clone_copy: "Also copy", clone_part_cookies: "Cookies (logged-in sessions)", clone_part_history: "History and bookmarks",
+    clone_part_site_data: "Site data (localStorage, IndexedDB, site permissions)", clone_part_passwords: "Saved passwords", clone_part_tabs: "Open tabs",
+    clone_part_workflows: "This profile's workflows ({n})", clone_wf_hint: "Each copy gets workflows of its own, named <workflow>-<new profile>.", cloned_wf: "copied {n} workflow(s)",
+    clone_data_hint: "Sites will see the same logins on a new device.", clone_data_running: "Stop the profile to copy its data.",
+    clone_fp_note: "The copy gets a new fingerprint of its own, so sites see a different device.", cloned: "Cloned {name} as {copy}",
+    clone_count: "Copies", clone_base: "Base name (-1, -2... added)", clone_preview: "Will create: {names}", cloned_n: "Created {n} copies of {name}",
+    workflows: "Workflows", wf_title: "Workflows · {name}",
+    wf_sub: "Record what you do in the profile's browser, tune each step's delay and speed, then replay it. Every step's result is checked.",
+    rec_section: "Record", rec_need_launch: "Launch the profile, then do the task in its browser to record it.",
+    rec_hint: "Every click, keystroke, selection and scroll in the profile's browser becomes a step. If the browser runs on a server, use View screen.",
+    rec_start: "Start recording", rec_live: "Recording · {n} steps", rec_draft: "Unsaved recording · {n} steps",
+    rec_draft_hint: "The recording stopped (or the browser closed) but its steps are kept. Name it to save it as a workflow.",
+    rec_name: "Workflow name", rec_save: "Stop and save", rec_save_draft: "Save workflow", rec_discard: "Discard",
+    confirm_discard: "Discard this {n}-step recording?", rec_started: "Recording in {name}", rec_saved: "Saved workflow {name}", rec_need_name: "Name the workflow",
+    run_section: "Last run", run_state_starting: "Starting", run_state_running: "Running", run_state_succeeded: "Done",
+    run_state_failed: "Failed", run_state_stopped: "Stopped", run_progress: "Step {step}/{total} · attempt {attempt} · restarts {restarts}/{max}",
+    run_stop: "Stop run", run_row: "{wf} · step {step}/{total}", wf_list: "Saved workflows",
+    wf_none: "No workflows yet. Record one above to create the first.",
+    wf_none_here: "No workflow of this profile yet. Record one above, or show the other profiles' workflows; any workflow runs in any profile.",
+    wf_show_others: "Show the workflows of other profiles too ({n})", wf_hide_others: "Only this profile's workflows", wf_meta: "{n} steps · recorded in {profile}",
+    wf_run: "Run", confirm_wf_delete: "Delete workflow “{name}”? This cannot be undone.", wf_started: "Running {wf} in {name}", wf_deleted: "Deleted workflow {name}",
+    ed_title: "Edit workflow", ed_sub: "{name} · {n} steps", ed_desc: "Description", ed_settings: "Run settings",
+    set_speed: "Speed", set_timeout: "Step timeout (s)", set_retries: "Retries per step", set_retry_delay: "Retry delay (ms)",
+    set_restarts: "Max restarts", set_close: "Close the browser when the run is done",
+    set_policy: "Every step's result is checked. A failed step is retried {r} times; if it still fails the browser is closed and the workflow runs again from step 1, up to {m} times. Speed divides every delay: x2 runs twice as fast.",
+    ed_steps: "Steps", col_step: "Step", col_delay: "Delay (ms)", col_typing: "Typing (ms/char)", col_check: "Check", col_retries: "Retries",
+    check_auto: "Automatic", check_none: "No check", check_url_contains: "URL contains", check_title_contains: "Title contains",
+    check_selector_visible: "Element visible", check_text_visible: "Text visible", check_value: "Value to see", retries_default: "default",
+    act_navigate: "Open page", act_click: "Click", act_fill: "Type", act_press: "Press key", act_select: "Select", act_check: "Check",
+    act_uncheck: "Uncheck", act_hover: "Hover", act_scroll: "Scroll", act_wait: "Wait", act_switch_tab: "Switch tab",
+    act_get_text: "Get text", act_ai: "AI text",
+    f_hover: "Hover first", f_hover_hint: "Selectors of what to hover before the action (one per line), for menus and reaction bars that only appear on hover. Blank = no hover.",
+    f_hover_ms: "Wait after hovering (ms)", f_save_as: "Save into variable", f_save_as_hint: "Use it in later steps as {{name}}.",
+    ed_vars: "Variables", ed_vars_hint: "Use {{name}} in a step's value, URL or selector. {{profile}} is always the running profile's name. Get text and AI text steps save their result into a variable.",
+    var_name: "Variable name", var_value: "Starting value", var_add: "Add variable", var_remove: "Remove variable",
+    ai_title: "AI settings", ai_sub: "For AI text steps: OpenAI or a compatible API (Azure OpenAI, OpenRouter, a local LLM).",
+    ai_key: "API key", ai_key_keep: "{hint} is saved. Leave blank to keep it.", ai_key_env: "Using the key from FOXFLOW_OPENAI_API_KEY.", ai_base: "Base URL",
+    ai_model: "Model", ai_system: "System prompt", ai_temp: "Temperature", ai_temp_hint: "Blank = the model's default.", ai_test: "Test", ai_testing: "Testing...",
+    ai_privacy: "Prompts, including any page text they use, are sent to this service. The key is kept in ai_settings.json on the FoxFlow machine.",
+    ai_on: "AI: {model}", ai_off: "AI not set up", ai_setup: "AI settings", ai_saved: "AI settings saved", ai_remove_key: "Remove key",
+    f_action: "Action", f_value: "Value", f_value_hint: "Open page: URL · Type: text · Press key: Enter, Control+A · Select: value · Scroll: x,y · Wait: ms · Switch tab: index from 0 · Get text: optional regex (its first group is kept) · AI text: the prompt. {{variables}} work here.",
+    f_selectors: "Selectors", f_selectors_hint: "One Playwright selector per line, tried in order; the first that finds an element is used.",
+    f_label: "Step name", f_frame: "Frame", f_frame_hint: "Name or URL of an iframe; blank = the page itself.",
+    f_expect: "Expected URL after the step", f_expect_hint: "The automatic check waits for this page (query ignored).", f_timeout: "Timeout (ms)", f_timeout_hint: "Blank = the run settings.",
+    f_sensitive: "Hide the value (password)", ed_add: "Add step", ed_apply_all: "Apply to all steps", ed_bulk: "Set all:",
+    details: "Details", move_up: "Move up", move_down: "Move down", remove_step: "Remove step", step_on: "Enable step {n}",
   },
 };
 
@@ -490,8 +657,8 @@ const store = {
   get(k) { try { return localStorage.getItem(k); } catch { return null; } },
   set(k, v) { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} },
 };
-let lang = store.get("foxprofile.lang") || "en";
-let token = store.get("foxprofile.token") || "";
+let lang = store.get("foxflow.lang") || store.get("foxprofile.lang") || "en";
+let token = store.get("foxflow.token") || store.get("foxprofile.token") || "";
 let profiles = [], running = new Set(), fingerprints = {};
 let filter = "all";
 const busy = new Map();          // name -> "starting" | "stopping"
@@ -499,6 +666,8 @@ const failed = new Map();        // name -> error message of the last failed lau
 const liveSince = new Map();     // name -> Date the profile was first seen running
 const justLanded = new Set();    // stamps to animate on the next render
 const selected = new Set();
+let recordings = new Map();      // name -> live recording or unsaved draft
+let runs = new Map();            // name -> current or last workflow run
 const $ = (id) => document.getElementById(id);
 
 function t(key, vars = {}) {
@@ -578,8 +747,11 @@ const hhmm = (d) => d.toTimeString().slice(0, 5);
 
 async function refresh() {
   try {
-    const [list, run] = await Promise.all([api("GET", "/profiles"), api("GET", "/browser")]);
+    const [list, run, recs, wfRuns] = await Promise.all([api("GET", "/profiles"), api("GET", "/browser"),
+      api("GET", "/recordings").catch(() => ({ recordings: [] })), api("GET", "/workflow-runs").catch(() => ({ runs: [] }))]);
     profiles = list.profiles;
+    recordings = new Map(recs.recordings.map((r) => [r.profile, r]));
+    runs = new Map(wfRuns.runs.map((r) => [r.profile, r]));
     const now = new Set(run.running);
     for (const name of now) if (!liveSince.has(name)) liveSince.set(name, new Date());
     for (const name of [...liveSince.keys()]) if (!now.has(name)) liveSince.delete(name);
@@ -614,7 +786,7 @@ function render() {
   // Rebuilding the list replaces every button; skip it when nothing changed so a
   // periodic refresh cannot swap the button under the user's cursor mid-click.
   const key = JSON.stringify([lang, q, filter, profiles, [...running].sort(), [...busy], [...failed], [...selected].sort(),
-    [...justLanded], shown.map((p) => fingerprints[p.name] || null)]);
+    [...justLanded], shown.map((p) => fingerprints[p.name] || null), [...recordings], [...runs].map(([n, r]) => [n, r.status, r.step])]);
   if (key === lastRender) return;
   lastRender = key;
 
@@ -684,6 +856,13 @@ function row(p) {
     onchange: (e) => { e.target.checked ? selected.add(p.name) : selected.delete(p.name); render(); } });
   box.checked = selected.has(p.name);
   const proxy = maskProxy(p.proxy);
+  // The name's second line: the engine, or what a recording / workflow run is doing.
+  const rec = recordings.get(p.name), wfRun = runs.get(p.name);
+  const nameMinor = rec && rec.recording
+    ? h("span", { class: "minor rec" }, h("span", { class: "rec-dot" }), t("rec_live", { n: rec.step_count }))
+    : wfRun && wfRun.active
+      ? h("span", { class: "minor rec", title: wfRun.step_label }, t("run_row", { wf: wfRun.workflow, step: wfRun.step, total: wfRun.step_total }))
+      : h("span", { class: "minor" }, engine);
   const main = on
     ? h("button", { class: "btn btn-ink main", disabled: isBusy, onclick: () => toggle(p) }, icon("stop", true), t("stop"))
     : h("button", { class: "btn btn-act main", disabled: isBusy, onclick: () => toggle(p) }, icon("play", true), t("launch"));
@@ -693,7 +872,7 @@ function row(p) {
     h("div", { class: "c-sel", role: "cell" }, box),
     h("div", { class: "c-name stack", role: "cell" },
       h("span", { class: "name", title: p.name }, p.name),
-      h("span", { class: "minor" }, engine)),
+      nameMinor),
     h("div", { class: "c-device device", role: "cell" }, h("span", { class: "os", title: p.os_type }, os),
       h("div", { class: "stack" }, h("span", { class: p.engine === "chrome" ? "engine chrome" : "engine" }, engine),
         fp && fp.exists ? h("span", { class: "data minor" }, [fp.screen, `${fp.hardware_concurrency || "?"} CPU`].filter(Boolean).join(" · "))
@@ -708,6 +887,8 @@ function row(p) {
     h("div", { class: "c-stamp", role: "cell" }, stamp(p)),
     h("div", { class: "actions", role: "cell" }, main,
       iconBtn("monitor", t("view"), () => openViewer(p.name), "", !on || isBusy),
+      iconBtn("flow", t("workflows"), () => openWorkflows(p)),
+      iconBtn("copy", t("clone"), () => openClone(p)),
       iconBtn("cookie", t("cookies"), () => openCookies(p), "", on),
       iconBtn("edit", t("edit"), () => openEditor(p)),
       iconBtn("trash", t("delete"), () => removeProfile(p), "danger", on)));
@@ -764,7 +945,7 @@ async function toggle(p, { quiet = false } = {}) {
   await refresh();
 }
 
-function modal(build, { wide = false, onDismiss = null } = {}) {
+function modal(build, { wide = false, xwide = false, onDismiss = null } = {}) {
   const root = $("modal-root");
   const opener = document.activeElement;
   const close = () => { bg.remove(); if (opener && opener.isConnected && opener.focus) opener.focus(); };
@@ -774,6 +955,7 @@ function modal(build, { wide = false, onDismiss = null } = {}) {
   const box = build(close);
   box.classList.add("modal");
   if (wide) box.classList.add("wide");
+  if (xwide) box.classList.add("xwide");
   box.setAttribute("role", "dialog");
   box.setAttribute("aria-modal", "true");
   bg.append(box);
@@ -890,6 +1072,94 @@ function geoLines(r, useLocale) {
   });
   if (!r.warnings.length && !r.error) lines.push(h("div", { class: "line ok" }, icon("check", true), t("geo_ok")));
   return h("div", { class: "geo" }, lines);
+}
+
+const MAX_CLONES = 50;
+function cloneName(source) {
+  // Same rule as the server: "<name>-copy", then "-copy-2"..., within 64 characters.
+  const taken = new Set(profiles.map((x) => x.name.toLowerCase()));
+  const base = source.slice(0, 56) + "-copy";
+  let name = base;
+  for (let n = 2; taken.has(name.toLowerCase()); n++) name = `${base}-${n}`;
+  return name;
+}
+// Several copies: base-1, base-2..., skipping names in use (the server decides).
+function cloneNames(base, count) {
+  if (count <= 1) return [base];
+  const taken = new Set(profiles.map((x) => x.name.toLowerCase()));
+  const stem = base.slice(0, 60), names = [];
+  for (let i = 1; names.length < count; i++) if (!taken.has(`${stem}-${i}`.toLowerCase())) names.push(`${stem}-${i}`);
+  return names;
+}
+
+const CLONE_PARTS = ["cookies", "history", "site_data", "passwords", "tabs"];
+async function openClone(p) {
+  let workflowCount = 0;
+  try {
+    const { workflows } = await api("GET", "/workflows");
+    workflowCount = workflows.filter((w) => (w.profile || "").toLowerCase() === p.name.toLowerCase()).length;
+  } catch {}
+  modal((close) => {
+    const on = running.has(p.name);
+    const suggested = cloneName(p.name);
+    let edited = false;
+    const name = h("input", { id: "c-name", value: suggested, required: true, maxlength: 64, autocomplete: "off",
+      oninput: () => { edited = true; preview(); } });
+    const count = h("input", { id: "c-count", type: "number", min: 1, max: MAX_CLONES, value: "1", required: true, class: "data", oninput: () => preview() });
+    const nameLabel = h("label", { for: "c-name" });
+    const previewLine = h("div", { class: "hint", style: "margin-top:6px;font-size:12px;color:var(--ink-3)" });
+    // Several copies without a name of one's own are numbered from "<name>-copy".
+    const base = () => (edited || toInt(count.value, 1) <= 1 ? name.value.trim() : p.name.slice(0, 56) + "-copy");
+    function preview() {
+      const n = Math.min(MAX_CLONES, Math.max(1, toInt(count.value, 1)));
+      nameLabel.textContent = n > 1 ? t("clone_base") : t("clone_name");
+      if (n > 1 && !edited) name.value = base();
+      if (n === 1 && !edited) name.value = suggested;
+      const names = cloneNames(base() || "?", n);
+      previewLine.textContent = n > 1 ? t("clone_preview", { names: names.length > 4 ? `${names[0]}, ${names[1]}, … ${names[names.length - 1]}` : names.join(", ") }) : "";
+    }
+    // Browser data needs the browser stopped: copying its open files gives a torn copy.
+    const boxes = Object.fromEntries(CLONE_PARTS.map((part) => [part, h("input", { type: "checkbox", disabled: on })]));
+    boxes.workflows = h("input", { type: "checkbox", disabled: !workflowCount });
+    const option = (part, label, hint) => [h("label", { class: "check-line", style: "margin-top:8px" }, boxes[part], label),
+      hint ? h("div", { class: "hint", style: "margin:2px 0 0 24px;font-size:12px;color:var(--ink-3)" }, hint) : null];
+    const msg = h("div", { class: "msg", role: "status" });
+    return h("form", { onsubmit: async (e) => {
+      e.preventDefault();
+      const submit = e.currentTarget.querySelector(".modal-foot .btn-act");
+      submit.disabled = true;
+      msg.className = "msg"; msg.textContent = "";
+      try {
+        const copy = Object.keys(boxes).filter((part) => boxes[part].checked);
+        const r = await api("POST", `/profiles/${enc(p.name)}/clone`, { name: base(), count: toInt(count.value, 1), copy });
+        const done = r.total > 1 ? t("cloned_n", { name: p.name, n: r.total }) : t("cloned", { name: p.name, copy: r.profiles[0].name });
+        toast(r.workflows_copied ? `${done} · ${t("cloned_wf", { n: r.workflows_copied })}` : done);
+        close();
+        refresh();
+      } catch (ex) { msg.className = "msg err"; msg.textContent = ex.message; }
+      finally { submit.disabled = false; }
+    } },
+      modalHead(t("clone_title"), t("clone_sub", { name: p.name }), close),
+      h("div", { class: "modal-body" },
+        h("div", { style: "display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:12px" },
+          h("div", { class: "field" }, nameLabel, name), field(t("clone_count"), count)),
+        previewLine,
+        h("div", { class: "field" }, h("label", {}, t("clone_copy"))),
+        on ? h("div", { class: "note" }, icon("alert", true), h("span", {}, t("clone_data_running"))) : null,
+        option("cookies", t("clone_part_cookies"), t("clone_data_hint")),
+        option("history", t("clone_part_history")),
+        option("site_data", t("clone_part_site_data")),
+        option("passwords", t("clone_part_passwords")),
+        option("tabs", t("clone_part_tabs")),
+        option("workflows", t("clone_part_workflows", { n: workflowCount }), t("clone_wf_hint")),
+        h("div", { class: "note calm" }, icon("fingerprint", true), h("span", {}, t("clone_fp_note"))),
+        msg),
+      h("div", { class: "modal-foot" },
+        h("button", { type: "button", class: "btn btn-line", onclick: close }, t("cancel")),
+        h("button", { class: "btn btn-act" }, icon("copy", true), t("clone"))));
+  });
+  // Fill the label and preview once the dialog is built.
+  document.getElementById("c-count").dispatchEvent(new Event("input"));
 }
 
 async function removeProfile(p) {
@@ -1028,6 +1298,427 @@ async function openMcpGuide() {
   }, { wide: true });
 }
 
+// --- Workflows: record, run, edit ----------------------------------------------
+const ACTIONS = ["navigate", "click", "fill", "press", "select", "check", "uncheck", "hover", "scroll", "wait", "switch_tab", "get_text", "ai"];
+const ELEMENT_ACTIONS = ["click", "fill", "select", "check", "uncheck", "hover", "press", "get_text"];
+const CHECKS = ["auto", "none", "url_contains", "title_contains", "selector_visible", "text_visible"];
+const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 5];
+const toInt = (v, fallback) => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : fallback; };
+const stepId = () => Math.random().toString(16).slice(2, 10);
+
+// The second line of a step: what it types, opens or acts on.
+function stepTarget(st) {
+  const hover = st.hover_selectors && st.hover_selectors.length ? `↗ ${st.hover_selectors[0]} · ` : "";
+  return hover + stepWhat(st);
+}
+function stepWhat(st) {
+  const into = st.save_as ? ` → {{${st.save_as}}}` : "";
+  if (st.action === "fill") return st.sensitive ? "•••" : `“${st.value || ""}” → ${st.selectors[0] || ""}`;
+  if (st.action === "get_text") return (st.selectors[0] || "body") + (st.value ? ` /${st.value}/` : "") + into;
+  if (st.action === "ai") return `“${st.value || ""}”` + into;
+  if (["navigate", "press", "scroll", "wait", "switch_tab"].includes(st.action)) return st.value || "";
+  if (st.action === "select") return `${st.value} → ${st.selectors[0] || ""}`;
+  return st.selectors[0] || "";
+}
+// "click Log in" from the recorder, with the action in the panel's language.
+function recentLine(line) {
+  const [action, ...rest] = line.split(" ");
+  return ACTIONS.includes(action) ? [t("act_" + action), ...rest].join(" ") : line;
+}
+function runStamp(run) {
+  return h("span", { class: "run-state " + run.status }, t("run_state_" + run.status));
+}
+
+function openWorkflows(p) {
+  let timer = null, closeModal = () => {};
+  let state = { rec: null, run: null, on: running.has(p.name) }, list = [];
+  let showAll = false;  // other profiles' workflows run here too, but are listed on request
+  let recKey = "", runKey = "", listKey = "";
+  const done = () => { clearInterval(timer); closeModal(); refresh(); };
+  const recBox = h("div", { class: "panel" });
+  const runBox = h("div", { class: "panel hidden" });
+  const listBox = h("div");
+  const nameInput = h("input", { id: "wf-new-name", maxlength: 64, autocomplete: "off", placeholder: t("rec_name"), "aria-label": t("rec_name") });
+  const base = `/browser/${enc(p.name)}`;
+
+  async function busyDo(btn, fn) {
+    btn.disabled = true;
+    try { await fn(); } catch (e) { toast(e.message, true); }
+    finally { btn.disabled = false; }
+    await poll();
+  }
+  async function saveRecording() {
+    const name = nameInput.value.trim();
+    if (!name) { nameInput.focus(); throw new Error(t("rec_need_name")); }
+    const r = await api("POST", `${base}/record/stop`, { save_as: name });
+    toast(t("rec_saved", { name: r.workflow.name }));
+    nameInput.value = "";
+    await loadList();
+  }
+  async function discardRecording(n) {
+    if (!(await confirmDialog(t("confirm_discard", { n }), t("rec_discard"), true))) return;
+    try { await api("POST", `${base}/record/stop`, { discard: true }); } catch (e) { toast(e.message, true); }
+    await poll();
+  }
+  const viewBtn = () => h("button", { class: "btn btn-line", onclick: () => openViewer(p.name) }, icon("monitor", true), t("view"));
+
+  function drawRec() {
+    const { rec, on, run } = state;
+    const key = JSON.stringify([lang, on, rec, run && run.active]);
+    if (key === recKey) return;
+    recKey = key;
+    const hadFocus = document.activeElement === nameInput;
+    const recent = (rec && rec.recent) || [];
+    let kids;
+    if (rec && (rec.recording || rec.draft)) {
+      const save = h("button", { class: "btn btn-act", onclick: () => busyDo(save, saveRecording) }, rec.recording ? t("rec_save") : t("rec_save_draft"));
+      const discard = h("button", { class: "btn btn-ghost", onclick: () => discardRecording(rec.step_count) }, t("rec_discard"));
+      kids = [
+        rec.recording ? h("h3", {}, h("span", { class: "rec-dot" }), t("rec_live", { n: rec.step_count }))
+          : h("h3", {}, icon("rec", true), t("rec_draft", { n: rec.step_count })),
+        rec.recording ? null : h("p", {}, t("rec_draft_hint")),
+        h("ul", { class: "recent" }, recent.map((r) => h("li", {}, recentLine(r)))),
+        h("div", { class: "row-btns" }, nameInput, save, rec.recording && on ? viewBtn() : null, discard),
+      ];
+    } else if (on) {
+      const start = h("button", { class: "btn btn-act", disabled: !!(run && run.active), onclick: () => busyDo(start, async () => {
+        await api("POST", `${base}/record/start`);
+        toast(t("rec_started", { name: p.name }));
+      }) }, icon("rec", true), t("rec_start"));
+      kids = [h("h3", {}, icon("rec", true), t("rec_section")), h("p", {}, t("rec_hint")), h("div", { class: "row-btns" }, start, viewBtn())];
+    } else {
+      kids = [h("h3", {}, icon("rec", true), t("rec_section")), h("p", {}, t("rec_need_launch"))];
+    }
+    recBox.replaceChildren(...kids.filter(Boolean));
+    if (hadFocus && nameInput.isConnected) nameInput.focus();
+  }
+
+  function drawRun() {
+    const run = state.run;
+    runBox.classList.toggle("hidden", !run);
+    if (!run) return;
+    const key = JSON.stringify([lang, run]);
+    if (key === runKey) return;
+    runKey = key;
+    const log = h("pre", { class: "code log" }, run.log.slice(-60).join("\n"));
+    const stop = run.active ? h("button", { class: "btn btn-ink", onclick: () => busyDo(stop, () => api("POST", `/workflow-runs/${enc(p.name)}/stop`)) },
+      icon("stop", true), t("run_stop")) : null;
+    runBox.replaceChildren(...[
+      h("h3", {}, t("run_section"), runStamp(run), h("span", { class: "data", style: "font-weight:500" }, run.workflow)),
+      run.step ? h("div", { class: "run-line" }, t("run_progress", { step: run.step, total: run.step_total, attempt: run.attempt,
+        restarts: run.restarts, max: run.max_restarts }), run.step_label ? h("span", { class: "data" }, " · " + run.step_label) : null) : null,
+      run.error ? h("div", { class: "run-err" }, run.error) : null,
+      log,
+      stop ? h("div", { class: "row-btns" }, stop) : null].filter(Boolean));
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function drawList() {
+    const blocked = !!((state.run && state.run.active) || (state.rec && state.rec.recording));
+    const key = JSON.stringify([lang, list, blocked, showAll]);
+    if (key === listKey) return;
+    listKey = key;
+    const mine = list.filter((w) => (w.profile || "").toLowerCase() === p.name.toLowerCase());
+    const others = list.length - mine.length;
+    const items = (showAll ? list : mine).map((w) => {
+      const run = h("button", { class: "btn btn-act", disabled: blocked, onclick: () => busyDo(run, async () => {
+        await api("POST", `/workflows/${enc(w.name)}/run`, { profile: p.name });
+        toast(t("wf_started", { wf: w.name, name: p.name }));
+      }) }, icon("play", true), t("wf_run"));
+      return h("div", { class: "wf-item" },
+        h("div", { class: "stack", title: w.description || "" }, h("span", { class: "name" }, w.name),
+          h("span", { class: "minor" }, w.description || t("wf_meta", { n: w.step_count, profile: w.profile || "?" }))),
+        run,
+        h("button", { class: "icon-btn", title: t("edit"), "aria-label": `${t("edit")}: ${w.name}`, onclick: () => openStepEditor(w.name, loadList) }, icon("edit")),
+        h("button", { class: "icon-btn danger", title: t("delete"), "aria-label": `${t("delete")}: ${w.name}`, onclick: async () => {
+          if (!(await confirmDialog(t("confirm_wf_delete", { name: w.name }), t("delete"), true))) return;
+          try { await api("DELETE", `/workflows/${enc(w.name)}`); toast(t("wf_deleted", { name: w.name })); } catch (e) { toast(e.message, true); }
+          await loadList();
+        } }, icon("trash")));
+    });
+    listBox.replaceChildren(...[h("div", { class: "field" }, h("label", {}, t("wf_list"))),
+      items.length ? h("div", { class: "wf-list" }, items)
+        : h("div", { class: "note calm" }, icon("flow", true), h("span", {}, t(others ? "wf_none_here" : "wf_none"))),
+      others ? h("div", { class: "inline-btns" }, h("button", { type: "button", class: "btn btn-ghost",
+        onclick: () => { showAll = !showAll; drawList(); } }, showAll ? t("wf_hide_others") : t("wf_show_others", { n: others }))) : null].filter(Boolean));
+  }
+
+  async function poll() {
+    try {
+      const [rec, status, run] = await Promise.all([
+        api("GET", `${base}/record`),
+        api("GET", `${base}/status`),
+        api("GET", `/workflow-runs/${enc(p.name)}`).catch((e) => (e.status === 404 ? null : Promise.reject(e))),
+      ]);
+      state = { rec, run, on: status.is_running };
+    } catch (e) {
+      if (e.status === 401 || e.status === 404) return done();
+    }
+    drawRec(); drawRun(); drawList();
+  }
+  async function loadList() {
+    try { list = (await api("GET", "/workflows")).workflows; } catch (e) { toast(e.message, true); }
+    drawList();
+  }
+
+  closeModal = modal(() => h("div", {},
+    modalHead(t("wf_title", { name: p.name }), t("wf_sub"), done),
+    h("div", { class: "modal-body" }, recBox, runBox, listBox),
+    h("div", { class: "modal-foot" }, h("button", { type: "button", class: "btn btn-line", onclick: done }, t("close")))),
+  { wide: true, onDismiss: done });
+  drawRec(); drawList();
+  poll(); loadList();
+  timer = setInterval(() => { if (!document.hidden) poll(); }, 1500);
+}
+
+async function openAISettings(onSaved) {
+  let a;
+  try { a = await api("GET", "/ai/settings"); } catch (e) { return toast(e.message, true); }
+  modal((close) => {
+    const key = h("input", { id: "ai-key", type: "password", autocomplete: "off", class: "data", placeholder: a.configured ? a.key_hint : "sk-...", disabled: a.key_from_env });
+    const base = h("input", { id: "ai-base", class: "data", value: a.base_url, autocomplete: "off" });
+    const model = h("input", { id: "ai-model", class: "data", value: a.model, autocomplete: "off" });
+    const system = h("textarea", { id: "ai-system", rows: 3 });
+    system.value = a.system_prompt;
+    const temp = h("input", { id: "ai-temp", type: "number", min: 0, max: 2, step: "0.1", class: "data", value: a.temperature == null ? "" : String(a.temperature) });
+    const msg = h("div", { class: "msg", role: "status" });
+    const body = () => {
+      const b = { base_url: base.value.trim(), model: model.value.trim(), system_prompt: system.value };
+      if (key.value.trim()) b.api_key = key.value.trim();
+      if (temp.value.trim() === "") b.clear_temperature = true; else b.temperature = Number(temp.value);
+      return b;
+    };
+    const save = async () => { a = await api("PUT", "/ai/settings", body()); key.value = ""; if (onSaved) onSaved(); };
+    const test = h("button", { type: "button", class: "btn btn-line", onclick: async () => {
+      test.disabled = true; msg.className = "msg info"; msg.textContent = t("ai_testing");
+      try { await save(); const r = await api("POST", "/ai/test", {}); msg.className = "msg ok"; msg.textContent = r.text; }
+      catch (e) { msg.className = "msg err"; msg.textContent = e.message; }
+      finally { test.disabled = false; }
+    } }, t("ai_test"));
+    const remove = h("button", { type: "button", class: "btn btn-ghost", onclick: async () => {
+      try { a = await api("PUT", "/ai/settings", { api_key: "" }); key.placeholder = "sk-..."; toast(t("ai_saved")); if (onSaved) onSaved(); }
+      catch (e) { toast(e.message, true); }
+    } }, t("ai_remove_key"));
+    return h("form", { onsubmit: async (e) => {
+      e.preventDefault();
+      try { await save(); toast(t("ai_saved")); close(); } catch (ex) { msg.className = "msg err"; msg.textContent = ex.message; }
+    } },
+      modalHead(t("ai_title"), t("ai_sub"), close),
+      h("div", { class: "modal-body" },
+        field(t("ai_key"), key, a.key_from_env ? t("ai_key_env") : a.configured ? t("ai_key_keep", { hint: a.key_hint }) : null),
+        a.configured && !a.key_from_env ? h("div", { class: "inline-btns" }, remove) : null,
+        h("div", { class: "field-row" }, field(t("ai_base"), base), field(t("ai_model"), model)),
+        field(t("ai_system"), system),
+        field(t("ai_temp"), temp, t("ai_temp_hint")),
+        h("div", { class: "note" }, icon("alert", true), h("span", {}, t("ai_privacy"))),
+        msg),
+      h("div", { class: "modal-foot" },
+        test,
+        h("button", { type: "button", class: "btn btn-line", onclick: close }, t("cancel")),
+        h("button", { class: "btn btn-act" }, t("save"))));
+  });
+}
+
+async function openStepEditor(name, onSaved) {
+  let wf;
+  try { wf = await api("GET", `/workflows/${enc(name)}`); } catch (e) { return toast(e.message, true); }
+  const expanded = new Set();
+  modal((close) => {
+    const s = wf.settings;
+    const msg = h("div", { class: "msg", role: "status" });
+    const num = (id, value, min, max) => h("input", { id, type: "number", min, max, step: "any", value: String(value), class: "data" });
+    const desc = h("input", { id: "ed-desc", value: wf.description || "", maxlength: 2000, autocomplete: "off" });
+    const speeds = SPEEDS.includes(Number(s.speed)) ? SPEEDS : [...SPEEDS, Number(s.speed)].sort((a, b) => a - b);
+    const speed = h("select", { id: "ed-speed" }, speeds.map((v) => h("option", { value: String(v), selected: Number(s.speed) === v }, "x" + v)));
+    const timeout = num("ed-timeout", s.step_timeout_ms / 1000, 1, 300);
+    const retries = num("ed-retries", s.retries, 0, 10);
+    const retryDelay = num("ed-retry-delay", s.retry_delay_ms, 0, 600000);
+    const restarts = num("ed-restarts", s.max_restarts, 0, 20);
+    const closeWhenDone = h("input", { type: "checkbox", id: "ed-close" });
+    closeWhenDone.checked = !!s.close_when_done;
+    const policyText = h("span");
+    const syncPolicy = () => { policyText.textContent = t("set_policy", { r: retries.value || 0, m: restarts.value || 0 }); };
+    retries.addEventListener("input", syncPolicy);
+    restarts.addEventListener("input", syncPolicy);
+    syncPolicy();
+
+    // Variables as rows; kept as a list while editing so renaming keeps the order.
+    const vars = Object.entries(wf.variables || {}).map(([name, value]) => ({ name, value }));
+    const varsBox = h("div", { class: "vars" });
+    function drawVars() {
+      varsBox.replaceChildren(...vars.map((v, i) => h("div", { class: "var-row" },
+        h("input", { class: "data", value: v.name, placeholder: t("var_name"), "aria-label": t("var_name"), maxlength: 64,
+          pattern: "[A-Za-z_][A-Za-z0-9_]*", autocomplete: "off", oninput: (e) => { v.name = e.target.value.trim(); } }),
+        h("input", { value: v.value, placeholder: t("var_value"), "aria-label": t("var_value"), autocomplete: "off",
+          oninput: (e) => { v.value = e.target.value; } }),
+        h("button", { type: "button", class: "icon-btn danger", title: t("var_remove"), "aria-label": t("var_remove"),
+          onclick: () => { vars.splice(i, 1); drawVars(); } }, icon("trash", true)))));
+    }
+    drawVars();
+    const addVar = h("button", { type: "button", class: "btn btn-line", onclick: () => { vars.push({ name: "", value: "" }); drawVars(); } },
+      icon("plus", true), t("var_add"));
+    const aiLine = h("span", { class: "muted" });
+    const showAi = async () => {
+      try { const a = await api("GET", "/ai/settings"); aiLine.textContent = a.configured ? t("ai_on", { model: a.model }) : t("ai_off"); }
+      catch { aiLine.textContent = ""; }
+    };
+    showAi();
+    const aiBtn = h("button", { type: "button", class: "btn btn-line", onclick: () => openAISettings(showAi) }, icon("bot", true), t("ai_setup"));
+
+    const stepsBox = h("div", { class: "steps" });
+    const bulkDelay = h("input", { type: "number", min: 0, max: 600000, class: "data", placeholder: t("col_delay"), "aria-label": t("col_delay") });
+    const bulkTyping = h("input", { type: "number", min: 0, max: 2000, class: "data", placeholder: t("col_typing"), "aria-label": t("col_typing") });
+    const applyAll = h("button", { type: "button", class: "btn btn-line", onclick: () => {
+      const d = bulkDelay.value.trim(), c = bulkTyping.value.trim();
+      for (const st of wf.steps) {
+        if (d !== "") st.delay_ms = toInt(d, st.delay_ms);
+        if (c !== "" && st.action === "fill") st.char_delay_ms = toInt(c, st.char_delay_ms);
+      }
+      drawSteps();
+    } }, t("ed_apply_all"));
+
+    function move(i, d) {
+      const j = i + d;
+      [wf.steps[i], wf.steps[j]] = [wf.steps[j], wf.steps[i]];
+      drawSteps();
+    }
+    function drawSteps() {
+      stepsBox.replaceChildren(
+        h("div", { class: "step-row step-head" }, h("div", {}, "#"), h("div"), h("div", {}, t("col_step")), h("div", {}, t("col_delay")),
+          h("div", {}, t("col_typing")), h("div", {}, t("col_check")), h("div", {}, t("col_retries")), h("div")),
+        ...wf.steps.map(stepRow));
+    }
+    function stepRow(st, i) {
+      const cell = (label, input) => h("div", { class: "c-field" }, h("span", { class: "cell-label" }, label), input);
+      const on = h("input", { type: "checkbox", "aria-label": t("step_on", { n: i + 1 }), onchange: (e) => {
+        st.enabled = e.target.checked; row.classList.toggle("off", !st.enabled); } });
+      on.checked = st.enabled !== false;
+      const delay = h("input", { type: "number", min: 0, max: 600000, class: "data", value: String(st.delay_ms), "aria-label": t("col_delay"),
+        oninput: (e) => { st.delay_ms = toInt(e.target.value, 0); } });
+      const typing = st.action === "fill"
+        ? h("input", { type: "number", min: 0, max: 2000, class: "data", value: String(st.char_delay_ms || 0), "aria-label": t("col_typing"),
+          oninput: (e) => { st.char_delay_ms = toInt(e.target.value, 0); } })
+        : h("span", { class: "muted-cell" }, "—");
+      const checkVal = h("input", { value: st.check.value || "", placeholder: t("check_value"), "aria-label": t("check_value"),
+        oninput: (e) => { st.check.value = e.target.value; } });
+      const plain = () => ["auto", "none"].includes(st.check.type);
+      const checkSel = h("select", { "aria-label": t("col_check"), onchange: (e) => { st.check.type = e.target.value; checkVal.classList.toggle("hidden", plain()); } },
+        CHECKS.map((c) => h("option", { value: c, selected: st.check.type === c }, t("check_" + c))));
+      checkVal.classList.toggle("hidden", plain());
+      const retriesIn = h("input", { type: "number", min: 0, max: 10, class: "data", value: st.retries == null ? "" : String(st.retries),
+        placeholder: t("retries_default"), "aria-label": t("col_retries"),
+        oninput: (e) => { st.retries = e.target.value.trim() === "" ? null : toInt(e.target.value, null); } });
+      const btn = (name, label, fn, disabled = false, cls = "") =>
+        h("button", { type: "button", class: "icon-btn " + cls, title: label, "aria-label": `${label} ${i + 1}`, disabled, onclick: fn }, icon(name, true));
+      const target = stepTarget(st);
+      const row = h("div", { class: "step-row" + (st.enabled === false ? " off" : "") },
+        h("div", { class: "num" }, String(i + 1)),
+        h("div", { class: "c-on" }, on),
+        h("div", { class: "c-label stack" },
+          h("span", {}, h("span", { class: "act-tag" }, t("act_" + st.action)), h("span", { class: "step-name" }, st.label || "")),
+          h("span", { class: "minor data", title: target }, target)),
+        cell(t("col_delay"), delay), cell(t("col_typing"), typing),
+        cell(t("col_check"), h("div", { class: "check-cell" }, checkSel, checkVal)),
+        cell(t("col_retries"), retriesIn),
+        h("div", { class: "acts" },
+          btn("sliders", t("details"), () => { expanded.has(st.id) ? expanded.delete(st.id) : expanded.add(st.id); drawSteps(); }),
+          btn("up", t("move_up"), () => move(i, -1), i === 0),
+          btn("down", t("move_down"), () => move(i, 1), i === wf.steps.length - 1),
+          btn("trash", t("remove_step"), () => { wf.steps.splice(i, 1); drawSteps(); }, false, "danger")));
+      if (expanded.has(st.id)) row.append(stepDetail(st));
+      return row;
+    }
+    function stepDetail(st) {
+      const id = (k) => `st-${st.id}-${k}`;
+      const bind = (key, numeric = false) => (e) => {
+        const v = e.target.value;
+        st[key] = numeric ? (v.trim() === "" ? null : toInt(v, null)) : v;
+      };
+      const action = h("select", { id: id("action"), onchange: (e) => { st.action = e.target.value; drawSteps(); } },
+        ACTIONS.map((a) => h("option", { value: a, selected: st.action === a }, t("act_" + a))));
+      const label = h("input", { id: id("label"), value: st.label || "", maxlength: 300, autocomplete: "off", oninput: bind("label") });
+      const value = h("input", { id: id("value"), type: st.sensitive ? "password" : "text", class: "data", value: st.value || "", autocomplete: "off", oninput: bind("value") });
+      const selectors = h("textarea", { id: id("sel"), rows: 3, spellcheck: "false", oninput: (e) => {
+        st.selectors = e.target.value.split("\n").map((x) => x.trim()).filter(Boolean); } });
+      selectors.value = (st.selectors || []).join("\n");
+      const frame = h("input", { id: id("frame"), class: "data", value: st.frame || "", autocomplete: "off", oninput: bind("frame") });
+      const expect = h("input", { id: id("expect"), class: "data", value: st.expect_url || "", autocomplete: "off", oninput: bind("expect_url") });
+      const timeoutIn = h("input", { id: id("timeout"), type: "number", min: 500, max: 300000, class: "data",
+        value: st.timeout_ms == null ? "" : String(st.timeout_ms), placeholder: t("retries_default"), oninput: bind("timeout_ms", true) });
+      const sensitive = h("input", { type: "checkbox", onchange: (e) => { st.sensitive = e.target.checked; value.type = st.sensitive ? "password" : "text"; } });
+      sensitive.checked = !!st.sensitive;
+      const hover = h("textarea", { id: id("hover"), rows: 2, spellcheck: "false", oninput: (e) => {
+        st.hover_selectors = e.target.value.split("\n").map((x) => x.trim()).filter(Boolean); } });
+      hover.value = (st.hover_selectors || []).join("\n");
+      const hoverMs = h("input", { id: id("hover-ms"), type: "number", min: 0, max: 60000, class: "data",
+        value: String(st.hover_ms == null ? 800 : st.hover_ms), oninput: (e) => { st.hover_ms = toInt(e.target.value, 800); } });
+      const saveAs = h("input", { id: id("save"), class: "data", value: st.save_as || "", maxlength: 64, autocomplete: "off",
+        pattern: "[A-Za-z_][A-Za-z0-9_]*", oninput: bind("save_as") });
+      const prompt = h("textarea", { id: id("prompt"), rows: 4, oninput: bind("value") });
+      prompt.value = st.value || "";
+      return h("div", { class: "step-detail" },
+        field(t("f_action"), action), field(t("f_label"), label),
+        h("div", { class: "wide" }, field(t("f_value"), st.action === "ai" ? prompt : value, t("f_value_hint"))),
+        ["get_text", "ai"].includes(st.action) ? h("div", { class: "wide" }, field(t("f_save_as"), saveAs, t("f_save_as_hint"))) : null,
+        ELEMENT_ACTIONS.includes(st.action) ? h("div", { class: "wide" }, field(t("f_hover"), hover, t("f_hover_hint"))) : null,
+        ELEMENT_ACTIONS.includes(st.action) ? field(t("f_hover_ms"), hoverMs) : null,
+        ELEMENT_ACTIONS.includes(st.action) ? h("div") : null,
+        st.action === "fill" ? h("label", { class: "check-line wide" }, sensitive, t("f_sensitive")) : null,
+        h("div", { class: "wide" }, field(t("f_selectors"), selectors, t("f_selectors_hint"))),
+        field(t("f_frame"), frame, t("f_frame_hint")), field(t("f_timeout"), timeoutIn, t("f_timeout_hint")),
+        h("div", { class: "wide" }, field(t("f_expect"), expect, t("f_expect_hint"))));
+    }
+    drawSteps();
+
+    const addStep = h("button", { type: "button", class: "btn btn-line", onclick: () => {
+      const st = { id: stepId(), action: "wait", value: "1000", label: "", selectors: [], frame: "", expect_url: "", delay_ms: 0,
+        char_delay_ms: 0, timeout_ms: null, retries: null, check: { type: "auto", value: "" }, enabled: true, sensitive: false };
+      wf.steps.push(st);
+      expanded.add(st.id);
+      drawSteps();
+    } }, icon("plus", true), t("ed_add"));
+
+    return h("form", { onsubmit: async (e) => {
+      e.preventDefault();
+      const submit = e.currentTarget.querySelector(".modal-foot .btn-act");
+      submit.disabled = true;
+      msg.className = "msg"; msg.textContent = "";
+      const variables = Object.fromEntries(vars.filter((v) => v.name).map((v) => [v.name, v.value]));
+      const body = { ...wf, description: desc.value.trim(), variables, settings: {
+        speed: Number(speed.value), step_timeout_ms: Math.round(Number(timeout.value || 15) * 1000), retries: toInt(retries.value, 2),
+        retry_delay_ms: toInt(retryDelay.value, 1500), max_restarts: toInt(restarts.value, 3), close_when_done: closeWhenDone.checked } };
+      try {
+        await api("PUT", `/workflows/${enc(wf.name)}`, body);
+        toast(t("saved"));
+        close();
+        if (onSaved) onSaved();
+      } catch (ex) { msg.className = "msg err"; msg.textContent = ex.message; }
+      finally { submit.disabled = false; }
+    } },
+      modalHead(t("ed_title"), t("ed_sub", { name: wf.name, n: wf.steps.length }), close),
+      h("div", { class: "modal-body" },
+        field(t("ed_desc"), desc),
+        h("div", { class: "step" }, t("ed_settings")),
+        h("div", { class: "settings-grid" },
+          field(t("set_speed"), speed), field(t("set_timeout"), timeout), field(t("set_retries"), retries),
+          field(t("set_retry_delay"), retryDelay), field(t("set_restarts"), restarts)),
+        h("label", { class: "check-line" }, closeWhenDone, t("set_close")),
+        h("div", { class: "note calm" }, icon("check", true), policyText),
+        h("div", { class: "step" }, t("ed_vars")),
+        h("div", { class: "hint", style: "font-size:12.5px;color:var(--ink-2);margin-top:4px" }, t("ed_vars_hint")),
+        varsBox,
+        h("div", { class: "inline-btns" }, addVar, aiBtn, aiLine),
+        h("div", { class: "step" }, t("ed_steps")),
+        h("div", { class: "bulk-line" }, t("ed_bulk"), bulkDelay, bulkTyping, applyAll),
+        stepsBox,
+        h("div", { class: "inline-btns" }, addStep),
+        msg),
+      h("div", { class: "modal-foot" },
+        h("button", { type: "button", class: "btn btn-line", onclick: close }, t("cancel")),
+        h("button", { class: "btn btn-act" }, t("save"))));
+  }, { xwide: true });
+}
+
 // --- Remote viewer -----------------------------------------------------------
 let viewing = null, viewTimer = null, shotUrl = null, shotInFlight = false;
 function page(path) { return `/browser/${enc(viewing)}/page/${path}`; }
@@ -1108,14 +1799,14 @@ async function showApp(authRequired) {
 $("login-form").onsubmit = async (e) => {
   e.preventDefault();
   token = $("token").value.trim();
-  try { await api("GET", "/profiles"); store.set("foxprofile.token", token); $("login-err").textContent = ""; showApp(true); }
+  try { await api("GET", "/profiles"); store.set("foxflow.token", token); $("login-err").textContent = ""; showApp(true); }
   catch (err) { $("login-err").textContent = err.status === 401 ? t("bad_token") : (err.message || t("bad_token")); token = ""; }
 };
-$("logout-btn").onclick = () => { token = ""; store.set("foxprofile.token", null); showLogin(); };
+$("logout-btn").onclick = () => { token = ""; store.set("foxflow.token", null); store.set("foxprofile.token", null); showLogin(); };
 $("new-btn").onclick = () => openEditor(null);
 $("mcp-btn").onclick = openMcpGuide;
 $("search").oninput = render;
-document.querySelectorAll("[data-lang]").forEach((b) => { b.onclick = () => { lang = b.dataset.lang; store.set("foxprofile.lang", lang); applyI18n(); lastRender = ""; render(); }; });
+document.querySelectorAll("[data-lang]").forEach((b) => { b.onclick = () => { lang = b.dataset.lang; store.set("foxflow.lang", lang); applyI18n(); lastRender = ""; render(); }; });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     if (!$("viewer").classList.contains("hidden")) { closeViewer(); return; }

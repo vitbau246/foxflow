@@ -1,6 +1,6 @@
 ---
-name: FoxProfile
-description: Self-hosted anti-detect profile manager; every profile reads as a passport data page with an entry stamp for its state.
+name: FoxFlow
+description: Self-hosted web automation in isolated browser profiles; every profile reads as a passport data page with an entry stamp for its state.
 colors:
   paper: "#F3F4EF"
   paper-raised: "#FBFBF8"
@@ -184,7 +184,7 @@ components:
     width: "500px"
 ---
 
-# Design System: FoxProfile
+# Design System: FoxFlow
 
 ## Overview
 
@@ -320,7 +320,7 @@ Buttons are solid and quiet. The fill colour says what kind of action it is.
 - **Desktop difference:** Flet dropdowns cannot go below 48px, so desktop text fields keep Material's 48px height to stay aligned with them. Desktop labels sit above the fields as separate text rather than floating.
 
 ### Navigation (the cover rail)
-- From top to bottom: brand (fox mark, `FoxProfile` at 18px/700, subtitle in cover-muted), a full-width orange Create button, the filter list (`Tất cả`, `Đang chạy`, `Có proxy`, `Không proxy`, `Engine Chrome`), MCP and API links, and the language segment (`Tiếng Việt` / `English`).
+- From top to bottom: brand (fox mark, `FoxFlow` at 18px/700, subtitle in cover-muted), a full-width orange Create button, the filter list (`Tất cả`, `Đang chạy`, `Có proxy`, `Không proxy`, `Engine Chrome`), MCP and API links, and the language segment (`Tiếng Việt` / `English`).
 - Filter items are 36px tall with 7px corners, in cover-ink at 500. Hover fills them with cover-deep. The active item is a cover-ink pill with cover-coloured 600 text. Counts are right-aligned in mono.
 - On desktop, the rail also holds a collapsible activity log (`Nhật ký hoạt động`) on cover-deep.
 

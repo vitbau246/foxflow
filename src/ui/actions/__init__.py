@@ -1,7 +1,7 @@
 from .browser import launch_or_stop
 from .bulk import bulk_delete_profiles, bulk_launch_profiles, bulk_stop_profiles
 from .cookies import manage_cookies
-from .profile import add_profile, delete_profile, edit_profile
+from .profile import add_profile, clone_profile, delete_profile, edit_profile
 from .transfer import export_profile, import_profile
 
 __all__ = [
@@ -9,6 +9,7 @@ __all__ = [
     "bulk_delete_profiles",
     "bulk_launch_profiles",
     "bulk_stop_profiles",
+    "clone_profile",
     "delete_profile",
     "manage_cookies",
     "edit_profile",

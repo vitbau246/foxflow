@@ -1,6 +1,6 @@
-"""Start the FoxProfile MCP server from any working directory.
+"""Start the FoxFlow MCP server from any working directory.
 
-Point your MCP client at this file:  python /path/to/foxprofile/foxprofile_mcp.py
+Point your MCP client at this file:  python /path/to/foxflow/foxflow_mcp.py
 """
 
 import os

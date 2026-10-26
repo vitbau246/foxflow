@@ -35,7 +35,7 @@ class APIServer:
         self._thread = threading.Thread(
             target=self._server.run,
             daemon=True,
-            name="foxprofile-api",
+            name="foxflow-api",
         )
         self._thread.start()
         logger.info("API server started on http://%s:%s", API_HOST, API_PORT)

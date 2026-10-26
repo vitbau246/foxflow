@@ -10,23 +10,23 @@ Two surfaces share one product: a desktop app built with Flet (Python, Flutter r
 
 ## Users
 
-- **MMO and ads operators** running tens to hundreds of Facebook, TikTok, Google and Shopee accounts. They open, stop and switch profiles all day, work in bulk, and care about which proxy and device each account presents.
-- **Agencies managing client accounts**: several people and clients share one installation; the list must stay orderly and trustworthy.
-- **Developers and automation users** who drive FoxProfile through the REST API and MCP, often on a VPS; for them the UI is where they check state and step in by hand (log in, solve a captcha through the remote screen view).
+- **Operators automating repetitive web work**: back-office, marketing and support staff who do the same task in a browser many times a day. They record it once as a workflow, then replay it across profiles and check the run log.
+- **Agencies and teams managing several accounts or clients**: each account lives in its own profile so logins, cookies and settings never mix; several people share one installation and the list must stay orderly and trustworthy.
+- **Developers and AI-agent users** who drive FoxFlow through the REST API and MCP, often on a VPS; for them the UI is where they check state and step in by hand (log in, solve a captcha through the remote screen view).
 
 ## Product Purpose
 
-FoxProfile is a free, open-source, self-hosted manager for anti-detect browser profiles. Each profile is a persistent identity: its own device fingerprint, cookies, proxy, timezone and locale. It replaces paid tools such as GoLogin, GPM and MoreLogin. Success means a user can create, launch, check and move many accounts quickly without an account leaking its real device, IP or a mismatched geo.
+FoxFlow is a free, open-source, self-hosted web automation tool. A task done once in a browser becomes a workflow: steps with delays, checks, retries, variables and optional AI-written text, replayed by the app, the REST API or an AI agent over MCP. Every run happens in an isolated browser profile with its own fingerprint, cookies, proxy, timezone and locale. Success means a user can record a task, replay it reliably across profiles and see at once which run failed and why. FoxFlow is based on FoxProfile by chienbm98 (https://github.com/chienbm98/foxprofile).
 
 ## Positioning
 
-Open source (MIT), runs on the user's own machine or VPS, no account and no per-profile pricing. Two browser engines: Camoufox (Firefox patched at the engine level) and an experimental Chrome engine (fingerprint-chromium). Built-in REST API and MCP server so AI agents can drive the browsers.
+Open source (MIT), runs on the user's own machine or VPS, no account and no per-run pricing. Record-and-replay workflows with built-in checks and retries, a REST API and an MCP server so scripts and AI agents can drive the browsers. Two browser engines: Camoufox (Firefox, default) and an experimental Chrome engine (fingerprint-chromium).
 
 ## Operating Context
 
 - Desktop: `python -m src.main` on Windows, macOS or Linux; the API runs alongside on `127.0.0.1:8000`.
 - Server: `python -m src.server` on a VPS behind HTTPS; the web panel at `/` is token-protected and includes a remote screen view that accepts clicks and typing.
-- Core tasks: create/edit a profile (name, engine, OS, proxy, timezone, locale), launch/stop, bulk launch/stop/delete, search by name or proxy, check proxy, Check IP (exit IP vs Cloudflare/ipinfo/ip-api with warnings), cookie export/import (JSON, Netscape), new fingerprint, profile ZIP export/import, connect an AI agent over MCP, read the activity log.
+- Core tasks: record, edit and run a workflow and follow its run log; create/edit a profile (name, engine, OS, proxy, timezone, locale), launch/stop, bulk launch/stop/delete, search by name or proxy, check proxy, Check IP (exit IP vs Cloudflare/ipinfo/ip-api with warnings), cookie export/import (JSON, Netscape), new fingerprint, profile ZIP export/import, connect an AI agent over MCP, read the activity log.
 - Sessions are long; users scan many cards at once and repeat the same actions many times a day.
 
 ## Capabilities and Constraints
@@ -38,14 +38,14 @@ Open source (MIT), runs on the user's own machine or VPS, no account and no per-
 
 ## Brand Commitments
 
-- Name: **FoxProfile**. Keep it.
-- Logo: the fox icon in `src/assets/icon.png` (and `icon.ico`). Keep it.
-- Language: Vietnamese is the default UI language, with English available.
+- Name: **FoxFlow**. Keep it.
+- Logo: the fox icon in `src/assets/icon.png` (and `icon.ico`), inherited from FoxProfile. Keep it.
+- Language: English is the default UI language, with Vietnamese available.
 - Terminology: keep industry terms in English inside Vietnamese copy (profile, proxy, cookie, fingerprint, engine, timezone, locale, headless, API, MCP...) because users read them more easily than translations.
 
 ## Evidence on Hand
 
-- Screenshots of the current UI: `docs/images/main.png` (desktop), `panel.png`, `panel-viewer.png`, `cookies.png`, `mcp-guide.png` (web panel), `profile-dialog.png` (desktop).
+- Screenshots of the current UI (taken before the rename, still titled FoxProfile): `docs/images/en/` and `docs/images/main.png` (desktop), `panel.png`, `panel-viewer.png`, `cookies.png`, `mcp-guide.png` (web panel), `profile-dialog.png` (desktop).
 - README (vi/en) describing every feature. No user testimonials, usage numbers or customer names exist; do not invent them.
 
 ## Product Principles

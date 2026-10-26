@@ -327,7 +327,7 @@ def test_record_and_clear_round_trip(run_dir, procs):
 @linux_only
 def test_a_run_dir_others_can_read_is_not_trusted(monkeypatch, tmp_path):
     monkeypatch.setattr(display.tempfile, "gettempdir", lambda: str(tmp_path))
-    path = tmp_path / f"foxprofile-{os.getuid()}"
+    path = tmp_path / f"foxflow-{os.getuid()}"
     path.mkdir(mode=0o755)
     path.chmod(0o755)
     assert display._run_dir() is None

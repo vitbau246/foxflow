@@ -1,4 +1,4 @@
-"""Drive FoxProfile's MCP endpoint over Streamable HTTP, as Claude Code / Cursor would."""
+"""Drive FoxFlow's MCP endpoint over Streamable HTTP, as Claude Code / Cursor would."""
 
 import asyncio
 import base64
@@ -10,8 +10,8 @@ import urllib.request
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
-URL = os.getenv("FOXPROFILE_URL", "http://127.0.0.1:8000").rstrip("/") + "/mcp"
-TOKEN = os.environ.get("FOXPROFILE_API_TOKEN", "")
+URL = os.getenv("FOXFLOW_URL", "http://127.0.0.1:8000").rstrip("/") + "/mcp"
+TOKEN = os.environ.get("FOXFLOW_API_TOKEN", "")
 results = []
 
 
@@ -23,7 +23,7 @@ def check(name, cond, detail=""):
 for _ in range(60):
     try:
         urllib.request.urlopen(
-            os.getenv("FOXPROFILE_URL", "http://127.0.0.1:8000").rstrip("/") + "/api/v1/health",
+            os.getenv("FOXFLOW_URL", "http://127.0.0.1:8000").rstrip("/") + "/api/v1/health",
             timeout=2,
         )
         break
@@ -51,7 +51,7 @@ async def main():
         ClientSession(read, write) as s,
     ):
         init = await s.initialize()
-        check("initialize over HTTP", init.serverInfo.name == "foxprofile")
+        check("initialize over HTTP", init.serverInfo.name == "foxflow")
         tools = (await s.list_tools()).tools
         check("27 tools over HTTP", len(tools) == 27, len(tools))
 

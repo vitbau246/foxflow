@@ -1,66 +1,76 @@
 <div align="center">
-  <img src="src/assets/icon.png" width="112" alt="FoxProfile logo" />
-  <h1>FoxProfile</h1>
-  <p><strong>Quản lý nhiều profile trình duyệt chống phát hiện, miễn phí và mã nguồn mở</strong></p>
-  <p>Mỗi profile có fingerprint thiết bị, cookie và proxy riêng · Hai engine: Camoufox (Firefox) và Chrome · Giao diện tiếng Anh và tiếng Việt · REST API và MCP cho tự động hóa</p>
+  <img src="src/assets/icon.png" width="112" alt="FoxFlow logo" />
+  <h1>FoxFlow</h1>
+  <p><strong>Tự động hoá web tự host: ghi lại một lần, chạy lại trên bất kỳ profile trình duyệt nào</strong></p>
+  <p>Workflow ghi và chạy lại có kiểm tra, thử lại, biến và sinh chữ bằng AI · Profile trình duyệt tách biệt (Camoufox hoặc Chrome) · REST API và MCP cho script và AI agent · Giao diện tiếng Anh và tiếng Việt</p>
 
   <p>
-    <a href="https://github.com/chienbm98/foxprofile/actions/workflows/ci.yml"><img src="https://github.com/chienbm98/foxprofile/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-    <a href="https://github.com/chienbm98/foxprofile/releases/latest"><img src="https://img.shields.io/github/v/release/chienbm98/foxprofile" alt="Release" /></a>
+    <a href="https://github.com/vitbau246/foxflow/actions/workflows/ci.yml"><img src="https://github.com/vitbau246/foxflow/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
     <img src="https://img.shields.io/badge/python-3.10%2B-blue" alt="Python 3.10+" />
     <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Windows | macOS | Linux" />
-    <a href="LICENSE"><img src="https://img.shields.io/github/license/chienbm98/foxprofile" alt="MIT License" /></a>
-    <a href="https://buymeacoffee.com/chienbm98"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logo=buymeacoffee&logoColor=black" alt="Buy me a coffee" /></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" /></a>
+    <a href="https://github.com/chienbm98/foxprofile"><img src="https://img.shields.io/badge/based%20on-FoxProfile-orange" alt="Dựa trên FoxProfile" /></a>
   </p>
 
   <p><a href="README.md">English</a> · Tiếng Việt</p>
   <p>
     <a href="#bắt-đầu-nhanh">Bắt đầu nhanh</a> ·
-    <a href="#tính-năng">Tính năng</a> ·
-    <a href="#rest-api">REST API</a> ·
+    <a href="#workflow-ghi-lại-và-chạy-lại">Workflow</a> ·
     <a href="#mcp-cho-ai-điều-khiển-trình-duyệt">MCP</a> ·
-    <a href="#đóng-góp">Đóng góp</a>
+    <a href="#rest-api">REST API</a> ·
+    <a href="#dựa-trên-foxprofile">Nguồn gốc</a>
   </p>
 </div>
 
-![FoxProfile](docs/images/main.png)
+![FoxFlow](docs/images/main.png)
 
-FoxProfile quản lý các profile trình duyệt chống phát hiện: mỗi profile là một danh tính riêng với fingerprint thiết bị, cookie, proxy, timezone và locale của nó. Trình duyệt mặc định là [Camoufox](https://github.com/daijro/camoufox), một bản Firefox được chỉnh sửa ở tầng mã nguồn để giả lập fingerprint; ngoài ra có engine Chrome thử nghiệm dựa trên [fingerprint-chromium](https://github.com/adryfish/fingerprint-chromium). FoxProfile là lựa chọn tự host, chạy trên máy bạn hoặc VPS, thay cho các antidetect browser trả phí như GoLogin, GPM hay MoreLogin.
+FoxFlow tự động hoá những việc lặp đi lặp lại trên trình duyệt. Bạn làm một việc một lần trong khi FoxFlow ghi lại, chỉnh các bước, rồi cho chạy lại: mỗi bước đều được kiểm tra kết quả, bước lỗi được thử lại, lần chạy bị kẹt thì trình duyệt được khởi động lại và chạy lại từ đầu. Workflow đọc được chữ trên trang, điền biến và nhờ một model tương thích OpenAI viết chữ giúp bạn. Bạn chạy workflow từ app desktop, web panel, REST API, hoặc để AI agent (Claude, Cursor...) điều khiển trình duyệt qua MCP.
+
+Mọi lần chạy diễn ra trong một **profile trình duyệt**: một trình duyệt tách biệt có cookie, phiên đăng nhập, proxy, timezone, locale và fingerprint thiết bị cố định của riêng nó, nên việc của các tài khoản hay khách hàng khác nhau không bao giờ dùng chung phiên. Profile chạy trên [Camoufox](https://github.com/daijro/camoufox) (Firefox) hoặc engine Chrome thử nghiệm dựa trên [fingerprint-chromium](https://github.com/adryfish/fingerprint-chromium), trên máy bạn hoặc VPS.
+
+> [!NOTE]
+> **FoxFlow dựa trên [FoxProfile](https://github.com/chienbm98/foxprofile) của [chienbm98](https://github.com/chienbm98)**, trình quản lý profile trình duyệt mã nguồn mở (MIT). FoxFlow giữ toàn bộ phần quản lý profile của FoxProfile và chuyển trọng tâm dự án sang tự động hoá web. Xem [Dựa trên FoxProfile](#dựa-trên-foxprofile).
 
 ## Mục lục
 
 - [Tính năng](#tính-năng)
 - [Yêu cầu](#yêu-cầu)
 - [Bắt đầu nhanh](#bắt-đầu-nhanh)
-- [Timezone, locale và Kiểm tra IP](#timezone-locale-và-kiểm-tra-ip)
-- [Chế độ server và web panel](#chế-độ-server-và-web-panel)
+- [Workflow: ghi lại và chạy lại](#workflow-ghi-lại-và-chạy-lại)
 - [MCP: cho AI điều khiển trình duyệt](#mcp-cho-ai-điều-khiển-trình-duyệt)
-- [Engine Chrome (thử nghiệm)](#engine-chrome-thử-nghiệm)
-- [Cookie và fingerprint](#cookie-và-fingerprint)
+- [Chế độ server và web panel](#chế-độ-server-và-web-panel)
+- [Profile trình duyệt](#profile-trình-duyệt)
 - [Cấu hình](#cấu-hình)
 - [REST API](#rest-api)
+- [Chuyển từ FoxProfile sang](#chuyển-từ-foxprofile-sang)
 - [Phát triển](#phát-triển)
 - [Đóng góp](#đóng-góp)
-- [Ủng hộ](#ủng-hộ)
 - [Lưu ý sử dụng](#lưu-ý-sử-dụng)
+- [Dựa trên FoxProfile](#dựa-trên-foxprofile)
 - [Giấy phép](#giấy-phép)
 - [Ghi công](#ghi-công)
 
 ## Tính năng
 
-- **Fingerprint cố định cho từng profile.** Lần mở đầu tiên sinh ra một thiết bị (màn hình, GPU, số nhân CPU, font, nhiễu canvas/audio) và lưu lại; các lần sau mở lại đúng thiết bị đó. Có thể chủ động tạo fingerprint mới.
-- **Hai engine.** Camoufox (Firefox, mặc định) hoặc Chrome (fingerprint-chromium, thử nghiệm), chọn khi tạo profile. Bản Chrome được tự tải về khi cần.
-- **Giữ phiên làm việc.** Lịch sử, cookie và đăng nhập nằm trong thư mục của profile; các tab đang mở được mở lại ở lần khởi động sau.
-- **Mỗi profile một proxy riêng**, hỗ trợ HTTP/HTTPS/SOCKS4/SOCKS5 có hoặc không có mật khẩu, kể cả dạng `host:port:user:pass`, có nút kiểm tra proxy.
-- **Timezone và locale** tự khớp theo IP hoặc đặt cố định cho từng profile. Nút **Kiểm tra IP** đối chiếu IP ra với Cloudflare, ipinfo, ip-api và cảnh báo khi lệch quốc gia/timezone hoặc IP bị gắn datacenter.
-- **Xuất/nhập cookie** dạng JSON Cookie-Editor / EditThisCookie (GoLogin, GPM, Multilogin, extension Cookie-Editor) và `cookies.txt` Netscape (yt-dlp, curl, wget).
-- **Xuất/nhập cả profile** ra file ZIP để chuyển sang máy khác, có hoặc không kèm dữ liệu trình duyệt. Fingerprint luôn đi kèm.
-- **Bảng profile dễ quét**: mỗi dòng cho thấy engine, thiết bị đang giả lập, proxy (đã ẩn mật khẩu), timezone/locale và trạng thái. Trạng thái phân biệt bằng cả hình lẫn màu: dấu tím viền kép kèm giờ mở là đang chạy, viền xám là đang mở, dấu đỏ gạch ngang là mở lỗi.
-- **Lọc và tìm kiếm**: lọc theo đang chạy, có/không proxy, engine Chrome (kèm số đếm); tìm theo tên hoặc proxy.
-- **Thao tác hàng loạt**: chọn nhiều profile để mở, dừng hoặc xóa cùng lúc.
-- **MCP server**: Claude, Cursor... tự mở profile, lướt web, click, gõ, chụp màn hình.
-- **Chế độ server + web panel**: chạy trên VPS, quản lý và xem màn hình từ xa qua trình duyệt, có token bảo vệ.
-- **REST API** để điều khiển bằng script, có trang tài liệu Swagger.
+**Tự động hoá**
+
+- **Ghi và chạy lại workflow.** Mỗi click, gõ phím, chọn, bấm phím, cuộn và mở trang trong trình duyệt của profile thành một bước, mỗi phần tử kèm nhiều selector dự phòng.
+- **Chạy lại tin cậy.** Mỗi bước được kiểm tra (ô đã có đúng chữ, ô đã được tích, click tới đúng trang như lúc ghi), lỗi thì thử lại, và nếu một bước cứ lỗi mãi thì cả lần chạy bắt đầu lại từ bước 1 trên trình duyệt mới.
+- **Nhịp như người thật.** Mỗi bước giữ đúng khoảng dừng của bạn lúc ghi, bước gõ có tốc độ theo từng ký tự, và một mức tốc độ chung (x0.25 đến x5) cho cả workflow.
+- **Biến, lấy chữ và AI.** `{{biến}}` trong giá trị, URL và selector; *Lấy chữ* đọc chữ trên trang vào biến (lọc được bằng regex); *Sinh bằng AI* gửi prompt tới API tương thích OpenAI và lưu câu trả lời.
+- **Menu hiện khi rê chuột.** Click vào phần tử chỉ hiện khi rê chuột được ghi kèm bước *Rê chuột vào trước*.
+- **AI agent qua MCP.** Claude Code, Claude Desktop, Cursor, VS Code... tự mở profile, mở trang, đọc, click, gõ, chụp màn hình và chạy workflow bạn đã ghi.
+- **REST API** có tài liệu Swagger cho mọi thao tác, để script hay bộ lập lịch bất kỳ khởi chạy và đọc log của lần chạy.
+- **Chế độ server + web panel** cho VPS: trình duyệt chạy ẩn, web panel có token bảo vệ và màn hình xem từ xa bấm và gõ được.
+
+**Profile trình duyệt** (kế thừa từ FoxProfile)
+
+- **Phiên làm việc tách biệt.** Lịch sử, cookie và đăng nhập nằm trong thư mục của từng profile; các tab đang mở được mở lại ở lần khởi động sau.
+- **Fingerprint thiết bị cố định cho từng profile**, sinh một lần rồi dùng lại, nên trang web luôn thấy cùng một thiết bị.
+- **Hai engine.** Camoufox (Firefox, mặc định) hoặc Chrome (fingerprint-chromium, thử nghiệm), chọn khi tạo profile.
+- **Mỗi profile một proxy riêng** (HTTP/HTTPS/SOCKS4/SOCKS5, có hoặc không có mật khẩu, cả dạng `host:port:user:pass`), nút kiểm tra proxy, và timezone/locale tự theo IP ra hoặc đặt cố định cho từng profile.
+- **Xuất/nhập cookie** (JSON Cookie-Editor, `cookies.txt` Netscape), **xuất/nhập profile dạng ZIP**, và **nhân bản** profile tới 50 bản kèm workflow của nó.
+- **Thao tác hàng loạt, lọc và tìm kiếm** trong bảng profile dễ quét, trên cả app desktop lẫn web panel.
 - Giao diện **tiếng Anh** (mặc định) và tiếng Việt, đổi ngay trong app. Font đóng gói sẵn, không cần mạng.
 
 ## Yêu cầu
@@ -72,8 +82,8 @@ FoxProfile quản lý các profile trình duyệt chống phát hiện: mỗi pr
 ## Bắt đầu nhanh
 
 ```bash
-git clone https://github.com/chienbm98/foxprofile.git
-cd foxprofile
+git clone https://github.com/vitbau246/foxflow.git
+cd foxflow
 
 python -m venv .venv
 .venv\Scripts\activate          # Windows
@@ -91,95 +101,123 @@ Chạy ứng dụng:
 python -m src.main
 ```
 
-Trên Windows có thể bấm đúp `run_foxprofile.bat`. Ứng dụng mở cửa sổ quản lý và đồng thời chạy API tại `http://127.0.0.1:8000`; tài liệu API ở `http://127.0.0.1:8000/docs`. Đặt `FOXPROFILE_LANG=vi` để dùng giao diện tiếng Việt.
+Trên Windows có thể bấm đúp `run_foxflow.bat`. Ứng dụng mở cửa sổ chính và đồng thời chạy API tại `http://127.0.0.1:8000`; tài liệu API ở `http://127.0.0.1:8000/docs`. Đặt `FOXFLOW_LANG=vi` để dùng giao diện tiếng Việt.
 
-## Timezone, locale và Kiểm tra IP
+Tự động hoá đầu tiên: tạo một profile, mở nó, bấm **Workflow** trên dòng profile, chọn **Bắt đầu ghi**, làm việc cần làm trong trình duyệt, rồi bấm **Dừng & lưu**. Bấm **Chạy** để chạy lại.
 
-Mặc định, mỗi lần mở profile Camoufox tra IP đi ra (qua proxy của profile) và đặt timezone, locale, toạ độ và IP WebRTC theo IP đó. Có ba điều nên biết:
+## Workflow: ghi lại và chạy lại
 
-- **Locale tự động được chọn ngẫu nhiên ở mỗi lần mở**, theo tỷ lệ người nói từng ngôn ngữ ở quốc gia của IP. Ví dụ IP Pháp cho `fr-FR` khoảng 60% số lần, còn lại là `en-FR`, `es-FR`… Một tài khoản đổi ngôn ngữ giữa các phiên là điều đáng ngờ, nên hãy đặt cố định locale cho profile.
-- **Các cơ sở dữ liệu GeoIP không phải lúc nào cũng thống nhất.** Cùng một IP có thể được Cloudflare xếp vào nước này, Google vào nước khác; Camoufox cũng có thể chọn một timezone cùng giờ nhưng khác tên (ví dụ IP Việt Nam ra `Asia/Bangkok` thay vì `Asia/Ho_Chi_Minh`).
-- **IP datacenter dễ bị bắt captcha** bất kể cấu hình trình duyệt. Với các trang dùng Cloudflare, proxy residential hoặc 4G quan trọng hơn mọi tinh chỉnh khác.
+Workflow là một việc bạn đã làm một lần trong trình duyệt của profile, được lưu thành các bước để chạy lại trên bất kỳ profile nào. Mở bằng nút **Workflow** trên dòng profile, ở app desktop hoặc web panel.
 
-![Hộp thoại tạo profile](docs/images/profile-dialog.png)
+1. **Ghi.** Mở profile, bấm **Bắt đầu ghi**, rồi làm việc đó trong trình duyệt của nó: mỗi click, gõ phím, chọn, bấm phím (Enter, Escape, Tab...) và cuộn trang đều thành một bước, mở trang cũng vậy. Trên server thì thao tác qua **Xem màn hình**. Bấm **Dừng & lưu** và đặt tên. Nếu trình duyệt đóng khi đang ghi, các bước vẫn được giữ thành một bản ghi chưa lưu để lưu sau.
+2. **Sửa.** Mỗi bước có **delay** riêng (thời gian chờ trước bước, lấy từ khoảng dừng thật của bạn lúc ghi) và với bước gõ thì có **tốc độ gõ** tính bằng ms mỗi ký tự (0 là điền ngay). **Tốc độ** chung của workflow chia mọi delay: x2 là nhanh gấp đôi. Có thể tắt, đổi thứ tự, thêm hoặc xoá bước; **Chi tiết** hiện các selector (thử lần lượt), giá trị, frame, thời gian chờ tối đa và URL mong đợi.
+3. **Chạy.** Mặc định mọi bước đều được kiểm tra kết quả: ô vừa gõ phải chứa đúng chữ, ô tích phải được tích, một click lúc ghi đã chuyển trang thì lúc chạy phải tới đúng trang đó, và phần tử phải tìm thấy trong thời gian chờ của bước. Có thể đổi phần kiểm tra thành chờ một URL, tiêu đề, phần tử hoặc dòng chữ, hoặc tắt hẳn. Bước lỗi được thử lại sau thời gian chờ thử lại (mặc định **thử lại 2 lần**); vẫn lỗi thì trình duyệt bị tắt và workflow chạy lại **từ bước 1**, mặc định tối đa **3 lần khởi động lại**, sau đó lần chạy báo lỗi kèm lý do. Theo dõi lần chạy, log và dừng ngay trong hộp thoại đó.
 
-Trong hộp thoại tạo/sửa profile có hai ô **Timezone** (tên IANA, ví dụ `Asia/Ho_Chi_Minh`) và **Locale** (dạng `vi-VN`); để trống là tự động theo IP. Nút **Kiểm tra IP** lấy IP đi ra qua proxy, đối chiếu với Cloudflare, ipinfo và ip-api, rồi cảnh báo khi lệch quốc gia hoặc timezone, khi IP bị gắn datacenter, khi proxy ra Internet bằng IPv4 và IPv6 khác nhau, và khi locale đang để ngẫu nhiên.
+Khi chạy, workflow chỉ để lại một tab trong profile (bắt đầu giống lúc ghi) và không chạy khi profile đang ghi. Dừng profile thì lần chạy cũng dừng. Workflow cũng chạy được từ REST API (`POST /workflows/{name}/run`) hoặc do AI agent gọi (`run_workflow`).
+
+### Menu hiện khi rê chuột, biến, lấy chữ và AI
+
+- **Rê chuột vào trước.** Có nút chỉ xuất hiện khi rê chuột vào chỗ khác: bảng cảm xúc hiện trên nút "Thích", menu mở khi rê chuột. Khi click rơi vào phần trang như vậy, bản ghi tự thêm **Rê chuột vào trước** cho bước đó (phần tử cần rê, rồi chờ, mặc định 800 ms). Nếu bản ghi bỏ sót, thêm tay ở **Chi tiết** của bước.
+- **Biến.** Viết `{{tên}}` trong giá trị, URL hay selector của bước; nó được thay khi bước chạy. Đặt giá trị ban đầu ở mục **Biến** trong trình sửa, hoặc theo từng lần chạy qua API (`"variables": {...}`). `{{profile}}` luôn là tên profile đang chạy. Bước dùng biến không tồn tại bị từ chối khi lưu.
+- **Lấy chữ** đọc chữ hiển thị của một phần tử (cả trang nếu không có selector), có thể lọc qua biểu thức chính quy (lấy nhóm đầu, ví dụ `#(\d+)`), rồi lưu vào biến. Bước báo lỗi khi không có chữ hoặc biểu thức không khớp.
+- **Sinh bằng AI** gửi prompt (đã thay `{{biến}}`) tới API Chat Completions tương thích OpenAI và lưu câu trả lời vào biến. Ví dụ: *Lấy chữ* trang đơn hàng vào `{{order}}`, *Sinh bằng AI* "Viết một câu trả lời ngắn xác nhận đơn hàng này: {{order}}" vào `{{reply}}`, rồi *Gõ* `{{reply}}`. Cấu hình ở nút **Cấu hình AI** trong trình sửa: API key, base URL (mặc định OpenAI; dùng được cả Azure OpenAI, OpenRouter hay LLM chạy trên máy), model, system prompt và temperature, có nút **Thử**. AI tắt cho tới khi có key. Prompt, kể cả chữ lấy từ trang mà nó dùng, được gửi tới dịch vụ đó, từ tiến trình FoxFlow (không qua proxy của profile). Key lưu trong `ai_settings.json` cạnh `profiles.json`, hoặc lấy từ `FOXFLOW_OPENAI_API_KEY` (không bao giờ được ghi ra đĩa).
+
+Workflow là các file JSON trong `workflows/`, mỗi workflow một file, sửa được cả qua REST API (`PUT /workflows/{name}`). File chứa những gì bạn đã gõ lúc ghi, **kể cả mật khẩu** (ô mật khẩu chỉ được ẩn trên giao diện), nên hãy giữ thư mục này cẩn thận như `camoufox_data/`. Khi chạy lại, trang được điều khiển qua Playwright: trang web chặn tự động hoá có thể nhận ra.
+
+## MCP: cho AI điều khiển trình duyệt
+
+FoxFlow có sẵn MCP server, để Claude Code, Claude Desktop, Cursor, VS Code... tự quản lý profile, thao tác trên trang (mở URL, đọc trang, click, gõ, chụp màn hình) và chạy các workflow bạn đã ghi.
+
+**Cách nhanh nhất:** bấm **Kết nối AI (MCP)** ở thanh bên trái của app desktop hoặc web panel. Hộp thoại sinh sẵn cấu hình cho từng ứng dụng AI, đúng địa chỉ và token của bạn, chỉ cần bấm Sao chép rồi dán.
+
+![Kết nối AI (MCP)](docs/images/mcp-guide.png)
+
+MCP được phục vụ qua HTTP tại `/mcp`, ngay trên cổng của FoxFlow, nên dùng được cả khi FoxFlow chạy trên VPS:
+
+```bash
+# Claude Code
+claude mcp add --transport http foxflow http://127.0.0.1:8000/mcp
+# Server có token:
+claude mcp add --transport http foxflow https://vps.cua-ban.com/mcp --header "Authorization: Bearer <token>"
+```
+
+```jsonc
+// Cursor: ~/.cursor/mcp.json
+{ "mcpServers": { "foxflow": { "url": "http://127.0.0.1:8000/mcp" } } }
+```
+
+Claude Desktop chỉ chạy được server MCP cục bộ: dùng `foxflow_mcp.py` (cùng máy) hoặc cầu nối `npx mcp-remote` (máy khác). Hộp thoại "Kết nối AI" sinh sẵn cả hai.
+
+Sau đó chỉ cần nhắn AI, ví dụ: *"Mở profile work-01, vào example.com và chụp màn hình cho tôi"* hoặc *"Chạy workflow daily-report trên profile work-01 và báo tôi nếu nó lỗi"*.
+
+| Nhóm | Tool |
+| --- | --- |
+| Profile | `list_profiles`, `get_profile`, `create_profile`, `update_profile`, `clone_profile`, `launch_profile`, `stop_profile`, `running_profiles` |
+| Cookie & fingerprint | `export_cookies`, `import_cookies`, `get_fingerprint`, `reset_fingerprint`, `check_proxy`, `check_profile_ip` |
+| Trang | `browser_navigate`, `browser_back`, `browser_snapshot`, `browser_get_text`, `browser_click`, `browser_click_at`, `browser_type`, `browser_press`, `browser_wait_for`, `browser_screenshot`, `browser_evaluate` |
+| Tab | `browser_tabs`, `browser_tab_new`, `browser_tab_select`, `browser_tab_close` |
+| Workflow | `list_workflows`, `get_workflow`, `run_workflow`, `workflow_run_status`, `stop_workflow_run` |
+
+MCP **không** có tool xóa profile, để AI không thể vô tình xóa cookie của tài khoản. Trang chỉ mở được `http`, `https` và `about:blank`; `file://` và `about:config` bị chặn.
 
 ## Chế độ server và web panel
 
-Không cần cửa sổ desktop: chỉ chạy API và web panel, trình duyệt chạy headless. Phù hợp để chạy trên VPS.
+Không cần cửa sổ desktop: chỉ chạy API và web panel, trình duyệt chạy ẩn. Phù hợp với VPS chạy workflow suốt ngày đêm.
 
 ```bash
 python -m src.server                     # http://127.0.0.1:8000
 python -m src.server --host 0.0.0.0      # mở ra mạng: BẮT BUỘC đặt token
 ```
 
-Mở `http://<địa-chỉ>:8000/` để vào **web panel**: cùng bảng profile, bộ lọc và thao tác hàng loạt như app desktop; tạo, sửa, mở/dừng profile, xuất/nhập cookie và **xem màn hình từ xa**. Bạn có thể bấm thẳng lên ảnh màn hình và gõ phím để tự đăng nhập hay giải captcha, kể cả khi trình duyệt đang chạy headless trên server.
+Mở `http://<địa-chỉ>:8000/` để vào **web panel**: cùng bảng profile, bộ lọc, thao tác hàng loạt và hộp thoại workflow như app desktop, thêm **màn hình xem từ xa**. Bạn có thể bấm thẳng lên ảnh màn hình và gõ phím để ghi workflow, đăng nhập hay giải captcha, kể cả khi trình duyệt đang chạy ẩn trên server.
 
 | Web panel | Xem màn hình từ xa |
 | --- | --- |
 | ![Web panel](docs/images/panel.png) | ![Xem màn hình từ xa](docs/images/panel-viewer.png) |
 
-**Bảo mật:** khi nghe ngoài `127.0.0.1`, server **từ chối khởi động** nếu chưa đặt `FOXPROFILE_API_TOKEN` (tối thiểu 24 ký tự). Web panel, REST API và MCP đều dùng chung token này.
+**Bảo mật:** khi nghe ngoài `127.0.0.1`, server **từ chối khởi động** nếu chưa đặt `FOXFLOW_API_TOKEN` (tối thiểu 24 ký tự). Web panel, REST API và MCP đều dùng chung token này.
 
 ```bash
 # Tạo token ngẫu nhiên
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-Khi đưa lên VPS, nên đặt server sau reverse proxy có HTTPS (Caddy, Nginx) để token không bị gửi đi dưới dạng chữ thường. Trên Linux không có màn hình, đặt `FOXPROFILE_HEADLESS=virtual` (cần cài `xvfb`) để trình duyệt chạy trên màn hình ảo, khó bị phát hiện hơn chế độ headless thường.
+Khi đưa lên VPS, nên đặt server sau reverse proxy có HTTPS (Caddy, Nginx) để token không bị gửi đi dưới dạng chữ thường. Trên Linux không có màn hình, đặt `FOXFLOW_HEADLESS=virtual` (cần cài `xvfb`) để trình duyệt chạy trên màn hình ảo, hoạt động giống trình duyệt desktop bình thường hơn chế độ headless thường.
 
 Hướng dẫn triển khai đầy đủ (Ubuntu, systemd, nginx, HTTPS): [docs/DEPLOY.md](docs/DEPLOY.md).
 
-## MCP: cho AI điều khiển trình duyệt
+## Profile trình duyệt
 
-FoxProfile có sẵn MCP server, để Claude Code, Claude Desktop, Cursor, VS Code... tự quản lý profile và thao tác trên trang: mở URL, đọc trang, click, gõ, chụp màn hình.
+Profile là một trình duyệt tách biệt: thư mục dữ liệu riêng (cookie, đăng nhập, lịch sử), proxy, timezone, locale và fingerprint thiết bị. Workflow và AI agent luôn thao tác bên trong một profile.
 
-**Cách nhanh nhất:** bấm **Kết nối AI (MCP)** ở thanh bên trái của app desktop hoặc web panel. Hộp thoại sinh sẵn cấu hình cho từng ứng dụng AI, đúng địa chỉ và token của bạn, chỉ cần bấm Sao chép rồi dán.
+![Hộp thoại tạo profile](docs/images/profile-dialog.png)
 
-![Kết nối AI (MCP)](docs/images/mcp-guide.png)
+### Timezone, locale và Kiểm tra IP
 
-MCP được phục vụ qua HTTP tại `/mcp`, ngay trên cổng của FoxProfile, nên dùng được cả khi FoxProfile chạy trên VPS:
+Mặc định, mỗi lần mở profile Camoufox tra IP đi ra (qua proxy của profile) và đặt timezone, locale, toạ độ và IP WebRTC theo IP đó. Có ba điều nên biết:
 
-```bash
-# Claude Code
-claude mcp add --transport http foxprofile http://127.0.0.1:8000/mcp
-# Server có token:
-claude mcp add --transport http foxprofile https://vps.cua-ban.com/mcp --header "Authorization: Bearer <token>"
-```
+- **Locale tự động được chọn ngẫu nhiên ở mỗi lần mở**, theo tỷ lệ người nói từng ngôn ngữ ở quốc gia của IP. Ví dụ IP Pháp cho `fr-FR` khoảng 60% số lần, còn lại là `en-FR`, `es-FR`… Hãy đặt cố định locale cho profile khi trang web cần thấy cùng một ngôn ngữ ở mọi phiên.
+- **Các cơ sở dữ liệu GeoIP không phải lúc nào cũng thống nhất.** Cùng một IP có thể được Cloudflare xếp vào nước này, Google vào nước khác; Camoufox cũng có thể chọn một timezone cùng giờ nhưng khác tên (ví dụ IP Việt Nam ra `Asia/Bangkok` thay vì `Asia/Ho_Chi_Minh`).
+- **IP datacenter hay bị bắt captcha** ở nhiều trang bất kể cấu hình trình duyệt, làm hỏng các lần chạy không người trông.
 
-```jsonc
-// Cursor: ~/.cursor/mcp.json
-{ "mcpServers": { "foxprofile": { "url": "http://127.0.0.1:8000/mcp" } } }
-```
+Trong hộp thoại tạo/sửa profile có hai ô **Timezone** (tên IANA, ví dụ `Asia/Ho_Chi_Minh`) và **Locale** (dạng `vi-VN`); để trống là tự động theo IP. Nút **Kiểm tra IP** lấy IP đi ra qua proxy, đối chiếu với Cloudflare, ipinfo và ip-api, rồi cảnh báo khi lệch quốc gia hoặc timezone, khi IP bị gắn datacenter, khi proxy ra Internet bằng IPv4 và IPv6 khác nhau, và khi locale đang để ngẫu nhiên.
 
-Claude Desktop chỉ chạy được server MCP cục bộ: dùng `foxprofile_mcp.py` (cùng máy) hoặc cầu nối `npx mcp-remote` (máy khác). Hộp thoại "Kết nối AI" sinh sẵn cả hai.
-
-Sau đó chỉ cần nhắn AI, ví dụ: *"Mở profile tiktok-us-02, vào tiktok.com và chụp màn hình cho tôi"*.
-
-| Nhóm | Tool |
-| --- | --- |
-| Profile | `list_profiles`, `get_profile`, `create_profile`, `update_profile`, `launch_profile`, `stop_profile`, `running_profiles` |
-| Cookie & fingerprint | `export_cookies`, `import_cookies`, `get_fingerprint`, `reset_fingerprint`, `check_proxy`, `check_profile_ip` |
-| Trang | `browser_navigate`, `browser_back`, `browser_snapshot`, `browser_get_text`, `browser_click`, `browser_click_at`, `browser_type`, `browser_press`, `browser_wait_for`, `browser_screenshot`, `browser_evaluate` |
-| Tab | `browser_tabs`, `browser_tab_new`, `browser_tab_select`, `browser_tab_close` |
-
-MCP **không** có tool xóa profile, để AI không thể vô tình xóa cookie của tài khoản. Trang chỉ mở được `http`, `https` và `about:blank`; `file://` và `about:config` bị chặn.
-
-## Engine Chrome (thử nghiệm)
+### Engine Chrome (thử nghiệm)
 
 Ngoài Camoufox (Firefox), profile có thể chạy trên engine **Chrome**: một bản Chromium đã vá fingerprint ở tầng C++ ([fingerprint-chromium](https://github.com/adryfish/fingerprint-chromium), giấy phép BSD-3). Chọn ở ô **Engine** khi tạo profile; không đổi được sau khi tạo. Bản trình duyệt (~140-190 MB tuỳ hệ điều hành, tải từ GitHub của fingerprint-chromium và kiểm tra SHA-256) được tự tải ở nền ngay khi tạo profile Chrome đầu tiên, hoặc lúc mở profile nếu chưa có; tiến độ hiện trong log. Muốn tải trước bằng tay: `python -m chrome_engine fetch`.
 
-Nên chọn đúng hệ điều hành của máy đang chạy FoxProfile: persona khác hệ điều hành sẽ lộ font của máy, và persona Linux trên Windows/macOS bị từ chối vì WebGL lộ GPU thật. Hỗ trợ Windows x64, macOS Apple Silicon và Linux x64 (chưa kiểm chứng). Chi tiết và kết quả kiểm thử: [chrome_engine/README.md](chrome_engine/README.md).
+Nên chọn đúng hệ điều hành của máy đang chạy FoxFlow: persona khác hệ điều hành sẽ lộ font của máy, và persona Linux trên Windows/macOS bị từ chối vì WebGL lộ GPU thật. Hỗ trợ Windows x64, macOS Apple Silicon và Linux x64 (chưa kiểm chứng). Chi tiết và kết quả kiểm thử: [chrome_engine/README.md](chrome_engine/README.md).
 
-## Cookie và fingerprint
+### Cookie, fingerprint và nhân bản
 
 ![Cookie & fingerprint](docs/images/cookies.png)
 
-Bấm nút cookie trên dòng profile để mở hộp thoại **Cookie & fingerprint**. **Trình duyệt của profile phải đang tắt**, vì FoxProfile mở profile ở chế độ headless để đọc và ghi cookie.
+Bấm nút cookie trên dòng profile để mở hộp thoại **Cookie & fingerprint**. **Trình duyệt của profile phải đang tắt**, vì FoxFlow mở profile ở chế độ headless để đọc và ghi cookie.
 
-- Cookie phiên (session) khi nhập vào sẽ được đặt hạn 1 năm. Nếu không, trình duyệt sẽ xóa chúng ngay khi đóng.
+- Cookie xuất/nhập dạng JSON Cookie-Editor / EditThisCookie và `cookies.txt` Netscape (yt-dlp, curl, wget). Cookie phiên (session) khi nhập vào sẽ được đặt hạn 1 năm; nếu không, trình duyệt sẽ xóa chúng ngay khi đóng.
 - "Tạo fingerprint mới" xóa fingerprint đã lưu; lần mở sau profile sẽ là một thiết bị khác. Đổi hệ điều hành của profile cũng tự sinh fingerprint mới.
+- **Nhân bản** (nút sao chép trên dòng profile) tạo profile mới cùng cài đặt: đặt **Số bản** để tạo nhiều bản một lần, đặt tên theo tên gốc thêm -1, -2... (bỏ qua số đã dùng). Mỗi bản sao luôn có fingerprint mới. Ở mục **Chép thêm**, tick những gì đi kèm: **cookie** (phiên đăng nhập), **lịch sử và bookmark**, **dữ liệu trang web** (localStorage, IndexedDB, quyền của trang), **mật khẩu đã lưu**, **các tab đang mở** (các mục này cần profile đang tắt), và **workflow của profile**: mỗi bản sao có workflow riêng, tên `<workflow>-<profile mới>`. Cache, file khoá, các cài đặt khác và bản ghi chưa lưu không bao giờ được chép. Khi chép cookie, trang web thấy cùng các phiên đăng nhập trên một thiết bị mới, có trang sẽ coi là đăng nhập mới.
+- **Xuất/nhập cả profile** ra file ZIP, có hoặc không kèm dữ liệu trình duyệt, để chuyển sang máy khác. Fingerprint luôn đi kèm.
 
 ## Cấu hình
 
@@ -187,18 +225,25 @@ Mọi cấu hình đều không bắt buộc. Muốn đổi thì sao chép `.env
 
 | Biến | Mặc định | Ý nghĩa |
 | --- | --- | --- |
-| `FOXPROFILE_LANG` | `en` | Ngôn ngữ giao diện: `en` hoặc `vi` |
-| `FOXPROFILE_PROFILES_FILE` | `profiles.json` | File lưu danh sách profile |
-| `FOXPROFILE_DATA_DIR` | `camoufox_data` | Thư mục dữ liệu, mỗi profile một thư mục con |
-| `FOXPROFILE_LOG_DIR` | `logs` | Thư mục log |
-| `FOXPROFILE_LOG_LEVEL` | `INFO` | Mức log |
-| `FOXPROFILE_PROXY_TIMEOUT` | `10` | Thời gian chờ khi kiểm tra proxy (giây) |
-| `FOXPROFILE_LAUNCH_TIMEOUT` | `90` | Thời gian API chờ trình duyệt mở xong (giây) |
-| `FOXPROFILE_HEADLESS` | `false` (`true` ở chế độ server) | Chạy trình duyệt ẩn: `true`, `false` hoặc `virtual` (Linux + Xvfb) |
-| `FOXPROFILE_RESTORE_TABS` | `true` | Mở lại các tab của lần chạy trước |
-| `FOXPROFILE_API_TOKEN` | *(trống)* | Token cho API, web panel và MCP. Bắt buộc khi API nghe ngoài `127.0.0.1` |
-| `FOXPROFILE_API_HOST` | `127.0.0.1` | Địa chỉ API |
-| `FOXPROFILE_API_PORT` | `8000` | Cổng API |
+| `FOXFLOW_LANG` | `en` | Ngôn ngữ giao diện: `en` hoặc `vi` |
+| `FOXFLOW_PROFILES_FILE` | `profiles.json` | File lưu danh sách profile |
+| `FOXFLOW_DATA_DIR` | `camoufox_data` | Thư mục dữ liệu, mỗi profile một thư mục con |
+| `FOXFLOW_LOG_DIR` | `logs` | Thư mục log |
+| `FOXFLOW_LOG_LEVEL` | `INFO` | Mức log |
+| `FOXFLOW_PROXY_TIMEOUT` | `10` | Thời gian chờ khi kiểm tra proxy (giây) |
+| `FOXFLOW_LAUNCH_TIMEOUT` | `90` | Thời gian API chờ trình duyệt mở xong (giây) |
+| `FOXFLOW_HEADLESS` | `false` (`true` ở chế độ server) | Chạy trình duyệt ẩn: `true`, `false` hoặc `virtual` (Linux + Xvfb) |
+| `FOXFLOW_RESTORE_TABS` | `true` | Mở lại các tab của lần chạy trước |
+| `FOXFLOW_WORKFLOWS_DIR` | `workflows` | Các workflow đã lưu, mỗi workflow một file JSON |
+| `FOXFLOW_OPENAI_API_KEY` | *(trống)* | Key cho bước Sinh bằng AI; được ưu tiên hơn key trong Cấu hình AI và không bao giờ được lưu |
+| `FOXFLOW_OPENAI_BASE_URL` | `https://api.openai.com/v1` | Base URL mặc định của API tương thích OpenAI |
+| `FOXFLOW_OPENAI_MODEL` | `gpt-4o-mini` | Model mặc định |
+| `FOXFLOW_AI_SETTINGS_FILE` | `ai_settings.json` | Nơi lưu cấu hình AI (kèm key) |
+| `FOXFLOW_API_TOKEN` | *(trống)* | Token cho API, web panel và MCP. Bắt buộc khi API nghe ngoài `127.0.0.1` |
+| `FOXFLOW_API_HOST` | `127.0.0.1` | Địa chỉ API |
+| `FOXFLOW_API_PORT` | `8000` | Cổng API |
+
+Tên cũ `FOXPROFILE_*` vẫn dùng được; nếu đặt cả hai thì biến `FOXFLOW_*` được ưu tiên.
 
 ### Định dạng proxy
 
@@ -212,11 +257,14 @@ camoufox_data/<tên-profile>/                      dữ liệu trình duyệt: c
 camoufox_data/<tên-profile>/fingerprint.json      fingerprint thiết bị (engine Camoufox)
 camoufox_data/<tên-profile>/chrome_persona.json   fingerprint thiết bị (engine Chrome)
 camoufox_data/<tên-profile>/tabs.json             các tab sẽ được mở lại
-logs/foxprofile_YYYYMMDD.log                      log theo ngày
+camoufox_data/<tên-profile>/recording.json        các bước của bản ghi đang ghi hoặc chưa lưu
+workflows/<tên-workflow>.json                     workflow đã lưu: bước, delay, kiểm tra, thử lại
+ai_settings.json                                  cấu hình AI cho bước Sinh bằng AI, kèm API key
+logs/foxflow_YYYYMMDD.log                         log theo ngày
 ```
 
 > [!WARNING]
-> `camoufox_data/` chứa cookie đăng nhập của mọi tài khoản. Không commit, không chia sẻ thư mục này.
+> `camoufox_data/` chứa cookie đăng nhập của mọi tài khoản, còn `workflows/` chứa những gì đã gõ lúc ghi, kể cả mật khẩu. Không commit, không chia sẻ các thư mục này.
 
 ## REST API
 
@@ -225,21 +273,14 @@ Tiền tố: `/api/v1`. Xem đầy đủ tại `/docs` khi ứng dụng đang ch
 | Method | Đường dẫn | Mô tả |
 | --- | --- | --- |
 | `GET` | `/health` | Kiểm tra API |
-| `GET` / `POST` | `/profiles` | Liệt kê / tạo profile |
-| `GET` / `PATCH` / `DELETE` | `/profiles/{name}` | Xem / sửa / xóa profile (không đổi được `engine`) |
-| `GET` | `/profiles/{name}/data-dir` | Đường dẫn thư mục dữ liệu của profile |
-| `POST` | `/profiles/{name}/export` | Xuất profile ra ZIP |
-| `POST` | `/profiles/import` | Nhập profile từ ZIP |
-| `GET` | `/profiles/{name}/cookies?format=json\|netscape` | Xuất cookie |
-| `POST` | `/profiles/{name}/cookies` | Nhập cookie (`{"content": "<JSON hoặc cookies.txt>"}`) |
-| `GET` / `DELETE` | `/profiles/{name}/fingerprint` | Xem / tạo fingerprint mới |
-| `GET` | `/profiles/{name}/ip-check` | Kiểm tra IP ra của profile: quốc gia, timezone theo Cloudflare/ipinfo/ip-api, cảnh báo lệch |
-| `GET` | `/browser` | Danh sách profile đang chạy |
-| `GET` | `/browser/{name}/status` | Profile có đang chạy không |
-| `POST` | `/browser/{name}/launch` | Mở trình duyệt, chờ đến khi mở xong hoặc lỗi (409 nếu đang chạy hoặc đang bận) |
-| `POST` | `/browser/{name}/stop` | Đóng trình duyệt |
-| `POST` | `/proxy/check` | Kiểm tra proxy |
-| `POST` | `/proxy/geo-check` | Như `ip-check` cho tổ hợp `{proxy, timezone, locale}` chưa lưu |
+| `POST` | `/browser/{name}/record/start` · `/record/stop` | Bắt đầu ghi; dừng ghi, lưu thành workflow với `{"save_as": "tên"}` hoặc bỏ đi với `{"discard": true}` |
+| `GET` | `/browser/{name}/record` · `/recordings` | Trạng thái ghi của một profile (`draft` = đã ghi nhưng chưa lưu) / của mọi profile |
+| `GET` / `POST` | `/workflows` | Danh sách / tạo workflow |
+| `GET` / `PUT` / `DELETE` | `/workflows/{name}` | Xem / lưu (bước, delay, tốc độ gõ, kiểm tra, thử lại) / xoá workflow |
+| `POST` | `/workflows/{name}/run` | Chạy lại trên một profile: `{"profile": "tên", "variables": {}}`, tự mở trình duyệt nếu cần (202) |
+| `GET` / `POST` | `/workflow-runs` · `/workflow-runs/{profile}` · `/workflow-runs/{profile}/stop` | Các lần chạy; lần chạy hiện tại hoặc gần nhất của một profile (trạng thái, bước, lần thử, số lần khởi động lại, log); dừng nó |
+| `GET` / `PUT` | `/ai/settings` | Cấu hình AI (key chỉ hiện gợi ý) / lưu cấu hình (bỏ `api_key` thì giữ key cũ, `""` thì xoá) |
+| `POST` | `/ai/test` | Gửi thử một prompt với cấu hình AI đã lưu |
 | `POST` | `/browser/{name}/page/navigate` · `back` | Mở URL trong tab đang chọn, quay lại trang trước |
 | `GET` | `/browser/{name}/page/snapshot` · `text` | Cây accessibility của trang (để chọn selector), chữ trên trang |
 | `POST` | `/browser/{name}/page/click` · `type` · `press` · `wait` | Click, gõ, bấm phím, chờ phần tử (selector Playwright) |
@@ -248,25 +289,53 @@ Tiền tố: `/api/v1`. Xem đầy đủ tại `/docs` khi ứng dụng đang ch
 | `POST` | `/browser/{name}/page/evaluate` | Chạy JavaScript |
 | `GET` / `POST` | `/browser/{name}/page/tabs` | Liệt kê / mở tab mới |
 | `POST` / `DELETE` | `/browser/{name}/page/tabs/{index}/select` · `/page/tabs/{index}` | Chọn / đóng tab |
+| `GET` | `/browser` | Danh sách profile đang chạy |
+| `GET` | `/browser/{name}/status` | Profile có đang chạy không |
+| `POST` | `/browser/{name}/launch` | Mở trình duyệt, chờ đến khi mở xong hoặc lỗi (409 nếu đang chạy hoặc đang bận) |
+| `POST` | `/browser/{name}/stop` | Đóng trình duyệt |
+| `GET` / `POST` | `/profiles` | Liệt kê / tạo profile |
+| `GET` / `PATCH` / `DELETE` | `/profiles/{name}` | Xem / sửa / xóa profile (không đổi được `engine`) |
+| `POST` | `/profiles/{name}/clone` | Nhân bản: `{"name": "tên-mới", "count": 1, "copy": ["cookies", "workflows"]}`; `count` > 1 (tối đa 50) thì tên là `tên-mới-1`, `tên-mới-2`...; `copy` nhận `cookies`, `history`, `site_data`, `passwords`, `tabs` (profile phải tắt) và `workflows`; mỗi bản sao có fingerprint mới |
+| `GET` | `/profiles/{name}/data-dir` | Đường dẫn thư mục dữ liệu của profile |
+| `POST` | `/profiles/{name}/export` | Xuất profile ra ZIP |
+| `POST` | `/profiles/import` | Nhập profile từ ZIP |
+| `GET` | `/profiles/{name}/cookies?format=json\|netscape` | Xuất cookie |
+| `POST` | `/profiles/{name}/cookies` | Nhập cookie (`{"content": "<JSON hoặc cookies.txt>"}`) |
+| `GET` / `DELETE` | `/profiles/{name}/fingerprint` | Xem / tạo fingerprint mới |
+| `GET` | `/profiles/{name}/ip-check` | Kiểm tra IP ra của profile: quốc gia, timezone theo Cloudflare/ipinfo/ip-api, cảnh báo lệch |
+| `POST` | `/proxy/check` | Kiểm tra proxy |
+| `POST` | `/proxy/geo-check` | Như `ip-check` cho tổ hợp `{proxy, timezone, locale}` chưa lưu |
 | `GET` | `/mcp/setup?base_url=...` | Cấu hình MCP cho từng ứng dụng AI (dùng bởi hộp thoại Kết nối AI) |
 
-Khi có `FOXPROFILE_API_TOKEN`, mọi request (trừ `/health` và `/info`) phải gửi header `Authorization: Bearer <token>`.
+Khi có `FOXFLOW_API_TOKEN`, mọi request (trừ `/health` và `/info`) phải gửi header `Authorization: Bearer <token>`.
 
 Ví dụ:
 
 ```bash
-# Tạo profile macOS có proxy. "engine": "chrome" để dùng engine Chrome (mặc định "camoufox").
+# Tạo profile có proxy. "engine": "chrome" để dùng engine Chrome (mặc định "camoufox").
 curl -X POST http://127.0.0.1:8000/api/v1/profiles \
   -H "Content-Type: application/json" \
-  -d '{"name": "tiktok-us-02", "os_type": "macos", "proxy": "socks5://user:pass@203.0.113.10:1080"}'
+  -d '{"name": "work-01", "os_type": "windows", "proxy": "socks5://user:pass@203.0.113.10:1080"}'
 
-# Mở trình duyệt. Trả 200 khi đã mở, 502 kèm lý do nếu lỗi.
-# Thêm ?wait=false để trả về ngay (202).
-curl -X POST http://127.0.0.1:8000/api/v1/browser/tiktok-us-02/launch
+# Chạy lại một workflow đã ghi trên profile đó (tự mở trình duyệt nếu cần)
+curl -X POST http://127.0.0.1:8000/api/v1/workflows/daily-report/run \
+  -H "Content-Type: application/json" \
+  -d '{"profile": "work-01", "variables": {"date": "2026-10-26"}}'
 
-# Xuất cookie dạng cookies.txt
-curl "http://127.0.0.1:8000/api/v1/profiles/tiktok-us-02/cookies?format=netscape" -o cookies.txt
+# Theo dõi lần chạy: trạng thái, bước hiện tại, số lần thử và log
+curl http://127.0.0.1:8000/api/v1/workflow-runs/work-01
 ```
+
+## Chuyển từ FoxProfile sang
+
+FoxFlow đọc nguyên trạng một bản cài FoxProfile: chạy từ cùng thư mục là có đủ profile, cookie, fingerprint và workflow.
+
+- **Dữ liệu giữ nguyên**: `profiles.json`, `camoufox_data/`, `workflows/` và `ai_settings.json` không đổi tên, không đổi định dạng.
+- **Biến môi trường** giờ là `FOXFLOW_*`. `FOXPROFILE_*` trong `.env` cũ vẫn được đọc nên không có gì bị hỏng; đổi tên khi tiện.
+- **Engine Chrome** dùng lại bản trình duyệt FoxProfile đã tải, không tải lại.
+- **MCP**: server giờ tên là `foxflow`, file chạy qua stdio là `foxflow_mcp.py`. Thêm lại vào các ứng dụng AI (hộp thoại Kết nối AI sinh sẵn cấu hình mới).
+- **File đổi tên**: `run_foxflow.bat`, `deploy/foxflow.service`, `deploy/nginx-foxflow.conf`, và log ghi vào `logs/foxflow_YYYYMMDD.log`.
+- **Web panel**: ngôn ngữ và token đã lưu được giữ lại, không phải đăng nhập lại.
 
 ## Phát triển
 
@@ -283,29 +352,31 @@ Cấu trúc thư mục, quy ước code và quy trình gửi PR nằm trong [CON
 
 Mọi đóng góp đều được chào đón: báo lỗi, đề xuất tính năng, sửa tài liệu, dịch thuật hay viết code.
 
-- Báo lỗi hoặc đề xuất: mở [issue](https://github.com/chienbm98/foxprofile/issues/new/choose) theo mẫu.
+- Báo lỗi hoặc đề xuất: mở [issue](https://github.com/vitbau246/foxflow/issues/new/choose) theo mẫu.
 - Gửi code: đọc [CONTRIBUTING.md](CONTRIBUTING.md) trước khi mở Pull Request.
 - Lỗ hổng bảo mật: **không** mở issue công khai, xem [SECURITY.md](SECURITY.md).
 - Mọi người tham gia cần tuân theo [Quy tắc ứng xử](CODE_OF_CONDUCT.md).
 
-Nếu FoxProfile có ích với bạn, hãy cho dự án một ⭐ trên GitHub.
-
-## Ủng hộ
-
-FoxProfile miễn phí, mã nguồn mở, được làm vào thời gian rảnh và sẽ luôn như vậy. Nếu nó tiết kiệm cho bạn thời gian hay chi phí, bạn có thể mời mình một ly cà phê; cà phê sẽ thành bug fix, cập nhật theo bản mới của Camoufox và Chrome, và trả lời issue nhanh hơn.
-
-<a href="https://buymeacoffee.com/chienbm98"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy me a coffee" /></a>
+Thay đổi liên quan tới phần code gốc của FoxProfile cũng nên gửi ngược về [chienbm98/foxprofile](https://github.com/chienbm98/foxprofile).
 
 ## Lưu ý sử dụng
 
-Antidetect browser là công cụ hợp pháp, thường dùng để bảo vệ quyền riêng tư, kiểm thử web, hoặc để agency quản lý tài khoản của nhiều khách hàng. Tuy vậy, dùng nhiều tài khoản trên cùng một nền tảng có thể vi phạm điều khoản của Facebook, TikTok, Google, Shopee... Bạn tự chịu trách nhiệm về cách mình sử dụng.
+Chỉ tự động hoá những gì bạn được phép. Nhiều trang web cấm bot, cào dữ liệu hoặc dùng nhiều tài khoản trong điều khoản sử dụng, và dùng nhiều tài khoản trên cùng một nền tảng có thể vi phạm điều khoản của Facebook, TikTok, Google, Shopee... Hãy tôn trọng giới hạn tần suất và dữ liệu của người khác. Bạn tự chịu trách nhiệm về cách mình sử dụng phần mềm này.
+
+## Dựa trên FoxProfile
+
+FoxFlow là bản fork của **[FoxProfile](https://github.com/chienbm98/foxprofile)**, do **[chienbm98](https://github.com/chienbm98)** tạo ra và phát hành theo giấy phép MIT. FoxProfile xây nền móng mà FoxFlow đứng trên đó: profile trình duyệt với fingerprint cố định, hai engine Camoufox và Chrome, proxy và Kiểm tra IP, công cụ cookie, REST API, MCP server, chế độ server kèm web panel, app desktop và hệ thống thiết kế của nó.
+
+FoxFlow đổi tên dự án, chuyển trọng tâm sang tự động hoá web (ghi và chạy lại workflow, biến, bước sinh chữ bằng AI) và tiếp tục phát triển. Các phiên bản tới 2.3.1 trong [lịch sử thay đổi](CHANGELOG.md) là bản phát hành của FoxProfile. Nếu FoxProfile có ích với bạn, hãy tặng [repo gốc](https://github.com/chienbm98/foxprofile) một ⭐ hoặc [mời tác giả một ly cà phê](https://buymeacoffee.com/chienbm98).
 
 ## Giấy phép
 
-Phát hành theo [giấy phép MIT](LICENSE). Copyright (c) 2026 chienbm98.
+Phát hành theo [giấy phép MIT](LICENSE). Copyright (c) 2026 chienbm98 (FoxProfile) và 2026 vitbau246 (FoxFlow).
 
 ## Ghi công
 
+- [FoxProfile](https://github.com/chienbm98/foxprofile) của chienbm98, dự án gốc của FoxFlow.
 - Trình duyệt [Camoufox](https://github.com/daijro/camoufox) của daijro.
 - [fingerprint-chromium](https://github.com/adryfish/fingerprint-chromium) của adryfish cho engine Chrome (BSD-3).
+- [Playwright](https://github.com/microsoft/playwright-python), điều khiển trình duyệt khi chạy lại workflow.
 - Font [Be Vietnam Pro](https://github.com/bettergui/BeVietnamPro) và [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono), giấy phép SIL Open Font License (`src/assets/fonts/`).

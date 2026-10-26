@@ -1,6 +1,6 @@
 """Bearer-token authentication for the REST API.
 
-When FOXPROFILE_API_TOKEN is set every /api/v1 route except /health requires
+When FOXFLOW_API_TOKEN is set every /api/v1 route except /health requires
 `Authorization: Bearer <token>` (or `X-API-Key: <token>`). Without a token the
 API only accepts connections from the local machine; see `check_bind_safety`.
 """
@@ -52,9 +52,9 @@ def check_bind_safety(host: str, token: str = API_TOKEN) -> None:
     """Refuse to expose the API beyond this machine without a token."""
     if not is_loopback(host) and not token:
         raise SystemExit(
-            f"Refusing to listen on {host} without FOXPROFILE_API_TOKEN: anyone who can "
+            f"Refusing to listen on {host} without FOXFLOW_API_TOKEN: anyone who can "
             "reach this port could control every profile and read every cookie. "
-            "Set FOXPROFILE_API_TOKEN (at least 24 random characters) or use 127.0.0.1.",
+            "Set FOXFLOW_API_TOKEN (at least 24 random characters) or use 127.0.0.1.",
         )
     if token and len(token) < 24:
-        raise SystemExit("FOXPROFILE_API_TOKEN must be at least 24 characters long.")
+        raise SystemExit("FOXFLOW_API_TOKEN must be at least 24 characters long.")

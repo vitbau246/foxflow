@@ -10,10 +10,10 @@ def setup_logging(
 ) -> logging.Logger:
     pathlib.Path(log_dir).mkdir(exist_ok=True, parents=True)
 
-    log_filename = datetime.now().strftime("foxprofile_%Y%m%d.log")
+    log_filename = datetime.now().strftime("foxflow_%Y%m%d.log")
     log_path = os.path.join(log_dir, log_filename)
 
-    logger = logging.getLogger("foxprofile")
+    logger = logging.getLogger("foxflow")
     logger.setLevel(log_level)
 
     if logger.handlers:
@@ -40,5 +40,5 @@ def setup_logging(
 
 def get_logger(name: str | None = None) -> logging.Logger:
     if name:
-        return logging.getLogger(f"foxprofile.{name}")
-    return logging.getLogger("foxprofile")
+        return logging.getLogger(f"foxflow.{name}")
+    return logging.getLogger("foxflow")

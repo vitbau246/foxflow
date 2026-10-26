@@ -13,8 +13,8 @@ def pytest_configure(config):
 
 @pytest.fixture(scope="session")
 def chrome_exe() -> Path:
-    """The installed browser, or skip. FOXPROFILE_CHROME_EXECUTABLE overrides it."""
-    override = os.getenv("FOXPROFILE_CHROME_EXECUTABLE")
+    """The installed browser, or skip. FOXFLOW_CHROME_EXECUTABLE overrides it."""
+    override = os.getenv("FOXFLOW_CHROME_EXECUTABLE")
     if override:
         return Path(override)
     from chrome_engine.fetch import installed_executable

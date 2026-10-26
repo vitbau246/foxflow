@@ -1,4 +1,4 @@
-"""FoxProfile runner for the Chrome engine.
+"""FoxFlow runner for the Chrome engine.
 
 Same command line and stdout protocol as src/services/browser/runner.py, so
 BrowserLauncher can start a Chrome profile exactly like a Camoufox one:
@@ -7,7 +7,7 @@ BrowserLauncher can start a Chrome profile exactly like a Camoufox one:
 
 prints CONTROL:<port>:<token>, then BROWSER_STARTED, and BROWSER_CLOSED when
 the last tab closes (or LAUNCH_FAILED: ...). The page-control server, tab
-restore and tab snapshots are FoxProfile's own, shared with Camoufox.
+restore and tab snapshots are FoxFlow's own, shared with Camoufox.
 """
 
 from __future__ import annotations
@@ -125,7 +125,7 @@ async def run_browser(
         context.on("page", watch)
         context.on("close", lambda _: close_event.set())
 
-        control_runner, port, token = await control.serve(context)
+        control_runner, port, token = await control.serve(context, profile_dir)
         # CONTROL must precede BROWSER_STARTED (see the Camoufox runner).
         _say(f"CONTROL:{port}:{token}")
         _say("BROWSER_STARTED")

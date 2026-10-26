@@ -10,6 +10,7 @@ from ..core.logging import get_logger
 from ..core.strings import current_language, get_string, set_language
 from ..interfaces.protocols import IBrowserLauncher, IProfileManager, IProxyService
 from ..services.browser import fingerprint
+from ..services.workflow import recording
 from .components import (
     build_content_area,
     build_empty_state,
@@ -21,6 +22,7 @@ from .components import (
 from .components.profile_card import build_header_row
 from .components.sidebar import build_filter_buttons
 from .dialogs.mcp_guide import open_mcp_guide
+from .dialogs.workflows import WorkflowServices
 from .handlers import AppHandlers
 from .refs import UIRefs
 from .state import ITEMS_PER_PAGE, AppState
@@ -45,6 +47,9 @@ class App:
         self._live_since: dict[str, str] = {}
         self._filter_column = ft.Column(spacing=2)
         self._header_slot = ft.Container()
+        self.runner = c.workflow_runner
+        # Profiles recording or holding an unsaved recording, read off the UI thread.
+        self._recordings: dict[str, dict] = {}
         c.event_bus.subscribe(self.state.schedule_refresh)
         self.h = AppHandlers(
             pm=self.pm,
@@ -56,6 +61,9 @@ class App:
             log_fn=self._log,
             refresh_fn=self._refresh_profiles,
             get_page_profiles=self._get_page_profiles,
+            workflows=WorkflowServices(
+                self.bl, c.workflow_store, self.runner, self._log, ai=c.ai_settings
+            ),
         )
 
     def run(self) -> None:
@@ -74,6 +82,7 @@ class App:
         if not self._reconcile_started:
             self._reconcile_started = True
             page.run_task(self._ui_reconcile_loop)
+            page.run_task(self._watch_recordings)
 
     def _build_ui(self) -> None:
         """(Re)build every control; strings are read at build time."""
@@ -220,6 +229,7 @@ class App:
             else None
         )
 
+        runs = {run["profile"]: run for run in self.runner.list()}
         r.profile_list_area.controls = (
             [
                 build_profile_card(
@@ -235,6 +245,9 @@ class App:
                     device=self._device_label(p.name),
                     since=self._live_since.get(p.name, ""),
                     failed=p.name in self.state.failed,
+                    on_workflows=self.h.on_workflows,
+                    on_clone=self.h.on_clone,
+                    activity=self._activity(p.name, runs),
                 )
                 for p in page_profiles
             ]
@@ -263,6 +276,33 @@ class App:
         r.prev_btn.disabled = self.state.current_page <= 1
         r.next_btn.disabled = self.state.current_page >= total_pages
         self._safe_update()
+
+    def _activity(self, name: str, runs: dict[str, dict]) -> str:
+        rec = self._recordings.get(name)
+        if rec and rec.get("recording"):
+            return "● " + get_string("wf_recording", count=rec.get("step_count", 0))
+        run = runs.get(name)
+        if run and run["active"]:
+            return get_string(
+                "wf_row_running",
+                workflow=run["workflow"],
+                step=run["step"],
+                total=run["step_total"],
+            )
+        return ""
+
+    async def _watch_recordings(self) -> None:
+        """Follow recordings started anywhere (this app, the web panel, the API)."""
+        while self.page:
+            try:
+                found = await asyncio.to_thread(recording.overview, self.bl, list(self.pm.profiles))
+                current = {r["profile"]: r for r in found if r.get("recording")}
+                if current != self._recordings:
+                    self._recordings = current
+                    self.state.schedule_refresh()
+            except Exception as e:
+                logger.debug("Recording status unavailable: %s", e)
+            await asyncio.sleep(2)
 
     @staticmethod
     def _device_label(name: str) -> str:

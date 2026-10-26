@@ -4,7 +4,7 @@ import pathlib
 import sys
 import time
 
-os.environ["FOXPROFILE_HEADLESS"] = "true"
+os.environ["FOXFLOW_HEADLESS"] = "true"
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 os.chdir(ROOT)

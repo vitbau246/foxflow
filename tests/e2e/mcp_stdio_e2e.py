@@ -1,4 +1,4 @@
-"""End-to-end: HTTP auth checks, then drive FoxProfile through a real MCP stdio client."""
+"""End-to-end: HTTP auth checks, then drive FoxFlow through a real MCP stdio client."""
 
 import asyncio
 import base64
@@ -12,8 +12,8 @@ import urllib.request
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-BASE = os.getenv("FOXPROFILE_URL", "http://127.0.0.1:8000").rstrip("/")
-TOKEN = os.environ.get("FOXPROFILE_API_TOKEN", "")
+BASE = os.getenv("FOXFLOW_URL", "http://127.0.0.1:8000").rstrip("/")
+TOKEN = os.environ.get("FOXFLOW_API_TOKEN", "")
 ROOT = str(pathlib.Path(__file__).resolve().parents[2])
 results = []
 
@@ -48,7 +48,7 @@ check(
     b,
 )
 check("health is public", http("/api/v1/health")[0] == 200)
-check("panel served at /", http("/")[0] == 200 and b"FoxProfile" in http("/")[1])
+check("panel served at /", http("/")[0] == 200 and b"FoxFlow" in http("/")[1])
 check("profiles without token -> 401", http("/api/v1/profiles")[0] == 401)
 check("profiles with wrong token -> 401", http("/api/v1/profiles", "x" * 30)[0] == 401)
 check("profiles with token -> 200", http("/api/v1/profiles", TOKEN)[0] == 200)
@@ -64,11 +64,11 @@ async def main():
         command=os.path.join(ROOT, ".venv", "Scripts", "python.exe"),
         args=["-m", "src.mcp_server"],
         cwd=ROOT,
-        env={**os.environ, "FOXPROFILE_URL": BASE, "FOXPROFILE_API_TOKEN": TOKEN},
+        env={**os.environ, "FOXFLOW_URL": BASE, "FOXFLOW_API_TOKEN": TOKEN},
     )
     async with stdio_client(params) as (read, write), ClientSession(read, write) as session:
         init = await session.initialize()
-        check("MCP initialize", init.serverInfo.name == "foxprofile", init.serverInfo)
+        check("MCP initialize", init.serverInfo.name == "foxflow", init.serverInfo)
         tools = (await session.list_tools()).tools
         check("MCP lists 27 tools", len(tools) == 27, len(tools))
 

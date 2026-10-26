@@ -2,17 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-FoxProfile is a Python 3.10+ manager for [Camoufox](https://github.com/daijro/camoufox) anti-detect browser profiles: a Flet desktop UI, a FastAPI REST API + single-file web panel, and an MCP server for AI agents.
+FoxFlow is a Python 3.10+ web automation tool: record-and-replay workflows run in isolated browser profiles ([Camoufox](https://github.com/daijro/camoufox) or Chrome), with a Flet desktop UI, a FastAPI REST API + single-file web panel, and an MCP server for AI agents. It is a fork of [FoxProfile](https://github.com/chienbm98/foxprofile) by chienbm98.
 
 ## Open source first
 
-This is a public MIT-licensed repository (`github.com/chienbm98/foxprofile`). Everything committed, including commit messages, PR descriptions, test fixtures and docs, is published and stays in git history.
+This is a public MIT-licensed repository (`github.com/vitbau246/foxflow`). Everything committed, including commit messages, PR descriptions, test fixtures and docs, is published and stays in git history.
 
 - No secrets or personal data in tracked files or history: real proxies and their credentials, cookies, API tokens, server/VPS IPs and hostnames, provider names, personal or work emails, local paths such as `/Users/<name>/`, investigation logs. Commit with the repo's GitHub noreply identity.
 - Examples, tests and screenshots use fake data: IPs from the documentation ranges `192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`, placeholder credentials (`user:pass`), made-up profile names.
 - Bundled third-party code and assets must have a compatible license, kept next to them (fonts: `src/assets/fonts/OFL-*.txt`; fingerprint-chromium is BSD-3 and downloaded at run time, pinned by SHA-256). Do not add paid, proprietary or unlicensed assets.
 - Anything that leaves the user's machine must be opt-in and documented: no telemetry, no hidden network calls; downloads (Camoufox, GeoIP, the Chrome engine) are pinned or come from the upstream project.
 - Write for outside contributors: user-facing docs are bilingual (README.md English, README.vi.md Vietnamese, kept in sync), community files live at the root (`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`) and in `.github/` (issue and PR templates), and user-visible changes go into `CHANGELOG.md` under `[Unreleased]`.
+- Credit the origin: keep chienbm98's copyright line in `LICENSE` and the "Based on FoxProfile" sections in both READMEs. Older `CHANGELOG.md` entries (2.3.1 and before) are FoxProfile releases and keep their links to the original repo.
 - Keep the responsible-use framing: the README states that multi-accounting can violate platform terms; do not add features or copy aimed at evading bans for abuse.
 
 ## Commands
@@ -23,7 +24,7 @@ python -m camoufox fetch                # download the browser; needed only to a
 
 python -m src.main                      # desktop app + API on 127.0.0.1:8000
 python -m src.server [--port N] [--headed]   # API + web panel at /, no desktop window, browsers hidden
-python foxprofile_mcp.py                # MCP over stdio (client of a running API; FOXPROFILE_URL / FOXPROFILE_API_TOKEN)
+python foxflow_mcp.py                # MCP over stdio (client of a running API; FOXFLOW_URL / FOXFLOW_API_TOKEN)
 
 ruff check src tests chrome_engine
 ruff format --check src tests chrome_engine
@@ -31,7 +32,7 @@ pytest                                  # tests + chrome_engine/tests; real-brow
 pytest tests/test_validation.py::test_parse_proxy_with_auth   # single test
 ```
 
-CI (`.github/workflows/ci.yml`) runs lint plus pytest on Windows/macOS/Linux × Python 3.10/3.12. `tests/e2e/*.py` are manual scripts against a real FoxProfile (browser + network) and are not part of pytest; see `tests/e2e/README.md`, and point them at a scratch `FOXPROFILE_DATA_DIR` / `FOXPROFILE_PROFILES_FILE`.
+CI (`.github/workflows/ci.yml`) runs lint plus pytest on Windows/macOS/Linux × Python 3.10/3.12. `tests/e2e/*.py` are manual scripts against a real FoxFlow (browser + network) and are not part of pytest; see `tests/e2e/README.md`, and point them at a scratch `FOXFLOW_DATA_DIR` / `FOXFLOW_PROFILES_FILE`.
 
 Run everything from the repo root: `profiles.json`, `camoufox_data/`, `logs/` and `.env` are resolved relative to the working directory.
 
@@ -47,11 +48,13 @@ Run everything from the repo root: `profiles.json`, `camoufox_data/`, `logs/` an
 
 **Fingerprints** are generated once and persisted as `camoufox_data/<profile>/fingerprint.json` (`services/browser/fingerprint.py`); runner and cookie_tool both load it so a profile always presents the same device. Timezone/locale follow the proxy's exit IP via Camoufox geoip unless pinned per profile (`runner.geo_overrides`); `services/proxy/geo_check.py` implements "Check IP". Open tabs are snapshotted every 2 s to `camoufox_data/<profile>/tabs.json` (`services/browser/session.py`) and reopened by the runner on launch; the snapshot loop must not save an empty list, because the last tab closing is how a user ends the session.
 
+**Workflows** (`services/workflow/`) record and replay what a user does in a profile's browser. Recording runs in the runner process: `browser/recorder.py` injects `recorder.js` (trusted events only, several selectors per element) through a Playwright binding and keeps a draft in `camoufox_data/<profile>/recording.json`. Replay runs in the FoxFlow process: `WorkflowRunner` (one thread per profile) applies delays and speed, sends each step to the control server's `run_step` (`workflow/steps.py` does the action and its check), retries a failed step, then stops the browser and starts over from step 1 up to `max_restarts`. Workflows are JSON files in `WORKFLOWS_DIR`; `workflow/recording.py` is the start/status/stop logic shared by the API and the desktop app. Stopping a profile must stop its run first, or the runner restarts the browser.
+
 **MCP is a REST client.** `src/mcp_server/server.py` defines the tools with FastMCP and calls the REST API over HTTP. The same tools are also served over Streamable HTTP at `/mcp` (`api/mcp_http.py`), calling back into the API through `self_url` on loopback. A new capability therefore usually needs a REST route first, then an MCP tool. MCP deliberately has no delete tool.
 
-**Auth.** `FOXPROFILE_API_TOKEN` protects the REST routers, the web panel and `/mcp` (`/health` and `/info` stay public). `check_bind_safety` refuses to start on a non-loopback host without a 24+ character token. Without a token, `LocalOnlyGuard` blocks CSRF/DNS-rebinding requests from websites.
+**Auth.** `FOXFLOW_API_TOKEN` protects the REST routers, the web panel and `/mcp` (`/health` and `/info` stay public). `check_bind_safety` refuses to start on a non-loopback host without a 24+ character token. Without a token, `LocalOnlyGuard` blocks CSRF/DNS-rebinding requests from websites.
 
-**Config** is read from `FOXPROFILE_*` env vars (and `.env`) at import time in `src/core/config.py`. Anything that must change it, like server mode defaulting `FOXPROFILE_HEADLESS=true`, has to set the env var before `src.core.config` is imported; runner subprocesses inherit it through the environment.
+**Config** is read from `FOXFLOW_*` env vars (and `.env`) at import time in `src/core/config.py`. Read env vars through `src/core/env.getenv`, which falls back to FoxProfile's `FOXPROFILE_*` names so old `.env` files keep working. Anything that must change it, like server mode defaulting `FOXFLOW_HEADLESS=true`, has to set the env var before `src.core.config` is imported; runner subprocesses inherit it through the environment.
 
 **UI.** The web panel is one static file, `src/web/index.html` (no build step, no external requests), served at `/`; its design tokens are the CSS custom properties in `:root` and its strings live in its own `I18N` object (vi + en), not in `strings.py`. Fonts (Be Vietnam Pro, JetBrains Mono, OFL) ship in `src/assets/fonts/` and are served publicly at `/assets/fonts/{name}` for the panel and registered by `theme/page.py` for Flet (one family per weight, since Flet maps one file per family). The Flet app is `src/ui/`: `theme/colors.py` (`COLORS` + font family constants) and `theme/styles.py` hold the tokens; `App._build_ui()` builds every control and is called again by `_set_language()`, because `strings.set_language()` only changes what `get_string` returns for controls built afterwards. Profile rows share one column grid (`profile_card.COLUMNS`) with the header row.
 

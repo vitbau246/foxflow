@@ -81,8 +81,8 @@ async () => {
   const ctx = canvas.getContext('2d');
   ctx.textBaseline = 'top'; ctx.font = '16px Arial';
   ctx.fillStyle = '#f60'; ctx.fillRect(100, 1, 62, 20);
-  ctx.fillStyle = '#069'; ctx.fillText('FoxProfile, probe <canvas> 1.0', 2, 15);
-  ctx.fillStyle = 'rgba(102, 204, 0, 0.7)'; ctx.fillText('FoxProfile, probe <canvas> 1.0', 4, 17);
+  ctx.fillStyle = '#069'; ctx.fillText('FoxFlow, probe <canvas> 1.0', 2, 15);
+  ctx.fillStyle = 'rgba(102, 204, 0, 0.7)'; ctx.fillText('FoxFlow, probe <canvas> 1.0', 4, 17);
   const canvasHash = await hash(canvas.toDataURL());
 
   let webgl = null;

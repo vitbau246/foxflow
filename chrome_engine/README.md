@@ -1,8 +1,8 @@
 # Chrome engine (thử nghiệm)
 
-Engine trình duyệt thứ hai cho FoxProfile, chạy song song với Camoufox: một bản Chromium đã vá sẵn để giả fingerprint ngay trong C++ ([fingerprint-chromium](https://github.com/adryfish/fingerprint-chromium), BSD-3, dựa trên ungoogled-chromium). Engine không tự build Chromium. Nó tải một bản build đã ghim checksum rồi thêm những phần mà fork chưa có.
+Engine trình duyệt thứ hai cho FoxFlow, chạy song song với Camoufox: một bản Chromium đã vá sẵn để giả fingerprint ngay trong C++ ([fingerprint-chromium](https://github.com/adryfish/fingerprint-chromium), BSD-3, dựa trên ungoogled-chromium). Engine không tự build Chromium. Nó tải một bản build đã ghim checksum rồi thêm những phần mà fork chưa có.
 
-Engine đã được nối vào FoxProfile: profile có trường `engine` (`camoufox` hoặc `chrome`, cố định sau khi tạo). `BrowserLauncher` chạy `python -m chrome_engine.runner` cho profile Chrome (cùng protocol với runner Camoufox), cookie đi qua `cookie_tool.py` với engine `chrome`, và vân tay của profile Chrome là `chrome_persona.json`.
+Engine đã được nối vào FoxFlow: profile có trường `engine` (`camoufox` hoặc `chrome`, cố định sau khi tạo). `BrowserLauncher` chạy `python -m chrome_engine.runner` cho profile Chrome (cùng protocol với runner Camoufox), cookie đi qua `cookie_tool.py` với engine `chrome`, và vân tay của profile Chrome là `chrome_persona.json`.
 
 ## Cài và dùng
 
@@ -13,7 +13,7 @@ python -m chrome_engine probe data/alice --timezone Asia/Ho_Chi_Minh --locale vi
 python -m chrome_engine open  data/alice --proxy "socks5://user:pass@host:1080" --url https://example.com
 ```
 
-Thư mục cache mặc định là `%LOCALAPPDATA%\foxprofile\chrome`, `~/Library/Caches/foxprofile/chrome` hoặc `~/.cache/foxprofile/chrome`. Đặt `FOXPROFILE_CHROME_HOME` để đổi.
+Thư mục cache mặc định là `%LOCALAPPDATA%\foxflow\chrome`, `~/Library/Caches/foxflow/chrome` hoặc `~/.cache/foxflow/chrome`. Đặt `FOXFLOW_CHROME_HOME` để đổi.
 
 ```python
 from chrome_engine import ChromeEngine
@@ -23,7 +23,7 @@ async with ChromeEngine("data/alice", proxy="http://u:p@1.2.3.4:8080") as contex
     await page.goto("https://example.com")
 ```
 
-`context` là một `BrowserContext` Playwright bình thường. Runner cho FoxProfile:
+`context` là một `BrowserContext` Playwright bình thường. Runner cho FoxFlow:
 
 ```bash
 python -m chrome_engine.runner <tên> <proxy|None> <windows|macos|linux> [timezone] [locale]

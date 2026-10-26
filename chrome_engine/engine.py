@@ -112,7 +112,7 @@ def set_webrtc_policy(profile_dir: Path, policy: str) -> None:
         return
     webrtc["ip_handling_policy"] = policy
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name("Preferences.foxprofile-tmp")
+    tmp = path.with_name("Preferences.foxflow-tmp")
     tmp.write_text(json.dumps(prefs), encoding="utf-8")
     tmp.replace(path)
 

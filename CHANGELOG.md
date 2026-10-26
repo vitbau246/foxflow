@@ -2,7 +2,18 @@
 
 Định dạng theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/); phiên bản theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+FoxFlow là bản fork của [FoxProfile](https://github.com/chienbm98/foxprofile) (chienbm98). Các phiên bản từ 2.3.1 trở về trước là bản phát hành của FoxProfile.
+
 ## [Unreleased]
+
+### Thêm
+- **Workflow: ghi lại và chạy lại thao tác.** Nút **Workflow** trên mỗi dòng profile (app desktop và web panel) ghi mọi click, gõ phím, chọn, bấm phím, cuộn và mở trang trong trình duyệt của profile thành các bước, mỗi phần tử kèm nhiều selector dự phòng. Mỗi bước có delay riêng (lấy từ nhịp thật lúc ghi) và tốc độ gõ (ms/ký tự); workflow có tốc độ chung (x0.25–x5). Khi chạy, mọi bước được kiểm tra kết quả (ô đã gõ đúng chữ, ô tích đã tích, click tới đúng trang như lúc ghi, hoặc chờ URL/tiêu đề/phần tử/chữ tuỳ chọn); bước lỗi được thử lại 2 lần, vẫn lỗi thì tắt trình duyệt và chạy lại từ bước 1, tối đa 3 lần (đều chỉnh được). Bản ghi chưa lưu được giữ lại kể cả khi trình duyệt đóng. Dùng được với cả engine Camoufox và Chrome.
+- **Nhân bản profile**: nút sao chép trên mỗi dòng profile (app desktop và web panel), `POST /profiles/{name}/clone` và MCP `clone_profile`, một bản hoặc tối đa 50 bản một lần (tên gốc thêm -1, -2...). Bản sao giữ proxy, hệ điều hành, engine, timezone, locale và luôn có fingerprint mới; tick để chép thêm từng phần: cookie, lịch sử và bookmark, dữ liệu trang web, mật khẩu đã lưu, các tab đang mở (profile phải đang tắt) và workflow của profile (mỗi bản sao có workflow riêng).
+- Hộp thoại Workflow của một profile chỉ hiện workflow của profile đó, kèm nút hiện cả workflow của profile khác. Đổi tên profile thì workflow của nó đi theo tên mới.
+- Workflow: **rê chuột rồi mới click** cho menu và thanh cảm xúc chỉ hiện khi rê chuột (ví dụ "Yêu thích" trên Facebook); bản ghi tự nhận ra trường hợp này, sửa tay được ở Chi tiết của bước.
+- Workflow: **biến** `{{tên}}` trong giá trị, URL và selector của bước (giá trị ban đầu trong trình sửa hoặc theo từng lần chạy, có sẵn `{{profile}}`); bước **Lấy chữ** (lọc được bằng regex) và bước **Sinh bằng AI** lưu kết quả vào biến.
+- **Cấu hình AI** (tuỳ chọn, tắt cho tới khi có API key): OpenAI hoặc API tương thích (Azure OpenAI, OpenRouter, LLM chạy trên máy), có nút Thử; REST `/ai/settings`, `/ai/test`; biến môi trường `FOXPROFILE_OPENAI_*`. Prompt và chữ lấy từ trang mà prompt dùng được gửi tới dịch vụ AI đã chọn.
+- REST API cho workflow: `/browser/{name}/record/*`, `/recordings`, `/workflows`, `/workflows/{name}/run`, `/workflow-runs`; MCP thêm `list_workflows`, `get_workflow`, `run_workflow`, `workflow_run_status`, `stop_workflow_run`. Workflow lưu ở `workflows/` (`FOXPROFILE_WORKFLOWS_DIR`).
 
 ### Sửa
 - App desktop: nút "Launch" không còn bị gãy chữ thành hai dòng khi dùng giao diện English.
@@ -16,6 +27,7 @@
 - App desktop: hỏi xác nhận trước khi tạo fingerprint mới; ô chọn ở tiêu đề bảng không còn bỏ chọn các profile ở trang khác; rail hiện số profile và số trình duyệt đang chạy; hộp thoại xoá nói rõ cookie và dữ liệu sẽ mất vĩnh viễn.
 
 ### Thay đổi
+- **Đổi tên thành FoxFlow** và chuyển trọng tâm sang tự động hoá web; ghi nguồn FoxProfile trong README, LICENSE và `pyproject.toml`. Biến môi trường đổi sang `FOXFLOW_*`, tên cũ `FOXPROFILE_*` vẫn được đọc. MCP server đổi tên thành `foxflow` (cần thêm lại vào ứng dụng AI), `foxprofile_mcp.py` thành `foxflow_mcp.py`, `run_foxprofile.bat` thành `run_foxflow.bat`, file trong `deploy/` và log `logs/foxflow_YYYYMMDD.log` cũng đổi tên. Dữ liệu (`profiles.json`, `camoufox_data/`, `workflows/`) giữ nguyên; engine Chrome dùng lại bản đã tải của FoxProfile; web panel giữ ngôn ngữ và token đã lưu.
 - Ngôn ngữ giao diện mặc định của app desktop và web panel là English; đặt `FOXPROFILE_LANG=vi` (hoặc bấm "Tiếng Việt" trong app) để dùng tiếng Việt.
 
 ## [2.3.1] - 2026-10-09
@@ -62,7 +74,7 @@
 
 Phát hành đầu tiên của FoxProfile: vân tay cố định theo profile, proxy riêng, xuất/nhập cookie (JSON và Netscape), REST API, giao diện tiếng Việt/tiếng Anh.
 
-[Unreleased]: https://github.com/chienbm98/foxprofile/compare/v2.3.1...HEAD
+[Unreleased]: https://github.com/vitbau246/foxflow/compare/v2.3.1...HEAD
 [2.3.1]: https://github.com/chienbm98/foxprofile/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/chienbm98/foxprofile/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/chienbm98/foxprofile/compare/v2.1.0...v2.2.0

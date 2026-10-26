@@ -1,6 +1,6 @@
 """Open tabs that survive a profile restart.
 
-Camoufox disables Firefox's own session restore, and FoxProfile stops a
+Camoufox disables Firefox's own session restore, and FoxFlow stops a
 browser by terminating its process, so Firefox never gets to save its session
 anyway. The runner instead snapshots the open tabs' URLs to tabs.json in the
 profile directory whenever they change, and reopens them on the next launch.

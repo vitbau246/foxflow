@@ -40,8 +40,8 @@ class FetchError(RuntimeError):
 
 
 def engine_home() -> Path:
-    """Where browser builds are kept. FOXPROFILE_CHROME_HOME overrides it."""
-    override = os.getenv("FOXPROFILE_CHROME_HOME")
+    """Where browser builds are kept. FOXFLOW_CHROME_HOME overrides it."""
+    override = os.getenv("FOXFLOW_CHROME_HOME") or os.getenv("FOXPROFILE_CHROME_HOME")
     if override:
         return Path(override)
     if sys.platform.startswith("win"):
@@ -50,7 +50,9 @@ def engine_home() -> Path:
         base = Path.home() / "Library" / "Caches"
     else:
         base = Path(os.getenv("XDG_CACHE_HOME") or Path.home() / ".cache")
-    return base / "foxprofile" / "chrome"
+    home, legacy = base / "foxflow" / "chrome", base / "foxprofile" / "chrome"
+    # FoxProfile kept its builds under "foxprofile": reuse them rather than download again.
+    return legacy if legacy.is_dir() and not home.exists() else home
 
 
 def installed_executable(version: str | None = None, home: Path | None = None) -> Path | None:
@@ -73,7 +75,7 @@ def install(
 ) -> Path:
     """Install a pinned build if needed and return its executable.
 
-    Safe across processes (FoxProfile prefetches while runners may launch): one
+    Safe across processes (FoxFlow prefetches while runners may launch): one
     process holds `<version>.lock` and installs; the others wait for it, then
     use its install instead of downloading the build again.
     """
@@ -194,7 +196,7 @@ def download(asset: Asset, dest: Path, progress: Progress | None = None) -> None
     """Stream `asset` to `dest`, failing unless its SHA-256 matches the pin."""
     digest = hashlib.sha256()
     done = 0
-    request = urllib.request.Request(asset.url, headers={"User-Agent": "foxprofile-chrome-engine"})
+    request = urllib.request.Request(asset.url, headers={"User-Agent": "foxflow-chrome-engine"})
     try:
         with urllib.request.urlopen(request, timeout=60) as resp, open(dest, "wb") as out:
             total = int(resp.headers.get("Content-Length") or asset.size)

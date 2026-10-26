@@ -21,8 +21,8 @@ COLUMNS = {
     "proxy": (9, None),
     "geo": (9, None),
     "status": (None, 100),
-    # Launch button (112, wide enough for "Launch") + gap (8) + three 40px icon buttons.
-    "actions": (None, 244),
+    # Launch button (112, wide enough for "Launch") + gap (8) + five 40px icon buttons.
+    "actions": (None, 324),
 }
 ROW_HEIGHT = 58
 
@@ -79,8 +79,15 @@ def build_profile_card(
     device: str = "",
     since: str = "",
     failed: bool = False,
+    on_workflows: Callable[[str], None] | None = None,
+    activity: str = "",
+    on_clone: Callable[[str], None] | None = None,
 ) -> ft.Container:
-    """One profile as a table row: identity, device, proxy, geo, stamp, actions."""
+    """One profile as a table row: identity, device, proxy, geo, stamp, actions.
+
+    `activity` replaces the engine under the name while the profile records or
+    runs a workflow.
+    """
     if is_running:
         bg = COLORS["card_hover"]
     elif is_selected:
@@ -105,18 +112,7 @@ def build_profile_card(
                         on_change=lambda _, n=profile.name: on_select(n) if on_select else None,
                     ),
                 ),
-                _cell(
-                    "name",
-                    ft.Text(
-                        profile.name,
-                        size=14,
-                        font_family=FONT_SEMIBOLD,
-                        color=COLORS["text_main"],
-                        no_wrap=True,
-                        overflow=ft.TextOverflow.ELLIPSIS,
-                        tooltip=profile.name,
-                    ),
-                ),
+                _cell("name", _name(profile, activity)),
                 _cell("device", _device(profile, device)),
                 _cell("proxy", _proxy(profile)),
                 _cell("geo", _geo(profile)),
@@ -131,6 +127,8 @@ def build_profile_card(
                         controls=[
                             build_launch_button(profile.name, is_loading, is_running, on_launch),
                             ft.Container(width=8),
+                            *_workflow_button(profile.name, on_workflows),
+                            *_clone_button(profile.name, on_clone),
                             *_action_buttons(
                                 profile.name, is_running, on_edit, on_delete, on_cookies
                             ),
@@ -166,6 +164,65 @@ def _minor(text: str, data: bool = False) -> ft.Text:
 
 def _stack(*lines: ft.Control) -> ft.Column:
     return ft.Column(spacing=1, alignment=ft.MainAxisAlignment.CENTER, controls=list(lines))
+
+
+def _name(profile: Profile, activity: str) -> ft.Column:
+    """The name over the engine, as in the web panel; violet while recording or running."""
+    second = (
+        ft.Text(
+            activity,
+            size=11.5,
+            font_family=FONT_SEMIBOLD,
+            color=COLORS["live"],
+            no_wrap=True,
+            overflow=ft.TextOverflow.ELLIPSIS,
+            tooltip=activity,
+        )
+        if activity
+        else _minor("Chrome" if profile.engine == "chrome" else "Camoufox")
+    )
+    return _stack(
+        ft.Text(
+            profile.name,
+            size=14,
+            font_family=FONT_SEMIBOLD,
+            color=COLORS["text_main"],
+            no_wrap=True,
+            overflow=ft.TextOverflow.ELLIPSIS,
+            tooltip=profile.name,
+        ),
+        second,
+    )
+
+
+def _workflow_button(name: str, on_workflows: Callable[[str], None] | None) -> list[ft.IconButton]:
+    if on_workflows is None:
+        return []
+    return [
+        ft.IconButton(
+            icon=ft.Icons.ACCOUNT_TREE_OUTLINED,
+            icon_size=19,
+            icon_color=COLORS["text_sub"],
+            tooltip=get_string("tooltip_workflows"),
+            style=ICON_STYLE,
+            on_click=lambda _, n=name: on_workflows(n),
+        )
+    ]
+
+
+def _clone_button(name: str, on_clone: Callable[[str], None] | None) -> list[ft.IconButton]:
+    if on_clone is None:
+        return []
+    return [
+        ft.IconButton(
+            icon=ft.Icons.CONTENT_COPY_OUTLINED,
+            icon_size=19,
+            icon_color=COLORS["text_sub"],
+            tooltip=get_string("tooltip_clone"),
+            style=ICON_STYLE,
+            on_click=lambda _, n=name: on_clone(n),
+        )
+    ]
 
 
 def _device(profile: Profile, device: str) -> ft.Row:

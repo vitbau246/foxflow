@@ -10,8 +10,8 @@ from camoufox.async_api import AsyncCamoufox
 OUT_DIR = pathlib.Path(os.getenv("E2E_OUT", "e2e-output"))
 OUT_DIR.mkdir(exist_ok=True)
 
-URL = os.getenv("FOXPROFILE_URL", "http://127.0.0.1:8000").rstrip("/") + "/"
-TOKEN = os.environ.get("FOXPROFILE_API_TOKEN", "")
+URL = os.getenv("FOXFLOW_URL", "http://127.0.0.1:8000").rstrip("/") + "/"
+TOKEN = os.environ.get("FOXFLOW_API_TOKEN", "")
 OUT = str(OUT_DIR)
 errors = []
 
@@ -24,7 +24,7 @@ def reset():
         ("DELETE", "/api/v1/profiles/panel-demo"),
     ):
         req = urllib.request.Request(
-            os.getenv("FOXPROFILE_URL", "http://127.0.0.1:8000").rstrip("/") + path,
+            os.getenv("FOXFLOW_URL", "http://127.0.0.1:8000").rstrip("/") + path,
             method=method,
             headers={"Authorization": "Bearer " + TOKEN},
         )

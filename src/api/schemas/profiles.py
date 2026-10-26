@@ -1,4 +1,8 @@
-from pydantic import BaseModel, Field
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
+
+CopyPart = Literal["cookies", "history", "site_data", "passwords", "tabs", "workflows"]
 
 
 class ProfileCreate(BaseModel):
@@ -16,6 +20,26 @@ class ProfileCreate(BaseModel):
         description="camoufox (Firefox) or chrome (experimental, fingerprint-chromium). "
         "Fixed once the profile is created",
     )
+
+
+class ProfileClone(BaseModel):
+    name: str | None = Field(
+        None,
+        description='New profile name; default "<name>-copy". With count > 1 it is the base '
+        "of the names: <name>-1, <name>-2... (numbers in use are skipped)",
+    )
+    count: int = Field(1, ge=1, le=50, description="How many copies to make")
+    # "copy" in JSON; BaseModel already has a copy() method.
+    model_config = ConfigDict(populate_by_name=True)
+    parts: list[CopyPart] = Field(
+        default_factory=list,
+        alias="copy",
+        description="What to copy besides the settings: cookies, history (and bookmarks), "
+        "site_data (localStorage, IndexedDB, site permissions), passwords, tabs (the source "
+        "must be stopped for these), workflows (a copy of each workflow recorded in the "
+        "profile, for every clone). The copy always gets a new fingerprint.",
+    )
+    copy_data: bool = Field(False, description="Shorthand: copy every browser data part")
 
 
 class ProfileUpdate(BaseModel):
@@ -92,3 +116,9 @@ class FingerprintResponse(BaseModel):
     platform: str | None = None
     screen: str | None = None
     hardware_concurrency: int | None = None
+
+
+class CloneResponse(BaseModel):
+    profiles: list[ProfileResponse]
+    total: int
+    workflows_copied: int = 0

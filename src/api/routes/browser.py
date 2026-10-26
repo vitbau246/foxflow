@@ -7,7 +7,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from ...core.config import LAUNCH_WAIT_TIMEOUT
 from ...core.logging import get_logger
 from ...services.browser.launcher import ProfileBusyError
-from ..dependencies import get_browser_launcher, get_event_bus, get_profile_manager
+from ..dependencies import (
+    get_browser_launcher,
+    get_event_bus,
+    get_profile_manager,
+    get_workflow_runner,
+)
 from ..helpers import require_profile
 from ..schemas.browser import (
     BrowserStatusResponse,
@@ -19,6 +24,7 @@ from ..schemas.common import ErrorResponse, SuccessResponse
 if TYPE_CHECKING:
     from ...core.events import EventBus
     from ...interfaces import IBrowserLauncher, IProfileManager
+    from ...services.workflow.runner import WorkflowRunner
 
 logger = get_logger("api.browser")
 
@@ -67,7 +73,7 @@ def launch_browser(
         True,
         description=(
             "If true (default), block until the browser is ready or has failed, "
-            f"up to {LAUNCH_WAIT_TIMEOUT}s (FOXPROFILE_LAUNCH_TIMEOUT). "
+            f"up to {LAUNCH_WAIT_TIMEOUT}s (FOXFLOW_LAUNCH_TIMEOUT). "
             "Pass wait=false to return 202 immediately and poll GET /{name}/status."
         ),
     ),
@@ -121,11 +127,14 @@ def stop_browser(
     pm: IProfileManager = Depends(get_profile_manager),
     bl: IBrowserLauncher = Depends(get_browser_launcher),
     bus: EventBus = Depends(get_event_bus),
+    runner: WorkflowRunner = Depends(get_workflow_runner),
 ) -> SuccessResponse:
     require_profile(name, pm)
     if not bl.is_running(name):
         raise HTTPException(status_code=409, detail="Browser is not running")
 
+    # A run would take the stopped browser for a failure and start it again.
+    runner.stop(name)
     bl.stop_profile(name)
     logger.info("API stopped browser for: %s", name)
     bus.emit()

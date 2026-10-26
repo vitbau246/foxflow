@@ -1,4 +1,4 @@
-"""Compare Camoufox headed vs headless against common bot checks, with FoxProfile-style config."""
+"""Compare Camoufox headed vs headless against common bot checks, with FoxFlow-style config."""
 
 import asyncio
 import sys

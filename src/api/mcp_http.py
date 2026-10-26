@@ -1,7 +1,7 @@
 """Serve the MCP server over Streamable HTTP at /mcp, next to the REST API.
 
 Remote MCP clients (Claude Code, Cursor, VS Code...) connect with a URL and the
-same bearer token as the API, so FoxProfile on a VPS needs no local install.
+same bearer token as the API, so FoxFlow on a VPS needs no local install.
 The tools call back into this process's REST API over loopback.
 """
 

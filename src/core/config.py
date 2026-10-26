@@ -1,5 +1,3 @@
-import os
-
 try:
     from dotenv import load_dotenv
 
@@ -7,10 +5,12 @@ try:
 except ImportError:
     pass
 
+from src.core.env import getenv
+
 
 def _env(key: str, default: str) -> str:
-    """Read the FOXPROFILE_<key> environment variable."""
-    return os.getenv(f"FOXPROFILE_{key}", default)
+    """Read FOXFLOW_<key> (or FoxProfile's FOXPROFILE_<key>)."""
+    return getenv(key, default)
 
 
 PROFILES_FILE = _env("PROFILES_FILE", "profiles.json")
@@ -27,6 +27,16 @@ API_PORT = int(_env("API_PORT", "8000"))
 LAUNCH_WAIT_TIMEOUT = int(_env("LAUNCH_TIMEOUT", "90"))
 
 FINGERPRINT_FILE = "fingerprint.json"
+
+# Recorded workflows, one JSON file each.
+WORKFLOWS_DIR = _env("WORKFLOWS_DIR", "workflows")
+
+# Optional AI text generation for workflow "ai" steps (OpenAI-compatible API).
+# Off until a key is set here or in the AI settings; the key here is never saved.
+AI_SETTINGS_FILE = _env("AI_SETTINGS_FILE", "ai_settings.json")
+OPENAI_API_KEY = _env("OPENAI_API_KEY", "")
+OPENAI_BASE_URL = _env("OPENAI_BASE_URL", "https://api.openai.com/v1")
+OPENAI_MODEL = _env("OPENAI_MODEL", "gpt-4o-mini")
 
 
 def _headless(value: str) -> bool | str:

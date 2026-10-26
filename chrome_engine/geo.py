@@ -2,7 +2,7 @@
 
 The exit IP is looked up through the proxy bridge (a plain HTTP proxy on
 loopback), so SOCKS5 and authenticated upstreams work without PySocks. The IP
-is then placed with Camoufox's GeoIP database, the same one FoxProfile uses for
+is then placed with Camoufox's GeoIP database, the same one FoxFlow uses for
 its Camoufox profiles.
 """
 

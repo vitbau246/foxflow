@@ -2,7 +2,7 @@
 
     python -m src.server [--host 127.0.0.1] [--port 8000]
 
-Exposing it beyond this machine requires FOXPROFILE_API_TOKEN.
+Exposing it beyond this machine requires FOXFLOW_API_TOKEN.
 """
 
 import argparse
@@ -13,9 +13,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="FoxProfile server (API + web panel)")
-    parser.add_argument("--host", help="Interface to listen on (default: FOXPROFILE_API_HOST)")
-    parser.add_argument("--port", type=int, help="Port (default: FOXPROFILE_API_PORT)")
+    parser = argparse.ArgumentParser(description="FoxFlow server (API + web panel)")
+    parser.add_argument("--host", help="Interface to listen on (default: FOXFLOW_API_HOST)")
+    parser.add_argument("--port", type=int, help="Port (default: FOXFLOW_API_PORT)")
     parser.add_argument(
         "--headed",
         action="store_true",
@@ -25,14 +25,16 @@ def main() -> None:
 
     # Must be decided before src.core.config is imported; runner subprocesses
     # inherit it through the environment. Load .env first so its
-    # FOXPROFILE_HEADLESS (e.g. "virtual") wins over the server default.
+    # FOXFLOW_HEADLESS (e.g. "virtual") wins over the server default.
     from dotenv import load_dotenv
 
     load_dotenv()
+    from src.core.env import getenv
+
     if args.headed:
-        os.environ["FOXPROFILE_HEADLESS"] = "false"
-    else:
-        os.environ.setdefault("FOXPROFILE_HEADLESS", "true")
+        os.environ["FOXFLOW_HEADLESS"] = "false"
+    elif getenv("HEADLESS") is None:
+        os.environ["FOXFLOW_HEADLESS"] = "true"
 
     import uvicorn
 
@@ -49,8 +51,8 @@ def main() -> None:
     container = Container()
     app = create_app(container, self_url=f"http://127.0.0.1:{port}")
     logger = get_logger("server")
-    logger.info("FoxProfile server on http://%s:%s (panel at /)", host, port)
-    print(f"FoxProfile panel: http://{host}:{port}/   API docs: http://{host}:{port}/docs")
+    logger.info("FoxFlow server on http://%s:%s (panel at /)", host, port)
+    print(f"FoxFlow panel: http://{host}:{port}/   API docs: http://{host}:{port}/docs")
     try:
         uvicorn.run(app, host=host, port=port, log_level="warning")
     finally:

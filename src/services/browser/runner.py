@@ -205,7 +205,7 @@ async def run_browser(
             context.on("page", watch)
             context.on("close", lambda: close_event.set())
 
-            control_runner, port, token = await control.serve(context)
+            control_runner, port, token = await control.serve(context, profile_dir)
             # CONTROL must precede BROWSER_STARTED: the launcher reports the
             # profile ready on BROWSER_STARTED and callers may control it at once.
             _safe_print(f"CONTROL:{port}:{token}")

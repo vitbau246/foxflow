@@ -152,8 +152,8 @@ def manager_in_tmp(tmp_path, monkeypatch):
     """Return a ProfileManager whose DATA_DIR and PROFILES_FILE live in tmp_path."""
     data_dir = str(tmp_path / "camoufox_data")
     profiles_file = str(tmp_path / "profiles.json")
-    monkeypatch.setenv("FOXPROFILE_DATA_DIR", data_dir)
-    monkeypatch.setenv("FOXPROFILE_PROFILES_FILE", profiles_file)
+    monkeypatch.setenv("FOXFLOW_DATA_DIR", data_dir)
+    monkeypatch.setenv("FOXFLOW_PROFILES_FILE", profiles_file)
 
     import src.core.config as cfg
 

@@ -1,4 +1,4 @@
-"""End-to-end checks against a running FoxProfile API."""
+"""End-to-end checks against a running FoxFlow API."""
 
 import hashlib
 import json
@@ -8,9 +8,9 @@ import time
 import urllib.error
 import urllib.request
 
-BASE = os.getenv("FOXPROFILE_URL", "http://127.0.0.1:8000").rstrip("/") + "/api/v1"
-DATA = pathlib.Path(os.getenv("FOXPROFILE_DATA_DIR", "camoufox_data"))
-TOKEN = os.getenv("FOXPROFILE_API_TOKEN", "")
+BASE = os.getenv("FOXFLOW_URL", "http://127.0.0.1:8000").rstrip("/") + "/api/v1"
+DATA = pathlib.Path(os.getenv("FOXFLOW_DATA_DIR", "camoufox_data"))
+TOKEN = os.getenv("FOXFLOW_API_TOKEN", "")
 HEADERS = {
     "Content-Type": "application/json",
     **({"Authorization": f"Bearer {TOKEN}"} if TOKEN else {}),
@@ -51,7 +51,7 @@ for _ in range(40):
         time.sleep(1)
 
 s, b, _ = call("GET", "/health")
-check("health renamed", "FoxProfile" in b["message"], b["message"])
+check("health renamed", "FoxFlow" in b["message"], b["message"])
 
 for n in ("e2e-a", "e2e-bad"):
     call("POST", f"/browser/{n}/stop")

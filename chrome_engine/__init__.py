@@ -1,4 +1,4 @@
-"""Chrome engine for FoxProfile, built on fingerprint-chromium.
+"""Chrome engine for FoxFlow, built on fingerprint-chromium.
 
 An experimental second browser engine next to Camoufox: a patched Chromium
 whose fingerprint (navigator, client hints, WebGL, canvas, audio, fonts) is

@@ -103,7 +103,7 @@ def _to_extension_json(cookies: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _to_netscape(cookies: list[dict[str, Any]]) -> str:
-    lines = ["# Netscape HTTP Cookie File", "# Exported by FoxProfile", ""]
+    lines = ["# Netscape HTTP Cookie File", "# Exported by FoxFlow", ""]
     for c in cookies:
         domain = c["domain"]
         if c.get("httpOnly"):

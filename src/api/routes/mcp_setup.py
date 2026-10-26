@@ -13,7 +13,7 @@ router = APIRouter(prefix="/mcp", tags=["mcp"])
 
 @router.get("/setup")
 def setup(
-    base_url: str = Query(description="Address the client uses to reach FoxProfile"),
+    base_url: str = Query(description="Address the client uses to reach FoxFlow"),
 ) -> dict:
     """MCP client configs for this server. The token appears as a placeholder."""
     parsed = urlparse(base_url)

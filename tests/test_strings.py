@@ -11,7 +11,8 @@ def test_languages_have_same_keys():
 
 
 def test_placeholders_match_between_languages():
-    field = re.compile(r"{(\w+)}")
+    # "{{name}}" is an escaped brace pair for str.format, not a placeholder.
+    field = re.compile(r"(?<!{){(\w+)}(?!})")
     for key, en in STRINGS["en"].items():
         assert set(field.findall(en)) == set(field.findall(STRINGS["vi"][key])), key
 
